@@ -208,7 +208,12 @@ export const translations = {
         "contact.form.email": "Correo Electrónico",
         "contact.form.subject": "Asunto",
         "contact.form.msg": "Mensaje",
+        "contact.form.message": "Mensaje",
         "contact.form.send": "Enviar Mensaje",
+        "contact.form.submit": "Enviar Mensaje",
+        "contact.info.title": "Información de Contacto",
+        "contact.info.support": "Soporte General",
+        "contact.info.admin": "Administración",
 
         // Portal & Dashboard
         "portal.title": "Acceso al Portal AIBAPT",
@@ -662,6 +667,16 @@ export const translations = {
         "contact.nav.contact": "Contato",
         "contact.title": "Fale Conosco",
         "contact.desc": "Estamos aquí para responder sus dúvidas e apoiar seu desenvolvimento profissional.",
+        "contact.info.hq": "Sede Central",
+        "contact.info.title": "Informações de Contato",
+        "contact.info.support": "Suporte Geral",
+        "contact.info.admin": "Administração",
+        "contact.form.title": "Envie-nos uma Mensagem",
+        "contact.form.name": "Nome Completo",
+        "contact.form.email": "E-mail",
+        "contact.form.subject": "Assunto",
+        "contact.form.message": "Mensagem",
+        "contact.form.submit": "Enviar Mensagem",
 
         // Portal & Dashboard
         "portal.title": "Acesso ao Portal AIBAPT",
