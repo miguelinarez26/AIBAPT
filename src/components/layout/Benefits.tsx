@@ -37,7 +37,7 @@ export const Benefits = () => {
         },
     };
 
-    const cardVariants = {
+    const cardVariants: any = {
         hidden: { opacity: 0, y: 30 },
         visible: {
             opacity: 1,
