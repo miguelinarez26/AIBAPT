@@ -2,16 +2,17 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
+import { LangKeys } from "@/i18n/translations";
 
 export default function QuienesSomosPage() {
     const { t } = useLanguage();
 
-    const fadeInUp = {
+    const fadeInUp: any = {
         hidden: { opacity: 0, y: 30 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
     };
 
-    const staggerContainer = {
+    const staggerContainer: any = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,

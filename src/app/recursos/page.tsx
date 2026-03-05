@@ -6,11 +6,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { LangKeys } from "@/i18n/translations";
 
 // Definimos la estructura de un documento (Card)
 type ResourceDoc = {
     id: string;
-    translationKey: string;
+    translationKey: LangKeys;
     category: "manuals" | "legal";
     size: string;
     icon: string;
