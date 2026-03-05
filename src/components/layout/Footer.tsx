@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+import logoDark from "../../../public/images/logo corto en blanco.png";
+
 export const Footer = () => {
     const { t } = useLanguage();
 
@@ -13,7 +15,7 @@ export const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 border-b border-white/10 pb-12">
                     <div className="lg:col-span-1">
                         <div className="bg-white/10 p-4 rounded-xl inline-flex items-center justify-center mb-6">
-                            <Image src="/images/logo corto en blanco.png" alt="AIBAPT Logo" width={180} height={100} className="object-contain h-10 w-auto" />
+                            <Image src={logoDark} alt="AIBAPT Logo" width={180} height={100} className="object-contain h-10 w-auto" />
                         </div>
                         <p className="text-white text-sm mb-6 leading-relaxed font-medium">
                             {t("footer.desc")}

@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import logoLight from "../../../public/images/logo aibapt.png";
+import logoDark from "../../../public/images/logo corto en blanco.png";
 
 export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,8 +18,8 @@ export const Header = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
                     <Link href="/" className="flex items-center gap-2">
-                        <Image src="/images/logo aibapt.png" alt="AIBAPT Logo" width={180} height={100} className="object-contain h-12 w-auto dark:hidden" />
-                        <Image src="/images/logo corto en blanco.png" alt="AIBAPT Logo Blanco" width={180} height={100} className="object-contain h-12 w-auto hidden dark:block" />
+                        <Image src={logoLight} alt="AIBAPT Logo" width={180} height={100} className="object-contain h-12 w-auto dark:hidden" />
+                        <Image src={logoDark} alt="AIBAPT Logo Blanco" width={180} height={100} className="object-contain h-12 w-auto hidden dark:block" />
                     </Link>
                     <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
                         <Link href="/" className={`text-sm font-medium transition-colors ${pathname === '/' ? 'text-primary dark:text-secondary' : 'text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white'}`}>{t("nav.home")}</Link>

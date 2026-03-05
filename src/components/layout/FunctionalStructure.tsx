@@ -5,6 +5,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import { FiArrowUpRight } from "react-icons/fi";
 import { LangKeys } from "@/i18n/translations";
+import elizabeth from "../../../public/images/elizabeth.jpg";
+import cristina from "../../../public/images/cristina.jpg";
+import mario from "../../../public/images/mario.jpg";
+import deglya from "../../../public/images/Deglya-3 (1).jpg";
 
 const DIRECTIVE_MEMBERS = [
     {
@@ -12,28 +16,28 @@ const DIRECTIVE_MEMBERS = [
         name: "Elizabeth Regina Maio",
         roleKey: "team.board.pres",
         descKey: "team.board.pres_desc",
-        image: "/images/elizabeth.jpg",
+        image: elizabeth,
     },
     {
         id: "vp",
         name: "Deglya J. Camero Flores",
         roleKey: "team.board.vp",
         descKey: "team.board.vp_desc",
-        image: "/images/Deglya-3 (1).jpg",
+        image: deglya,
     },
     {
         id: "vp_acad",
         name: "Cristina Melo Pérez",
         roleKey: "team.board.vp_acad",
         descKey: "team.board.vp_acad_desc",
-        image: "/images/cristina.jpg",
+        image: cristina,
     },
     {
         id: "tres",
         name: "Mario C. Salvador",
         roleKey: "team.board.tres",
         descKey: "team.board.tres_desc",
-        image: "/images/mario.jpg",
+        image: mario,
     },
 ];
 
