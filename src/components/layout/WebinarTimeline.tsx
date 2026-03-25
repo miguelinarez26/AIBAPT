@@ -118,7 +118,7 @@ export const WebinarTimeline = () => {
                 <div className="mt-20 text-center flex justify-center">
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Link
-                            href="/formaciones"
+                            href="/formaciones?tab=events"
                             className="inline-flex items-center gap-2 bg-transparent border-2 border-primary text-primary dark:text-gold dark:border-gold hover:bg-primary hover:text-white dark:hover:bg-gold dark:hover:text-secondary font-bold text-lg px-8 py-3.5 rounded-full transition-all"
                         >
                             {t("webinars.btn")}

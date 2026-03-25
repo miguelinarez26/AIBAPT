@@ -4,13 +4,12 @@ import React, { useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { FiArrowUpRight } from "react-icons/fi";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/Button";
 
 const IMG_PADDING = 12;
 
 export const HeroParallax = () => {
     const { t } = useLanguage();
-
-    const [isVideoOpen, setIsVideoOpen] = useState(false);
 
     return (
         <div className="bg-white dark:bg-background-dark">
@@ -18,7 +17,6 @@ export const HeroParallax = () => {
                 imgUrl="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 subheading={t("home.badge")}
                 heading={t("home.title1") + " " + t("home.title_highlight") + " " + t("home.title2")}
-                onPlayVideo={() => setIsVideoOpen(true)}
             >
                 <ExampleContent
                     title={t("home.hero.healing_root")}
@@ -27,44 +25,6 @@ export const HeroParallax = () => {
                     btnText={t("home.btn_trainings")}
                 />
             </TextParallaxContent>
-
-            {/* Video Modal */}
-            <AnimatePresence>
-                {isVideoOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setIsVideoOpen(false)}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 backdrop-blur-sm"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-                        >
-                            <button
-                                onClick={() => setIsVideoOpen(false)}
-                                className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors backdrop-blur-md"
-                            >
-                                <span className="material-icons-round">close</span>
-                            </button>
-                            {/* Placeholder Video - Reemplazar el src con el video real de YouTube / Vimeo */}
-                            <iframe
-                                width="100%"
-                                height="100%"
-                                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                                title="AIBAPT Bienvenida"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            ></iframe>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };
@@ -73,13 +33,11 @@ const TextParallaxContent = ({
     imgUrl,
     subheading,
     heading,
-    onPlayVideo,
     children,
 }: {
     imgUrl: string;
     subheading: string;
     heading: string;
-    onPlayVideo: () => void;
     children: React.ReactNode;
 }) => {
     return (
@@ -91,7 +49,7 @@ const TextParallaxContent = ({
         >
             <div className="relative h-[150vh]">
                 <StickyImage imgUrl={imgUrl} />
-                <OverlayCopy heading={heading} subheading={subheading} onPlayVideo={onPlayVideo} />
+                <OverlayCopy heading={heading} subheading={subheading} />
             </div>
             {children}
         </div>
@@ -134,11 +92,9 @@ const StickyImage = ({ imgUrl }: { imgUrl: string }) => {
 const OverlayCopy = ({
     subheading,
     heading,
-    onPlayVideo,
 }: {
     subheading: string;
     heading: string;
-    onPlayVideo: () => void;
 }) => {
     const { t } = useLanguage();
     const targetRef = useRef(null);
@@ -169,17 +125,6 @@ const OverlayCopy = ({
                     {subheading}
                 </p>
                 <p className="text-center text-4xl font-bold text-white md:text-6xl lg:text-7xl max-w-5xl mx-auto px-4 drop-shadow-[0_4px_16px_rgba(0,0,0,1)] mb-8">{heading}</p>
-
-                {/* Botón de Reproducir Video */}
-                <button
-                    onClick={onPlayVideo}
-                    className="group relative flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-sm text-white px-8 py-3.5 rounded-full font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
-                >
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                        <span className="material-icons-round text-white ml-1">play_arrow</span>
-                    </div>
-                    {t("home.hero.play_video")}
-                </button>
             </motion.div>
 
             {/* Bouncing Scroll Arrow */}
@@ -224,9 +169,9 @@ const ExampleContent = ({ title, desc1, desc2, btnText }: { title: string, desc1
             <p className="mb-8 text-xl text-text-muted dark:text-gray-300 md:text-2xl">
                 {desc2}
             </p>
-            <button className="w-full rounded bg-primary px-9 py-4 text-xl text-white transition-colors hover:bg-primary/90 md:w-fit font-bold flex items-center justify-center gap-2">
+            <Button variant="primary" size="lg" className="w-full md:w-fit">
                 {btnText} <FiArrowUpRight className="inline" />
-            </button>
+            </Button>
         </div>
     </div>
 );

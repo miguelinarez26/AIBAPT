@@ -2,14 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function FormacionesPage() {
+function FormacionesContent() {
     const { t } = useLanguage();
+    const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState<"all" | "events" | "recordings" | "accredited" | "accreditation">("all");
+
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab && ["all", "events", "recordings", "accredited", "accreditation"].includes(tab)) {
+            setActiveTab(tab as any);
+        }
+    }, [searchParams]);
 
     // TABS DEFINITION
     const tabs = [
@@ -323,5 +332,13 @@ export default function FormacionesPage() {
 
             </main>
         </div >
+    );
+}
+
+export default function FormacionesPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-cream dark:bg-bg-dark flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+            <FormacionesContent />
+        </Suspense>
     );
 }

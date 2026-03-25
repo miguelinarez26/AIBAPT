@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/Button";
 
 import logoDark from "../../../public/images/logo corto en blanco.png";
 
@@ -24,7 +25,9 @@ export const Footer = () => {
                             <label className="text-xs font-bold uppercase tracking-wider text-white">{t("footer.newsletter")}</label>
                             <div className="flex flex-col gap-2">
                                 <input className="bg-white/10 border border-accent/50 text-white placeholder-white/60 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent w-full transition-colors" placeholder={t("footer.newsletter.placeholder")} type="email" />
-                                <button className="bg-white text-accent hover:bg-accent hover:text-white transition-colors px-4 py-2.5 rounded-lg text-sm font-bold w-full" type="button">{t("footer.subscribe")}</button>
+                                <Button variant="secondary" size="sm" fullWidth type="button">
+                                    {t("footer.subscribe")}
+                                </Button>
                             </div>
                         </form>
                     </div>

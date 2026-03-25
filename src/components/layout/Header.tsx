@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { buttonVariants } from "@/components/ui/Button";
 import logoLight from "../../../public/images/logo aibapt.png";
 import logoDark from "../../../public/images/logo corto en blanco.png";
 
@@ -35,6 +37,9 @@ export const Header = () => {
                                 <Link href="/quienes-somos" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.about")}</Link>
                                 <Link href="/socios" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.partners")}</Link>
                                 <Link href="/contacto" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.contact")}</Link>
+                                <Link href="/docs/estatutos.pdf" target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Estatutos</Link>
+                                <Link href="/docs/reglamento_interno.pdf" target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Reglamento Interno</Link>
+                                <Link href="/organigrama" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Organigrama Funcional</Link>
                             </div>
                         </div>
 
@@ -65,7 +70,7 @@ export const Header = () => {
                             </div>
                         </div>
 
-                        <Link href="/noticias" className={`text-sm font-medium transition-colors ${pathname === '/noticias' ? 'text-primary dark:text-secondary' : 'text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white'}`}>{t("nav.news")}</Link>
+                        <Link href="/publicaciones" className={`text-sm font-medium transition-colors ${pathname === '/publicaciones' ? 'text-primary dark:text-secondary' : 'text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white'}`}>{t("nav.news")}</Link>
                     </nav>
                     <div className="flex items-center gap-4">
                         <div className="hidden sm:flex items-center bg-accent/50 dark:bg-surface-dark rounded-full p-1 border border-accent dark:border-gray-700">
@@ -78,8 +83,8 @@ export const Header = () => {
                                 className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${lang === 'pt' ? 'bg-white dark:bg-surface-light shadow-sm text-primary dark:text-secondary' : 'text-text-muted dark:text-white/70 hover:text-primary cursor-pointer'}`}
                             >PT</button>
                         </div>
-                        <Link href="/portal" className="hidden sm:flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm hover:bg-[#689153] transition-colors">
-                            <span className="material-icons-round text-[18px]">account_circle</span>
+                        <Link href="/portal" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                            <span className="material-icons-round text-lg">account_circle</span>
                             {t("nav.portal")}
                         </Link>
                         <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 text-gray-600 dark:text-gray-300">
@@ -101,6 +106,9 @@ export const Header = () => {
                             <Link href="/quienes-somos" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.about")}</Link>
                             <Link href="/socios" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.partners")}</Link>
                             <Link href="/contacto" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.contact")}</Link>
+                            <Link href="/docs/estatutos.pdf" target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Estatutos</Link>
+                            <Link href="/docs/reglamento_interno.pdf" target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Reglamento Interno</Link>
+                            <Link href="/organigrama" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Organigrama Funcional</Link>
                         </div>
 
                         {/* Membresía */}
@@ -120,12 +128,12 @@ export const Header = () => {
                             <Link href="/recursos" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("footer.resources")}</Link>
                         </div>
 
-                        <Link href="/noticias" onClick={() => setIsMenuOpen(false)} className="text-text-main dark:text-white/80 hover:text-primary font-medium px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.news")}</Link>
+                        <Link href="/publicaciones" onClick={() => setIsMenuOpen(false)} className="text-text-main dark:text-white/80 hover:text-primary font-medium px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.news")}</Link>
 
                         <div className="pt-4 border-t border-accent/20 dark:border-gray-800">
-                            <Link href="/portal" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-primary text-white px-4 py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-[#689153] transition-colors">
-                                <span className="material-icons-round text-[18px]">account_circle</span>
-                                {t("nav.login")}
+                            <Link href="/portal" onClick={() => setIsMenuOpen(false)} className={buttonVariants({ variant: "primary", size: "default", fullWidth: true })}>
+                                <span className="material-icons-round text-lg">account_circle</span>
+                                {t("nav.portal")}
                             </Link>
                         </div>
                     </nav>

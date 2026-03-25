@@ -30,11 +30,11 @@ export const WhatIsTrauma = () => {
                             Comprendiendo la raíz
                         </div>
 
-                        <h2 className="font-display text-4xl sm:text-5xl font-bold leading-tight text-secondary dark:text-white">
+                        <h2 className="font-display text-4xl sm:text-5xl font-bold leading-none text-secondary dark:text-white pb-2">
                             ¿Qué es el <span className="text-primary italic">Trauma</span> Psicológico o Emocional?
                         </h2>
 
-                        <div className="prose prose-lg dark:prose-invert text-text-muted dark:text-white/80 leading-relaxed">
+                        <div className="prose prose-lg dark:prose-invert text-text-muted dark:text-white/80 leading-relaxed text-justify">
                             <p>
                                 El trauma psicológico es el resultado de un evento o serie de eventos abrumadores que exceden nuestra capacidad de afrontamiento. No se trata simplemente del evento en sí, sino de la <strong>respuesta de nuestro sistema nervioso</strong> que queda atrapada en un estado de alerta constante o disociación.
                             </p>
@@ -85,7 +85,7 @@ export const WhatIsTrauma = () => {
                                             <h4 className="text-lg font-bold text-secondary dark:text-white mb-2">
                                                 Existe tratamiento efectivo
                                             </h4>
-                                            <p className="text-sm text-text-main dark:text-white/80 leading-snug">
+                                            <p className="text-sm text-text-main dark:text-white/80 leading-snug text-justify">
                                                 A través de enfoques integradores (como EMDR y Brainspotting), es posible reprogramar el sistema nervioso y restaurar el bienestar integral, sanando la raíz del sufrimiento.
                                             </p>
                                         </div>

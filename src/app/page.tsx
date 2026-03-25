@@ -9,24 +9,36 @@ import { Benefits } from "@/components/layout/Benefits";
 import { WebinarTimeline } from "@/components/layout/WebinarTimeline";
 import { FAQ } from "@/components/layout/FAQ";
 import { FunctionalStructure } from "@/components/layout/FunctionalStructure";
+import { WebinarCalendarNotice } from "@/components/layout/WebinarCalendarNotice";
+import { AccreditationCTA } from "@/components/layout/AccreditationCTA";
 
 export default function LandingPage() {
   const { t } = useLanguage();
   return (
     <div className="pt-20">
+      <WebinarCalendarNotice />
       <HeroParallax />
 
       {/* Qué es el Trauma */}
       <WhatIsTrauma />
 
-      {/* Estructura Funcional */}
-      <FunctionalStructure />
+      {/* Beneficios - Movido antes del equipo directivo */}
+      <div id="beneficios">
+          <Benefits />
+      </div>
 
-      {/* Fase 2: Beneficios */}
-      <Benefits />
+      {/* Llamado a la Acción Acreditaciones */}
+      <AccreditationCTA />
 
-      {/* Fase 3: Calendario de Webinars */}
-      <WebinarTimeline />
+      {/* Estructura Funcional (Equipo Directivo) */}
+      <div id="equipo">
+          <FunctionalStructure />
+      </div>
+
+      {/* Calendario de Webinars (Destacado) */}
+      <div className="bg-primary/5 dark:bg-surface-dark border-y border-primary/10">
+          <WebinarTimeline />
+      </div>
 
       {/* Who We Are */}
       <section className="py-24 bg-white dark:bg-background-dark relative">
