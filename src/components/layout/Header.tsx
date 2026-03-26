@@ -53,6 +53,8 @@ export const Header = () => {
                             <div className="absolute top-full left-0 mt-6 w-56 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-300 py-2">
                                 {/* @ts-ignore */}
                                 <Link href="/afiliacion" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.afiliacion" as any)}</Link>
+                                {/* @ts-ignore */}
+                                <Link href="/miembros" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.members" as any)}</Link>
                             </div>
                         </div>
 
@@ -117,6 +119,8 @@ export const Header = () => {
                             <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.membership" as any)}</span>
                             {/* @ts-ignore */}
                             <Link href="/afiliacion" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.afiliacion" as any)}</Link>
+                            {/* @ts-ignore */}
+                            <Link href="/miembros" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.members" as any)}</Link>
                         </div>
 
                         {/* Desarrollo Profesional */}

@@ -30,7 +30,8 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const t = (key: LangKeys): string => {
-        return translations[lang][key] || key;
+        const val = translations[lang][key];
+        return val !== undefined ? val : key;
     };
 
     return (

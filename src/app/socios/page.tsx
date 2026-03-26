@@ -1,74 +1,13 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { translations } from "@/i18n/translations";
 import { useRef, useEffect } from "react";
+import { mockPartners, countriesList, type Partner } from "./partnersData";
 
-// Datos de prueba (mock) para el directorio
-const mockPartners = [
-    {
-        id: 1,
-        name: "Dra. Ana López",
-        country: "España",
-        city: "Madrid",
-        certifications: ["emdr_therapist", "emdr_supervisor"],
-        avatar: "https://i.pravatar.cc/150?img=1",
-        email: "ana.lopez@ejemplo.com",
-        bio: "Especialista clínica con más de 15 años de experiencia trabajando con estrés postraumático complejo y trauma de apego. Dedicada a la investigación y formación de nuevas generaciones en técnicas avanzadas de EMDR.",
-    },
-    {
-        id: 2,
-        name: "Dr. Carlos Ruiz",
-        country: "México",
-        city: "Ciudad de México",
-        certifications: ["brainspotting_certified", "emdr_therapist"],
-        avatar: "https://i.pravatar.cc/150?img=11",
-        email: "carlos.ruiz@ejemplo.com",
-        bio: "Médico psiquiatra y psicoterapeuta. Integra intervenciones neurobiológicas y terapias somáticas para potenciar el procesamiento emocional profundo.",
-    },
-    {
-        id: 3,
-        name: "Dra. Elena Silva",
-        country: "Portugal",
-        city: "Lisboa",
-        certifications: ["psychodrama_trainer", "brainspotting_trainer"],
-        avatar: "https://i.pravatar.cc/150?img=5",
-        email: "elena.silva@ejemplo.pt",
-        bio: "Pionera en la aplicación del psicodrama en entornos grupales para sobrevivientes de trauma. Entrenadora internacional certificada y asesora clínica de múltiples ONGs.",
-    },
-    {
-        id: 4,
-        name: "Lic. Martín Gómez",
-        country: "Argentina",
-        city: "Buenos Aires",
-        certifications: ["emdr_trainer", "brainspotting_consultant"],
-        avatar: "https://i.pravatar.cc/150?img=14",
-        email: "martin.gomez@ejemplo.com.ar",
-        bio: "Licenciado en Psicología enfocado en trauma transgeneracional y colectivo. Facilita diplomados e interviene activamente en crisis y desastres naturales.",
-    },
-    {
-        id: 5,
-        name: "Dra. Sofía Mendes",
-        country: "Brasil",
-        city: "São Paulo",
-        certifications: ["emdr_therapist", "other"],
-        avatar: "https://i.pravatar.cc/150?img=9",
-        email: "sofia.mendes@ejemplo.com.br",
-        bio: "Investigadora clínica y terapeuta infanto-juvenil. Combina terapias de juego y herramientas de procesamiento focalizado para infancias vulneradas.",
-    },
-    {
-        id: 6,
-        name: "Dr. Javier Morales",
-        country: "Colombia",
-        city: "Bogotá",
-        certifications: ["brainspotting_trained"],
-        avatar: "https://i.pravatar.cc/150?img=8",
-        email: "javier.morales@ejemplo.co",
-        bio: "Psicoterapeuta experto en duelo y trauma agudo. Brinda acompañamiento individualizado e incorpora técnicas de regulación basada en la compasión y el cuerpo.",
-    },
-];
+// Los datos de los socios y países se importan de partnersData.ts
 
 // Lista de certificaciones disponibles basada en tu requerimiento
 const certificationTypes = [
@@ -83,7 +22,7 @@ const certificationTypes = [
     "other"
 ];
 
-const countriesList = ["Argentina", "Brasil", "Colombia", "España", "México", "Portugal"];
+
 
 export default function SociosPage() {
     const { t } = useLanguage();
@@ -91,7 +30,7 @@ export default function SociosPage() {
     const [selectedCountry, setSelectedCountry] = useState("Todos");
     const [selectedCert, setSelectedCert] = useState("Todas");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-    const [selectedPartner, setSelectedPartner] = useState<typeof mockPartners[0] | null>(null);
+    const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
     // Dropdown state and references
     const [openDropdown, setOpenDropdown] = useState<"country" | "cert" | null>(null);

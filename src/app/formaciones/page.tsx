@@ -32,23 +32,23 @@ function FormacionesContent() {
     // DATA FOR "EVENTOS FUTUROS"
     const eventsData = [
         {
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBgjkVgvWevbWuIfhq66RugsMp48jK5uMgWRwuCK8Qt3MXPLBMUiLaYtuFSqLAPE01RilmGkTE0AlOvttBbDlTk384J28F_gZ3d6Uh8x2DIPu-3_KuLQFMkmbXrrgVxIH-h7tjzx8sPcqf8KF7PtKRTp_VUIgpr_AzRXdBgdI0VDuhRAN3Ljtyy4QtLckXrsT-AFK90P5zv3JwB3Y5-aomazR8Oo96DwgrNi64-0dinLEiV8y8DZIgXa-mh1gpU09F1TnAb8m23J73u",
+            img: "/images/Gemini_Generated_Image_6hif2l6hif2l6hif.png",
             badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
             category: t("edu.cat.trauma" as any),
-            title: "Trauma Webinar #20 con Suzana Díaz",
-            desc: "Webinar en vivo abordando temas avanzados de trauma y sanación emocional en psicoterapia.",
+            title: t("webinars.event1.title" as any),
+            desc: t("webinars.event1.desc" as any),
             instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuCgoOzwVvSo8OtzhSZ9ejd_KbxNBjpnhXQL9-Gw2H5V3FFwwQnXX5UjzfRAvUS4Y4L-dVuJixN9r2RorGMDH_M7mCaG0472485sdJvL6uD8UHUhJU3yWwtRrddQC8XZBo--UiwOn8LQEqAKqx50_Ar7sho3VrEyLybP8kOFAkqUMrTtvc4PegfqwK88cTsfAqjGwtiWMF-jnMkavODzqJe4tCRO5df6KLvWHegIBaYX3qVTvdQr9GQPdgp0rXMwg4Ya3Z8IbsvOgt0C",
-            instructorName: "Suzana Díaz", route: "/formaciones/trauma-webinar-20",
+            instructorName: "Daniel Gabarra", route: "/formaciones/arte-apoyo-gabarra",
             price: t("edu.btn.register" as any)
         },
         {
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAP97HFwh62_4v6Bq0fSwdZl6HHdZXFQ_MyW9nFrRuWvIMWiAKOJxErx7r2RGwVEeOmbfuwALI8rsk53yaCBSMTpG0X1ca6EiIBxDq7UbboDoLVR7AzKPsr7wOTJv-6mbHujWRGaqKN_WrIAOKWqtieYbtgDgwVlhj0yoy4NkLsOS4R01O19C_yTft4kzy_dijmlbHW8Z58JTsrGCjXa05vsmAGq5L1c90vYJDsJfXyWg1E9HIg9dYT3yvDZTL5jjbz4io2eRPW0Sp7",
+            img: "/images/Gemini_Generated_Image_5ekuqs5ekuqs5eku.png",
             badge: t("edu.events.presencial" as any), badgeIcon: "location_on", badgeStyle: "text-amber-500",
             category: t("edu.cat.psicodrama" as any),
-            title: "Psicodrama para la Práctica Clínica",
-            desc: "Curso presencial en Brasília. Jornada teórico-práctica para aplicar Psicodrama en psicoterapia.",
+            title: t("webinars.event2.title" as any),
+            desc: t("webinars.event2.desc" as any),
             instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuAZZoN75buPkv39MTVOsuw-fBLszBlKmA9opTeWzIaxy2-7JpViUiVyY5BhKsQwkwHqR5w38bbcIeOtjpZj7t7D6kcuUNMTnaJ1ParB2dhZuZhicFVngsvlZ3UPGlhrxQ6HkBqNBD9Ia7Rx751fo_ZZ2isPFRpi7NNwj5O9nvu8xTrfDPRaJUB7ySaa9U3NljKBolHS6gEMNDgIEZRADPTgjAYnl4_jPmwYUW2nQ0vAxdVEj6x20zloWkEc_V-Zwq7hS7HEOscDQssJ",
-            instructorName: "Dra. Esly Carvalho", route: "/formaciones/psicodrama-clinico",
+            instructorName: "Dra. Esly Carvalho", route: "/formaciones/introduccion-psicodrama-esly",
             price: t("edu.btn.register" as any)
         },
         {
@@ -120,6 +120,8 @@ function FormacionesContent() {
         { title: "Terapia Centrada en Esquemas", instructor: "Ariel Milton Pinto de Sousa", hours: "22 horas", contact: "mailto:arielmilton@gmail.com" },
         { title: "Trauma Complejo, Disociación y EMDR", instructor: "Patricio Galleguillos", hours: "12 horas", contact: "mailto:contacto@atept.cl" },
     ];
+
+    const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
     // Select active data for list/grid view
     const currentData = useMemo(() => {
@@ -221,18 +223,29 @@ function FormacionesContent() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {filteredData.map((course, idx) => (
                                         <article key={idx} className="group flex flex-col bg-white/90 dark:bg-surface-dark/90 backdrop-blur-sm rounded-2xl overflow-hidden border border-accent/20 dark:border-gray-800 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300">
-                                            <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                            <div 
+                                                className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer"
+                                                onClick={() => setSelectedCourse(course)}
+                                            >
                                                 <Image fill alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={course.img} />
                                                 <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-text-main dark:text-white flex items-center gap-1.5 shadow-sm">
                                                     <span className={`material-icons-round ${course.badgeStyle} text-sm`}>{course.badgeIcon}</span>
                                                     {course.badge}
+                                                </div>
+                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="bg-white/90 text-primary px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                        Ver detalles
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className="p-5 flex flex-col flex-1">
                                                 <div className="flex items-center gap-2 text-xs font-medium text-primary mb-2">
                                                     <span className="text-secondary dark:text-gray-300">{course.category}</span>
                                                 </div>
-                                                <h3 className="text-lg font-bold text-text-main dark:text-white leading-snug mb-2 group-hover:text-primary transition-colors">
+                                                <h3 
+                                                    className="text-lg font-bold text-text-main dark:text-white leading-snug mb-2 group-hover:text-primary transition-colors cursor-pointer"
+                                                    onClick={() => setSelectedCourse(course)}
+                                                >
                                                     {course.title}
                                                 </h3>
                                                 <p className="text-sm text-text-muted dark:text-gray-400 line-clamp-2 mb-4">
@@ -329,9 +342,85 @@ function FormacionesContent() {
                         )}
                     </motion.div>
                 </AnimatePresence>
-
             </main>
-        </div >
+
+            {/* QUICK VIEW MODAL */}
+            <AnimatePresence>
+                {selectedCourse && (
+                    <>
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedCourse(null)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] cursor-pointer"
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-4xl max-h-[90vh] bg-white dark:bg-surface-dark rounded-[32px] overflow-hidden shadow-2xl z-[101] flex flex-col md:flex-row"
+                        >
+                            <div className="md:w-5/12 relative h-64 md:h-auto bg-[#f0f2f0] dark:bg-gray-900 flex items-center justify-center">
+                                <Image fill src={selectedCourse.img} alt={selectedCourse.title} className="object-contain" />
+                                <div className="absolute top-6 left-6 bg-white/95 dark:bg-black/80 backdrop-blur-md px-4 py-2 rounded-2xl text-sm font-bold shadow-lg">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`material-icons-round ${selectedCourse.badgeStyle}`}>{selectedCourse.badgeIcon}</span>
+                                        {selectedCourse.badge}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="md:w-7/12 p-8 md:p-12 overflow-y-auto no-scrollbar flex flex-col">
+                                <button 
+                                    onClick={() => setSelectedCourse(null)}
+                                    className="absolute top-6 right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 transition-colors group"
+                                >
+                                    <span className="material-icons-round text-gray-400 group-hover:text-primary transition-colors">close</span>
+                                </button>
+                                
+                                <div className="space-y-6">
+                                    <div>
+                                        <span className="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-2 block">{selectedCourse.category}</span>
+                                        <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white leading-tight">
+                                            {selectedCourse.title}
+                                        </h2>
+                                    </div>
+
+                                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                                        <p className="text-text-main dark:text-white/80 leading-relaxed text-lg italic border-l-4 border-primary/20 pl-4 py-1">
+                                            {selectedCourse.desc}
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-full border-2 border-primary/20 overflow-hidden relative shadow-inner">
+                                            <Image fill src={selectedCourse.instructorImg} alt="Instructor" className="object-cover" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-text-muted dark:text-gray-400 font-medium uppercase tracking-wider">Instructor</p>
+                                            <h4 className="font-bold text-secondary dark:text-white text-lg">{selectedCourse.instructorName}</h4>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 flex flex-col sm:flex-row gap-4">
+                                        <Link href={selectedCourse.route} className="flex-1 bg-primary hover:bg-[#689153] text-white font-bold py-4 px-8 rounded-2xl text-center shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+                                            Inscribirse ahora
+                                            <span className="material-icons-round">arrow_forward</span>
+                                        </Link>
+                                        <button 
+                                            onClick={() => setSelectedCourse(null)}
+                                            className="px-8 py-4 rounded-2xl font-bold text-text-muted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
     );
 }
 

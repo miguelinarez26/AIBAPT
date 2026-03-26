@@ -10,6 +10,7 @@ import elizabeth from "../../../public/images/elizabeth.jpg";
 import cristina from "../../../public/images/cristina.jpg";
 import mario from "../../../public/images/mario.jpg";
 import deglya from "../../../public/images/Deglya-3 (1).jpg";
+import neide from "../../../public/images/secrvetaria.jpg";
 
 interface SubTeam {
     name: string;
@@ -106,7 +107,7 @@ const TEAM_MEMBERS: TeamMember[] = [
         name: "Neide Zucoli",
         roleKey: "team.board.sec",
         descKey: "team.board.sec_desc",
-        image: "/images/neide.jpg", // Fallback will handle missing image
+        image: neide,
         email: "secretaria@aibapt.org",
         committees: [
             {
@@ -175,9 +176,9 @@ export const FunctionalStructure = () => {
                                 transition={{ delay: index * 0.1, duration: 0.5 }}
                                 className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 h-[450px] cursor-pointer"
                             >
-                                {member.image && typeof member.image !== 'string' ? (
+                                {member.image ? (
                                     <Image
-                                        src={member.image}
+                                        src={member.image as any}
                                         alt={member.name}
                                         fill
                                         sizes="(max-width: 768px) 100vw, 20vw"
@@ -235,9 +236,9 @@ export const FunctionalStructure = () => {
 
                             {/* Lateral Izquierdo - Imagen y Perfil */}
                             <div className="md:w-1/3 relative h-64 md:h-auto">
-                                {selectedMember.image && typeof selectedMember.image !== 'string' ? (
+                                {selectedMember.image ? (
                                     <Image
-                                        src={selectedMember.image}
+                                        src={selectedMember.image as any}
                                         alt={selectedMember.name}
                                         fill
                                         className="object-cover"

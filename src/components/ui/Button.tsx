@@ -16,9 +16,11 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-white shadow-[0_8px_20px_-6px_rgba(227,27,35,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(227,27,35,0.6)] before:absolute before:inset-0 before:bg-white/20 before:translate-y-full hover:before:translate-y-0 before:transition-transform before:duration-300",
+          "bg-primary text-white shadow-[0_8px_20px_-6px_rgba(90,153,84,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(90,153,84,0.6)] before:absolute before:inset-0 before:bg-white/20 before:translate-y-full hover:before:translate-y-0 before:transition-transform before:duration-300",
         secondary:
           "bg-secondary text-white shadow-[0_8px_20px_-6px_rgba(11,81,62,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(11,81,62,0.6)] before:absolute before:inset-0 before:bg-white/20 before:translate-y-full hover:before:translate-y-0 before:transition-transform before:duration-300",
+        accent:
+          "bg-accent text-white shadow-[0_8px_20px_-6px_rgba(192,57,43,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(192,57,43,0.6)] before:absolute before:inset-0 before:bg-white/20 before:translate-y-full hover:before:translate-y-0 before:transition-transform before:duration-300",
         ghost:
           "bg-transparent text-secondary dark:text-white hover:bg-gray-100 dark:hover:bg-white/10",
         outline:

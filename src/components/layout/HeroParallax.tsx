@@ -16,7 +16,7 @@ export const HeroParallax = () => {
             <TextParallaxContent
                 imgUrl="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 subheading={t("home.badge")}
-                heading={t("home.title1") + " " + t("home.title_highlight") + " " + t("home.title2")}
+                heading={t("home.title1") + " " + t("home.title_highlight") + (t("home.title2") ? " " + t("home.title2") : "")}
             >
                 <ExampleContent
                     title={t("home.hero.healing_root")}
