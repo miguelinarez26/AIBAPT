@@ -21,7 +21,7 @@ export const WebinarTimeline = () => {
             date: t("webinars.event1.date" as LangKeys),
             desc: t("webinars.event1.desc" as LangKeys),
             btnText: t("webinars.event1.btn" as LangKeys),
-            imageUrl: "/images/Gemini_Generated_Image_6hif2l6hif2l6hif.png",
+            imageUrl: "/images/webinar_flyer_2.png",
         },
         {
             category: t("webinars.event2.category" as LangKeys),
@@ -30,7 +30,7 @@ export const WebinarTimeline = () => {
             date: t("webinars.event2.date" as LangKeys),
             desc: t("webinars.event2.desc" as LangKeys),
             btnText: t("webinars.event2.btn" as LangKeys),
-            imageUrl: "/images/Gemini_Generated_Image_5ekuqs5ekuqs5eku.png",
+            imageUrl: "/images/webinar_flyer_1.png",
         },
     ];
 

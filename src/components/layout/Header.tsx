@@ -7,8 +7,8 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { buttonVariants } from "@/components/ui/Button";
-import logoLight from "../../../public/images/logo aibapt.png";
-import logoDark from "../../../public/images/logo corto en blanco.png";
+import logoLight from "../../../public/images/logo_aibapt.png";
+import logoDark from "../../../public/images/logo_corto_en_blanco.png";
 
 export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
