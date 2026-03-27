@@ -80,7 +80,7 @@ const StickyImage = ({ imgUrl }: { imgUrl: string }) => {
             className="sticky z-0 overflow-hidden rounded-3xl"
         >
             <motion.div
-                className="absolute inset-0 bg-neutral-950/70"
+                className="absolute inset-0 bg-neutral-950/40"
                 style={{
                     opacity,
                 }}
@@ -121,10 +121,10 @@ const OverlayCopy = ({
                 transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
                 className="flex flex-col items-center justify-center -mt-10 md:-mt-20"
             >
-                <p className="mb-4 text-center text-2xl md:text-4xl text-white font-bold drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
+                <p className="mb-4 text-center text-2xl md:text-4xl text-white font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,1)]">
                     {subheading}
                 </p>
-                <p className="text-center text-4xl font-bold text-white md:text-6xl lg:text-7xl max-w-5xl mx-auto px-4 drop-shadow-[0_4px_16px_rgba(0,0,0,1)] mb-8">{heading}</p>
+                <p className="text-center text-4xl font-bold text-white md:text-6xl lg:text-7xl max-w-5xl mx-auto px-4 drop-shadow-[0_2px_20px_rgba(0,0,0,1)] mb-8">{heading}</p>
             </motion.div>
 
             {/* Bouncing Scroll Arrow */}
@@ -140,7 +140,7 @@ const OverlayCopy = ({
                     });
                 }}
             >
-                <span className="text-white/60 text-xs uppercase tracking-[0.2em] mb-2 font-bold drop-shadow-md">{t("home.hero.explore")}</span>
+                <span className="text-white text-xs uppercase tracking-[0.2em] mb-2 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">{t("home.hero.explore")}</span>
                 <motion.div
                     animate={{ y: [0, 8, 0] }}
                     transition={{
