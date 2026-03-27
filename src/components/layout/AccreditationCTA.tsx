@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { FiFileText, FiMessageCircle } from "react-icons/fi";
 import { buttonVariants } from "@/components/ui/Button";
+import sealImage from "../../../public/images/aibapt_logo_transparent_seal.png";
 
 export const AccreditationCTA = () => {
     return (
@@ -88,7 +89,7 @@ export const AccreditationCTA = () => {
                                     </svg>
                                     
                                     <Image 
-                                        src="/images/aibapt_logo_transparent_seal.png" 
+                                        src={sealImage} 
                                         alt="Sello AIBAPT" 
                                         fill 
                                         sizes="(max-width: 1024px) 500px, 800px"

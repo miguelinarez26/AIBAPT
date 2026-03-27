@@ -57,9 +57,13 @@ export const Benefits = () => {
     }, [currentIndex, originalCards.length]);
 
     return (
-        <section className="py-24 bg-white dark:bg-background-dark relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+        <section className="py-24 relative overflow-hidden bg-primary/[0.05] dark:bg-background-dark/50 border-y border-primary/10">
+            {/* Patrón de puntos acentuado y más grande */}
+            <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1.5px,transparent_1.5px)] dark:bg-[radial-gradient(#475569_1.5px,transparent_1.5px)] bg-[length:32px_32px] opacity-25 pointer-events-none" />
+            
+            {/* Elementos de resplandor (blobs) con más presencia cromática */}
+            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-[40rem] h-[40rem] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-[40rem] h-[40rem] bg-accent/20 rounded-full blur-[100px] pointer-events-none" />
             
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-12">
                 <div className="text-center max-w-3xl mx-auto mb-16">
@@ -131,10 +135,10 @@ const BenefitCard = ({ card }: { card: any; index: number }) => {
     return (
         <div
             style={{ width: "280px" }}
-            className="h-[380px] flex-shrink-0 bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-[2rem] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-xl transition-shadow group flex flex-col items-center text-center relative"
+            className="h-[380px] flex-shrink-0 bg-white/95 backdrop-blur-xl dark:bg-surface-dark border border-primary/20 dark:border-white/10 rounded-[2rem] p-8 shadow-[0_8px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] hover:border-primary/40 hover:-translate-y-3 transition-all duration-300 group flex flex-col items-center text-center relative z-10"
         >
             <div 
-                className="w-16 h-16 bg-accent/10 text-primary dark:text-gold rounded-full flex items-center justify-center mb-8 shadow-inner transition-colors duration-300 pointer-events-none"
+                className="w-16 h-16 bg-gradient-to-br from-primary/10 to-transparent text-primary dark:text-gold rounded-2xl flex items-center justify-center mb-8 shadow-sm rotate-3 group-hover:rotate-0 transition-transform duration-300 pointer-events-none ring-1 ring-primary/20"
             >
                 <span className="material-icons-round text-3xl">{card.icon}</span>
             </div>

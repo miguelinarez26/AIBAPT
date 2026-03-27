@@ -10,6 +10,9 @@ import { LangKeys } from "@/i18n/translations";
 
 import { Button } from "@/components/ui/Button";
 
+import flyer1 from "../../../public/images/webinar_flyer_1.png";
+import flyer2 from "../../../public/images/webinar_flyer_2.png";
+
 export const WebinarTimeline = () => {
     const { t, lang } = useLanguage();
 
@@ -21,7 +24,7 @@ export const WebinarTimeline = () => {
             date: t("webinars.event1.date" as LangKeys),
             desc: t("webinars.event1.desc" as LangKeys),
             btnText: t("webinars.event1.btn" as LangKeys),
-            imageUrl: "/images/webinar_flyer_2.png",
+            imageUrl: flyer2,
         },
         {
             category: t("webinars.event2.category" as LangKeys),
@@ -30,7 +33,7 @@ export const WebinarTimeline = () => {
             date: t("webinars.event2.date" as LangKeys),
             desc: t("webinars.event2.desc" as LangKeys),
             btnText: t("webinars.event2.btn" as LangKeys),
-            imageUrl: "/images/webinar_flyer_1.png",
+            imageUrl: flyer1,
         },
     ];
 
