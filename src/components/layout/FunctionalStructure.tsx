@@ -9,7 +9,7 @@ import { LangKeys } from "@/i18n/translations";
 import elizabeth from "../../../public/images/elizabeth.jpg";
 import cristina from "../../../public/images/cristina.jpg";
 import mario from "../../../public/images/mario.jpg";
-import deglya from "../../../public/images/Deglya-3 (1).jpg";
+import deglya from "../../../public/images/deglya.jpg";
 import neide from "../../../public/images/secrvetaria.jpg";
 
 interface SubTeam {
