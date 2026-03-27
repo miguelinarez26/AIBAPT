@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/Button";
 
-import logoDark from "../../../public/images/logo corto en blanco.png";
+import logoDark from "../../../public/images/logo_corto_en_blanco.png";
 
 export const Footer = () => {
     const { t } = useLanguage();
