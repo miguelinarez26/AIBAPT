@@ -88,7 +88,7 @@ export const AccreditationCTA = () => {
                                     </svg>
                                     
                                     <Image 
-                                        src="/images/aibapt_logo_transparent (1).png" 
+                                        src="/images/aibapt_logo_transparent.png" 
                                         alt="Sello AIBAPT" 
                                         fill 
                                         sizes="(max-width: 1024px) 500px, 800px"
