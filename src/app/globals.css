@@ -4,7 +4,8 @@
 @theme {
   --color-primary: #5a9954;
   --color-secondary: #94d98d;
-  --color-accent: #C0392B; /* Rojo Terracota */
+  --color-accent: #d95858; /* Rojo sangre */
+  --color-accent-light: #ff7a59; /* Naranja */
   --color-highlight: #ffd47f;
   --color-background-light: #FFFFFF;
   --color-background-dark: #1A1C19;
@@ -12,6 +13,9 @@
   --color-surface-dark: #2C302B;
   --color-text-main: #333333;
   --color-text-muted: #666666;
+  
+  /* Degradados de marca */
+  --background-image-accent-gradient: linear-gradient(to bottom left, #d95858, #ff7a59);
 
   --font-sans: 'Aller', sans-serif;
   --font-serif: 'Aller', serif;

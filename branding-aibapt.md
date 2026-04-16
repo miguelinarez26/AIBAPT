@@ -24,10 +24,12 @@ Dado que estamos usando Tailwind V4, estas variables deben reflejarse en nuestro
   --color-primary: #5a9954;      
   --color-secondary: #94d98d;    
   --color-accent: #d95858;       
+  --color-accent-light: #ff7a59;
   --color-highlight: #ffd47f;
   --color-text-light: #333333;   
   --color-text-dark: #666666;    
   --color-background-light: #FFFFFF;
+  --background-image-accent-gradient: linear-gradient(to bottom left, #d95858, #ff7a59);
 }
 ```
 
