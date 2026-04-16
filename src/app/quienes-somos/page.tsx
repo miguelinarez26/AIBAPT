@@ -3,6 +3,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { LangKeys } from "@/i18n/translations";
+import { FunctionalStructure } from "@/components/layout/FunctionalStructure";
 
 export default function QuienesSomosPage() {
     const { t } = useLanguage();
@@ -48,7 +49,10 @@ export default function QuienesSomosPage() {
                         {t("about.intro.desc")}
                     </p>
                 </motion.div>
+            </div>
 
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Mission & Vision Section (Cards) */}
                 <motion.div
                     initial="hidden"
@@ -122,6 +126,9 @@ export default function QuienesSomosPage() {
                         ))}
                     </div>
                 </motion.div>
+
+                {/* NUEVA ESTRUCTURA FUNCIONAL (SUSTITUYE AL ANTERIOR ORGANIGRAMA) */}
+                <FunctionalStructure />
 
             </div>
         </main>

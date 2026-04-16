@@ -46,10 +46,10 @@ export const WebinarCalendarNotice = () => {
                         </div>
                         
                         <h3 className="text-2xl font-display font-bold text-secondary dark:text-white mb-2">
-                            Calendario de Webinars 2026
+                            Próximos Eventos 2026
                         </h3>
                         <p className="text-text-muted dark:text-gray-300 mb-6">
-                            Ya está disponible nuestro calendario oficial de webinars para el próximo año. ¡Reserva las fechas y no te pierdas a nuestros ponentes internacionales!
+                            Ya está disponible nuestro calendario oficial de eventos para el próximo año. ¡Reserva las fechas y no te pierdas a nuestros ponentes internacionales!
                         </p>
                         
                         <div className="bg-primary/5 dark:bg-surface-light/5 border border-primary/20 rounded-xl p-4 mb-6">

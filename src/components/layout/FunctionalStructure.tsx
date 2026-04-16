@@ -1,323 +1,195 @@
 "use client";
 
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage } from "@/contexts/LanguageContext";
-import Image, { StaticImageData } from "next/image";
-import { useState } from "react";
-import { FiArrowUpRight, FiX, FiMail, FiUsers, FiAward } from "react-icons/fi";
-import { LangKeys } from "@/i18n/translations";
-import elizabeth from "../../../public/images/elizabeth.jpg";
-import cristina from "../../../public/images/cristina.jpg";
-import mario from "../../../public/images/mario.jpg";
-import deglya from "../../../public/images/deglya.jpg";
-import neide from "../../../public/images/secrvetaria.jpg";
+import { FiMail, FiX, FiChevronRight, FiUsers } from "react-icons/fi";
 
-interface SubTeam {
-    name: string;
-    members: string[];
-}
-
-interface CommitteeDetail {
-    nameKey: string;
-    descKey: string;
-    members?: string[];
-    subTeams?: SubTeam[];
-    email?: string;
-}
-
-interface TeamMember {
-    id: string;
-    name: string;
-    roleKey: string;
-    descKey: string;
-    image: StaticImageData | string;
-    email?: string;
-    committees: CommitteeDetail[];
-}
-
-const TEAM_MEMBERS: TeamMember[] = [
+// Estructura de datos completa usando ARCHIVOS LOCALES (porque la web externa bloquea Hotlinking)
+const DIRECTIVA_DATA = [
     {
-        id: "elizabeth",
-        name: "Elizabeth Maio",
-        roleKey: "team.board.pres",
-        descKey: "team.board.pres_desc",
-        image: elizabeth,
-        email: "presidencia@aibapt.org",
-        committees: [
-            {
-                nameKey: "Asamblea General", // Hardcoded as it's a top level
-                descKey: "Órgano supremo de gobierno de la asociación enfocado en la toma de decisiones estratégicas.",
-                members: []
-            },
-            {
-                nameKey: "team.com.garantias",
-                descKey: "team.com.garantias_func",
-                members: []
-            }
-        ]
-    },
-    {
-        id: "cristina",
-        name: "Cristina Melo",
-        roleKey: "team.board.vp_acad",
-        descKey: "team.board.vp_acad_desc",
-        image: cristina,
-        committees: [
-            {
-                nameKey: "team.com.apoyo_acad",
-                descKey: "team.com.apoyo_acad_func",
-                members: ["Glenda Villamarín"]
-            },
-            {
-                nameKey: "team.com.cert",
-                descKey: "team.com.cert_func",
-                members: ["Maria Inês Mesquita", "Ivete Rizzato", "María Eugenia Francis", "Rosaura Boada"]
-            }
-        ]
-    },
-    {
-        id: "deglya",
-        name: "Deglya Camero",
-        roleKey: "team.board.vp",
-        descKey: "team.board.vp_desc",
-        image: deglya,
-        email: "deglya@aibapt.org",
-        committees: [
-            {
-                nameKey: "team.com.mkt",
-                descKey: "team.com.mkt_func",
-                subTeams: [
-                    { name: "Equipo de RRSS", members: ["Francirys Vargas", "Leonardo García"] },
-                    { name: "Web Site", members: ["Daniel Gabarra", "Erick Meneses"] },
-                    { name: "Equipo Miembros", members: ["Erika Rojas"] }
-                ]
-            },
-            {
-                nameKey: "team.com.social",
-                descKey: "team.com.social_func",
-                subTeams: [
-                    { name: "Ayuda Humanitaria", members: ["Olivar E. Ribeiro", "Daniel Gabarra"] },
-                    { name: "Atención a Paraprofesionales", members: ["María Alejandra Pérez"] }
-                ]
-            }
-        ]
-    },
-    {
-        id: "neide",
-        name: "Neide Zucoli",
-        roleKey: "team.board.sec",
-        descKey: "team.board.sec_desc",
-        image: neide,
+        cargo: "Asamblea General",
+        nombre: "Órgano Supremo",
         email: "secretaria@aibapt.org",
-        committees: [
-            {
-                nameKey: "team.com.apoyo_sec",
-                descKey: "team.com.apoyo_sec_func",
-                members: ["Anacelia Fornes"]
-            },
-            {
-                nameKey: "team.com.members",
-                descKey: "team.com.members_func",
-                members: ["Eduarda Pichioli Da Silveira", "Pedro Bregola", "Erika Rojas"]
-            }
-        ]
+        img: "/images/aibapt_logo_transparent_seal.png",
+        desc: "Integrada por todos los miembros activos de la asociación.",
+        color: "accent"
     },
     {
-        id: "mario",
-        name: "Mario Salvador",
-        roleKey: "team.board.tres",
-        descKey: "team.board.tres_desc",
-        image: mario,
+        cargo: "Comisión de Garantías",
+        nombre: "Comité de Ética",
+        email: "secretaria@aibapt.org",
+        desc: "Vela por el cumplimiento estatutario y ético.",
+        color: "accent"
+    },
+    {
+        cargo: "Presidente",
+        nombre: "Elizabeth Maio",
+        email: "presidencia@aibapt.org",
+        img: "/images/elizabeth.jpg",
+        desc: "Liderazgo global y representación institucional de AIBAPT.",
+        color: "primary"
+    },
+    {
+        cargo: "Vice Presidente Académico",
+        nombre: "Cristina Melo",
+        img: "/images/cristina.jpg",
+        desc: "Dirección científica y estándares de formación académica.",
+        comites: [
+            { id: "ca", rol: "Comité de Apoyo Académico", lider: "Glenda Villamarín", img: "/images/webinar_placeholder.png" },
+            { id: "cc", rol: "Comité de Certificación", lider: "María Inés Mesquita / Ivete Rizzato", email: "certificacao@aibapt.org" },
+            { id: "ce", rol: "Comité de Certificación Esp", lider: "María Eugenia Francis / Rosaura Boada", email: "certificacion@aibapt.org" }
+        ],
+        color: "primary"
+    },
+    {
+        cargo: "VP Relaciones Internacionales",
+        nombre: "Deglya Camero",
+        email: "deglya@aibapt.org",
+        img: "/images/deglya.jpg",
+        desc: "Coordinación de alianzas globales y gestión humanitaria.",
+        comites: [
+            { id: "cm", rol: "Comunicación y Marketing", lider: "Equipos RRSS, Web y Miembros", email: "comunicacion@aibapt.org" },
+            { id: "ah", rol: "Ayuda Humanitaria", lider: "Olivar E. Ribeiro / Daniel Gabarra", desc: "Gestión de proyectos sociales." },
+            { id: "ap", rol: "Atención a Paraprofesionales", lider: "María Alejandra Pérez" }
+        ],
+        color: "primary"
+    },
+    {
+        cargo: "Secretaria",
+        nombre: "Neide Zucoli",
+        email: "secretaria@aibapt.org",
+        img: "/images/secrvetaria.jpg",
+        desc: "Gestión documental, actas, comunicación oficial y supervisión del registro de miembros activos.",
+        comites: [
+            { id: "as", rol: "Apoyo a Secretaría", lider: "Anacelia Fornes" },
+            { id: "cm2", rol: "Comité de Miembros", lider: "Eduarda P. / Pedro Bregola", email: "miembroes@aibapt.org" },
+            { id: "er", rol: "Gestión Miembros", lider: "Erika Rojas" }
+        ],
+        color: "primary"
+    },
+    {
+        cargo: "Tesorero",
+        nombre: "Mario Salvador",
         email: "financiero@aibapt.org",
-        committees: [
-            {
-                nameKey: "team.com.fin",
-                descKey: "team.com.fin_func",
-                members: ["Roseane Ferreira"]
-            }
-        ]
+        img: "/images/mario.jpg",
+        desc: "Administración financiera y sostenibilidad de la asociación.",
+        comites: [
+            { id: "cf", rol: "Comité Financiero", lider: "Roseane Ferreira", email: "financeiro@aibapt.org" }
+        ],
+        color: "primary"
     }
 ];
 
 export const FunctionalStructure = () => {
-    const { t } = useLanguage();
-    const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+    const [activeMember, setActiveMember] = useState<any>(null);
 
     return (
-        <section className="py-24 bg-cream dark:bg-background-dark relative overflow-hidden">
+        <section className="py-24 bg-cream/30 dark:bg-bg-dark/50 overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <span className="text-primary dark:text-white font-serif italic text-xl mb-2 block">{t("team.badge" as LangKeys)}</span>
-                    <h2 className="text-4xl md:text-5xl font-bold font-serif text-secondary dark:text-white mb-6">
-                        {t("team.title" as LangKeys)}
-                    </h2>
-                    <p className="text-xl text-primary font-medium mb-4">{t("team.period" as LangKeys)}</p>
-                    <p className="text-text-main dark:text-white/80">
-                        {t("team.desc" as LangKeys)}
-                    </p>
+
+                {/* Encabezado */}
+                <div className="text-center mb-20">
+                    <span className="text-primary italic font-display text-2xl mb-4 block">Acompañando la excelencia</span>
+                    <h2 className="text-4xl md:text-6xl font-bold text-secondary dark:text-white mb-6">Organigrama Funcional</h2>
+                    <div className="h-1.5 w-24 bg-primary mx-auto rounded-full"></div>
                 </div>
 
-                {/* Junta Directiva Grid */}
-                <div className="mb-24">
-                    <div className="flex items-center gap-3 mb-10">
-                        <div className="h-0.5 w-12 bg-primary"></div>
-                        <h3 className="text-3xl font-serif font-bold text-secondary dark:text-white">{t("team.board" as LangKeys)}</h3>
-                        <div className="h-0.5 flex-1 bg-gray-200 dark:bg-gray-800"></div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                        {TEAM_MEMBERS.map((member, index) => (
+                {/* Listado de Directivos */}
+                <div className="space-y-12">
+                    {DIRECTIVA_DATA.map((member, index) => (
+                        <div key={index} className="relative">
                             <motion.div
-                                key={member.id}
-                                layoutId={`member-${member.id}`}
-                                onClick={() => setSelectedMember(member)}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
+                                initial={{ opacity: 0, x: -30 }}
+                                whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: index * 0.1, duration: 0.5 }}
-                                className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 h-[450px] cursor-pointer"
+                                transition={{ duration: 0.6, delay: index * 0.1 }}
+                                onClick={() => setActiveMember(member)}
+                                className="group flex flex-col lg:flex-row items-center gap-8 bg-white dark:bg-surface-dark p-8 md:p-10 rounded-[3rem] border border-accent/20 hover:border-primary/40 hover:shadow-2xl transition-all cursor-pointer relative z-10"
                             >
-                                {member.image ? (
-                                    <Image
-                                        src={member.image as any}
-                                        alt={member.name}
-                                        fill
-                                        sizes="(max-width: 768px) 100vw, 20vw"
-                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                    />
+                                {/* Imagen Directivo (Asegurando carga local) */}
+                                {member.img ? (
+                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl relative shrink-0">
+                                        <img src={member.img} alt={member.nombre} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                    </div>
                                 ) : (
-                                    <div className="w-full h-full bg-secondary flex items-center justify-center">
-                                        <span className="text-6xl text-white opacity-20 font-serif">{member.name[0]}</span>
+                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-110">
+                                        <FiUsers className="text-5xl" />
                                     </div>
                                 )}
-                                
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
 
-                                <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                    <p className="text-white font-bold text-lg leading-tight mb-1">{member.name}</p>
-                                    <p className="text-accent text-xs font-bold uppercase tracking-widest mb-3">
-                                        {t(member.roleKey as LangKeys)}
-                                    </p>
-                                    <div className="flex items-center gap-2 text-white/50 text-xs">
-                                        <span className="w-4 h-0.5 bg-primary"></span>
-                                        <span>Click para detalles</span>
-                                    </div>
+                                {/* Datos Directivo */}
+                                <div className="flex-1 text-center lg:text-left">
+                                    <span className={`inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 ${member.color === 'primary' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}`}>
+                                        {member.cargo}
+                                    </span>
+                                    <h3 className="text-3xl md:text-4xl font-bold text-secondary dark:text-white mb-4">{member.nombre}</h3>
+                                    <p className="text-text-muted dark:text-gray-400 text-lg max-w-2xl">{member.desc}</p>
+                                </div>
+
+                                {/* Botón Interactividad */}
+                                <div className="shrink-0 flex items-center gap-4 text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Conocer Equipo <FiChevronRight className="text-2xl" />
                                 </div>
                             </motion.div>
-                        ))}
-                    </div>
+
+                            {/* Subcomités */}
+                            {member.comites && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 pl-8 md:pl-20 relative z-0">
+                                    <div className="hidden lg:block absolute left-10 top-[-80px] bottom-10 w-0.5 bg-primary/20 -z-10"></div>
+
+                                    {member.comites.map((comite, idx) => (
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: 0.2 + (idx * 0.1) }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveMember({ ...comite, cargo: "Comité Directivo", nombre: comite.rol, desc: comite.desc || "Equipo de apoyo y gestión funcional." });
+                                            }}
+                                            className="bg-white/60 dark:bg-surface-light border border-primary/10 hover:border-primary/40 p-6 rounded-3xl hover:shadow-lg transition-all cursor-pointer group"
+                                        >
+                                            <p className="text-[10px] font-bold uppercase text-primary/70 mb-2">{comite.rol}</p>
+                                            <p className="text-base font-bold text-secondary dark:text-white group-hover:text-primary transition-colors">{comite.lider}</p>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            {/* Modal de Detalles */}
+            {/* Modal de Detalle */}
             <AnimatePresence>
-                {selectedMember && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedMember(null)}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                        />
-                        
-                        <motion.div
-                            layoutId={`member-${selectedMember.id}`}
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-4xl bg-white dark:bg-surface-dark rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh]"
-                        >
-                            <button 
-                                onClick={() => setSelectedMember(null)}
-                                className="absolute top-6 right-6 z-10 p-3 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
-                            >
-                                <FiX className="text-xl dark:text-white" />
-                            </button>
+                {activeMember && (
+                    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveMember(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }} className="bg-white dark:bg-surface-dark max-w-xl w-full rounded-[3rem] shadow-2xl relative z-[100] overflow-hidden">
+                            <div className="p-12 text-center">
+                                <button onClick={() => setActiveMember(null)} className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary transition-colors"><FiX className="text-2xl" /></button>
 
-                            {/* Lateral Izquierdo - Imagen y Perfil */}
-                            <div className="md:w-1/3 relative h-64 md:h-auto">
-                                {selectedMember.image ? (
-                                    <Image
-                                        src={selectedMember.image as any}
-                                        alt={selectedMember.name}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-secondary flex items-center justify-center">
-                                        <span className="text-8xl text-white opacity-20 font-serif">{selectedMember.name[0]}</span>
+                                {activeMember.img && (
+                                    <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6 border-4 border-primary/20 shadow-lg relative">
+                                        <img src={activeMember.img} alt={activeMember.nombre} className="w-full h-full object-cover" />
                                     </div>
                                 )}
-                                <div className="absolute bottom-6 left-6 right-6">
-                                    <h4 className="text-white text-2xl font-bold font-serif drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{selectedMember.name}</h4>
-                                    <p className="text-accent font-medium text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t(selectedMember.roleKey as LangKeys)}</p>
-                                </div>
-                            </div>
 
-                            {/* Contenido Derecho - Detalles */}
-                            <div className="md:w-2/3 p-8 sm:p-12 overflow-y-auto">
-                                <div className="mb-10">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <FiMail className="text-primary" />
-                                        <span className="text-xs font-bold uppercase tracking-widest text-text-muted dark:text-gray-400">Objetivo del Cargo</span>
-                                    </div>
-                                    <p className="text-lg text-secondary dark:text-white/90 font-serif leading-relaxed italic">
-                                        "{t(selectedMember.descKey as LangKeys)}"
-                                    </p>
-                                    {selectedMember.email && (
-                                        <a href={`mailto:${selectedMember.email}`} className="mt-4 flex items-center gap-2 text-primary font-medium hover:underline">
-                                            <FiMail /> {selectedMember.email}
+                                <span className="inline-block px-4 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest rounded-full mb-4">
+                                    {activeMember.cargo || "Información"}
+                                </span>
+                                <h3 className="text-3xl font-bold text-secondary dark:text-white mb-6 leading-tight">{activeMember.nombre}</h3>
+                                <p className="text-text-muted dark:text-gray-300 text-lg mb-8 leading-relaxed">{activeMember.desc || "Parte vital del equipo de gestión de AIBAPT."}</p>
+
+                                {activeMember.email && (
+                                    <div className="space-y-4">
+                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Contacto Oficial</p>
+                                        <a href={`mailto:${activeMember.email}`} className="flex items-center justify-center gap-3 p-5 bg-primary text-white rounded-2xl font-bold hover:shadow-xl transition-all">
+                                            <FiMail className="text-xl" /> {activeMember.email}
                                         </a>
-                                    )}
-                                </div>
-
-                                <div className="space-y-8">
-                                    <div className="flex items-center gap-2">
-                                        <FiUsers className="text-primary" />
-                                        <h5 className="font-bold text-secondary dark:text-white uppercase tracking-wider text-sm">Comités y Responsabilidades</h5>
                                     </div>
-
-                                    <div className="grid gap-6">
-                                        {selectedMember.committees.map((com, i) => (
-                                            <div key={i} className="bg-cream/50 dark:bg-white/5 rounded-2xl p-6 border border-primary/10">
-                                                <h6 className="font-bold text-secondary dark:text-white flex items-center gap-2 mb-2">
-                                                    <FiAward className="text-primary text-sm" />
-                                                    {com.nameKey.startsWith('team.') ? t(com.nameKey as LangKeys) : com.nameKey}
-                                                </h6>
-                                                <p className="text-sm text-text-muted dark:text-gray-400 mb-4">
-                                                    {com.descKey.startsWith('team.') ? t(com.descKey as LangKeys) : com.descKey}
-                                                </p>
-                                                
-                                                {com.members && com.members.length > 0 && (
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {com.members.map((m, idx) => (
-                                                            <span key={idx} className="px-3 py-1 bg-white dark:bg-surface-dark border border-primary/20 rounded-full text-xs text-secondary dark:text-white">
-                                                                {m}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                {com.subTeams && (
-                                                    <div className="space-y-4">
-                                                        {com.subTeams.map((st, idx) => (
-                                                            <div key={idx} className="pl-4 border-l-2 border-primary/20">
-                                                                <p className="text-xs font-bold text-primary uppercase mb-2">{st.name}</p>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {st.members.map((m, mIdx) => (
-                                                                        <span key={mIdx} className="text-xs text-secondary dark:text-gray-300">
-                                                                            • {m}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </motion.div>
                     </div>

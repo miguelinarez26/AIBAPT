@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { WEBINARS_DATA } from "@/data/webinars";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,90 +23,138 @@ function FormacionesContent() {
 
     // TABS DEFINITION
     const tabs = [
-        { id: "all", label: t("edu.tab.all" as any), icon: "grid_view" },
-        { id: "events", label: t("edu.tab.events" as any), icon: "event_available" },
-        { id: "recordings", label: t("edu.tab.recordings" as any), icon: "ondemand_video" },
+        { id: "all", label: "Webinars", icon: "grid_view" },
+        { id: "events", label: "Próximos Eventos", icon: "event_available" },
+        { id: "recordings", label: "Eventos Grabados", icon: "ondemand_video" },
         { id: "accredited", label: t("edu.tab.accredited" as any), icon: "verified" },
         { id: "accreditation", label: t("edu.tab.accreditation" as any), icon: "history_edu" },
     ];
 
-    // DATA FOR "EVENTOS FUTUROS"
-    const eventsData = [
+    // DATA FOR "WEBINARS" (Programa 2026)
+    const webinarsData = [
         {
-            img: "/images/Gemini_Generated_Image_6hif2l6hif2l6hif.png",
-            badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
-            category: t("edu.cat.trauma" as any),
-            title: t("webinars.event1.title" as any),
-            desc: t("webinars.event1.desc" as any),
-            instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuCgoOzwVvSo8OtzhSZ9ejd_KbxNBjpnhXQL9-Gw2H5V3FFwwQnXX5UjzfRAvUS4Y4L-dVuJixN9r2RorGMDH_M7mCaG0472485sdJvL6uD8UHUhJU3yWwtRrddQC8XZBo--UiwOn8LQEqAKqx50_Ar7sho3VrEyLybP8kOFAkqUMrTtvc4PegfqwK88cTsfAqjGwtiWMF-jnMkavODzqJe4tCRO5df6KLvWHegIBaYX3qVTvdQr9GQPdgp0rXMwg4Ya3Z8IbsvOgt0C",
-            instructorName: "Daniel Gabarra", route: "/formaciones/arte-apoyo-gabarra",
-            price: t("edu.btn.register" as any)
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Marzo 12", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Esp - España", title: "Abusos Sexuales en la Infancia: Secuelas y recuperación con Brainspotting y otros recursos",
+            desc: "Abordaje profundo de las secuelas del abuso infantil mediante técnicas de Brainspotting para una recuperación integral del paciente.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Susana Díaz", route: "/formaciones", price: "INSCRIPCIÓN"
         },
         {
-            img: "/images/Gemini_Generated_Image_5ekuqs5ekuqs5eku.png",
-            badge: t("edu.events.presencial" as any), badgeIcon: "location_on", badgeStyle: "text-amber-500",
-            category: t("edu.cat.psicodrama" as any),
-            title: t("webinars.event2.title" as any),
-            desc: t("webinars.event2.desc" as any),
-            instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuAZZoN75buPkv39MTVOsuw-fBLszBlKmA9opTeWzIaxy2-7JpViUiVyY5BhKsQwkwHqR5w38bbcIeOtjpZj7t7D6kcuUNMTnaJ1ParB2dhZuZhicFVngsvlZ3UPGlhrxQ6HkBqNBD9Ia7Rx751fo_ZZ2isPFRpi7NNwj5O9nvu8xTrfDPRaJUB7ySaa9U3NljKBolHS6gEMNDgIEZRADPTgjAYnl4_jPmwYUW2nQ0vAxdVEj6x20zloWkEc_V-Zwq7hS7HEOscDQssJ",
-            instructorName: "Dra. Esly Carvalho", route: "/formaciones/introduccion-psicodrama-esly",
-            price: t("edu.btn.register" as any)
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Abril 16", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Port - Brasil", title: "A Arte do Suporte em Psicoterapia: Presença, regulação e recursos clínicos avanzados",
+            desc: "Exploraremos a sintonía relacional e recursos neurorrelacionais para apoiar o processo de cura em psicoterapias de foco no trauma.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Daniel Gabarra", route: "/formaciones", price: "INSCRIPCIÓN"
         },
         {
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBOSz3yrAAVIFvEvTU7HtDm-FplkXoOHo6U7hnzW70qijyhQOVMhxr4DkaC5BFJ0zbjHEuVRIIsKrhoS4MxAvCbPenlwVR96Qu5nXwrYvBit6wmwpWQXwR6aaOKJU4ZViiVrWbrvYXAFDQATSgDx7HcJ5aAOmFrjClLM0DdsjJXxEUbScIJTtxs_KykLaRIeUi6NNud7w8Pgnq7frwEhmhXNprL0OQ8NRQGBA3Yv-wUt4ZL8Dr6LJgstZI_nY3fHXYmZ-6qLOy32Z9c",
-            badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
-            category: t("edu.cat.emdr" as any),
-            title: "Formación EMDR con Foco en el Cuerpo",
-            desc: "Curso vivencial con demostraciones en vivo. Teoria y Protocolos Corporales de Silvia Guz.",
-            instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuDNdL1EvGJ-TP7UjufnWMsgHfxumeFtXyT7V4kS7UI46ruqRQmBEu3Oj0_u9so7ZJqqmNnFa5kft4D7SRqdkbDggEN8FEG2cfZ-lK5OmcpCNZDa0MYE2V8KgHi1fjEbh68HzW0CA9qMiN2A2Zc1_kWTIOch4QDhhrGNAj3zWdzr8pJ0hPanvSZKj6AIeLPDwzPNESXAV7dISaKN8mE2MT7OU5I6AAU4V4wpzaiYr8yDHjJ-AxP5hTMznNu0XYrjR0M4g_mnssaMPYYd",
-            instructorName: "Beth Maio & Leo Garcia", route: "/formaciones/emdr-cuerpo",
-            price: t("edu.btn.register" as any)
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Mayo 21", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Esp - Argentina", title: "Hipnosis y Brainspotting: Sinergia neurobiológica para el abordaje del TEPT y la integración del Trauma",
+            desc: "Integración de técnicas de hipnosis y brainspotting para potenciar la neuroplasticidad y la integración de memorias traumáticas.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Sebastián Segui", route: "/formaciones", price: "INSCRIPCIÓN"
+        },
+        {
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Junio 18", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Port - Portugal", title: "¿Intervenção em Crise, Burnout e Stress, como consequencias ao Trauma?",
+            desc: "Análise profunda sobre o impacto do trauma no desenvolvimento de Burnout e stress crônico, e estratégias de intervenção em crise.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Renata Teles", route: "/formaciones", price: "INSCRIPCIÓN"
+        },
+        {
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Julio 16", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Esp - Mexico", title: "Herramientas creativas y Brainspotting",
+            desc: "Uso de recursos creativos y expresivos en el marco del Brainspotting para facilitar el acceso a núcleos traumáticos subcorticales.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Norma Contreras", route: "/formaciones", price: "INSCRIPCIÓN"
+        },
+        {
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Agosto 20", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Port - Brasil", title: "Novas Fronteiras na Clínica do Trauma",
+            desc: "Exploração de novos protocolos e abordagens integrativas para o tratamiento de traumas complexos na prática clínica actual.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Sandra Fiore", route: "/formaciones", price: "INSCRIPCIÓN"
+        },
+        {
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Septiembre 17", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Esp - Chile", title: "Trauma, cuerpo y brainspotting",
+            desc: "Enfoque somático en el procesamiento del trauma mediante la técnica de Brainspotting, conectando mente y cuerpo en la sanación.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Juan Alexis", route: "/formaciones", price: "INSCRIPCIÓN"
+        },
+        {
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Octubre 15", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Port - Brasil", title: "Do útero materno à relação terapêutica: A jornada da conexão",
+            desc: "Estudo sobre os vínculos primários e sua repercussão na aliança terapêutica e na resolução de traumas de apego precoce.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Angela Maranho", route: "/formaciones", price: "INSCRIPCIÓN"
+        },
+        {
+            img: "/images/webinar_placeholder_new.png",
+            badge: "Noviembre 19", badgeIcon: "calendar_today", badgeStyle: "text-primary",
+            category: "Esp - Mexico", title: "Integración de Memorias Traumáticas",
+            desc: "Técnicas avanzadas para la integración de memorias traumáticas fragmentadas en el flujo de la conciencia narrativa.",
+            instructorImg: "/images/secrvetaria.jpg", instructorName: "Parcuve Mex", route: "/formaciones", price: "INSCRIPCIÓN"
         }
     ];
 
-    // DATA FOR "GRABACIONES (VOD)"
-    const recordingsData = [
+    // DATA FOR "PRÓXIMOS EVENTOS" (Entrenamientos/Cursos largos)
+    const eventsData = [
         {
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDwjFC5Lqrsmp9SkpZJBTVG_JbbrRAFgQ_3cZOFvZTEwTITGSrOiSNtbsvdTaDjq-mPDFM-0iiybDqdMIK2kUl_PHBeQ4k8JvOrv0miSzm5I5wRXjAPZ_UNmlI8Aric3V1sGRGnXPQdumg4ORULY_Ql3BDDqG03F_KQBtqbCbe93GCUcRZ-5Kd6hSenP-XA6nm7Zsv8QiRSDaPl7jNcEa-TNRBwnxFjRVyLPztesJWPiZT3vkgCQuTqyppKaciBZQC_7wSnF3bUvf7c",
-            badge: t("edu.recordings.badge" as any), badgeIcon: "play_circle", badgeStyle: "text-white",
-            category: t("edu.cat.trauma" as any),
-            title: "Trauma Webinar #19 | Mirando a través de la Voracidad",
-            desc: "Sanando el Trauma Complejo y la Compulsión Alimentaria con Psicoterapias de Reprocesamiento.",
-            instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuCgoOzwVvSo8OtzhSZ9ejd_KbxNBjpnhXQL9-Gw2H5V3FFwwQnXX5UjzfRAvUS4Y4L-dVuJixN9r2RorGMDH_M7mCaG0472485sdJvL6uD8UHUhJU3yWwtRrddQC8XZBo--UiwOn8LQEqAKqx50_Ar7sho3VrEyLybP8kOFAkqUMrTtvc4PegfqwK88cTsfAqjGwtiWMF-jnMkavODzqJe4tCRO5df6KLvWHegIBaYX3qVTvdQr9GQPdgp0rXMwg4Ya3Z8IbsvOgt0C",
-            instructorName: "Múltiples Ponentes", route: "/formaciones/trauma-webinar-19",
-            price: t("edu.btn.buy" as any)
+            img: "/images/webinar_flyer_2.png",
+            badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
+            category: "Entrenamiento | Brasil",
+            title: "Práctica Supervisada y Manejo Online",
+            desc: "Este é um curso vivencial com demonstrações ao vivo e práticas supervisionadas, contando com manejo do atendimento online com foco no corpo.",
+            instructorImg: "/images/secrvetaria.jpg",
+            instructorName: "Silvia Guz", route: "/formaciones",
+            price: t("webinars.event1.btn" as any)
         },
         {
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBOSz3yrAAVIFvEvTU7HtDm-FplkXoOHo6U7hnzW70qijyhQOVMhxr4DkaC5BFJ0zbjHEuVRIIsKrhoS4MxAvCbPenlwVR96Qu5nXwrYvBit6wmwpWQXwR6aaOKJU4ZViiVrWbrvYXAFDQATSgDx7HcJ5aAOmFrjClLM0DdsjJXxEUbScIJTtxs_KykLaRIeUi6NNud7w8Pgnq7frwEhmhXNprL0OQ8NRQGBA3Yv-wUt4ZL8Dr6LJgstZI_nY3fHXYmZ-6qLOy32Z9c",
-            badge: t("edu.recordings.badge" as any), badgeIcon: "play_circle", badgeStyle: "text-white",
-            category: t("edu.cat.trauma" as any),
-            title: "Trauma Webinar #18 | Guion de vida y Trauma Psicológico",
-            desc: "Mi historia en el espejo. Cómo nuestras narrativas moldean el manejo del trauma.",
-            instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuAIMYXD1XBkPUXnI7W8TK-Falr56QML6_oYvevsXwebVRLM6yM484YbyqQP62PD9-1HELQs-V-7Q1-jz2iy4ROyDofWCFtXmtark3aEyXFYxUWRaaMb-b8rSDe5yEks2qcHgLQYrjZSQfdbnBgkPOErphM9pG-G11gIGy3kIfRUeMCk9wa3IXguNUxHK1gz7FvrBVAIgIi6JCwHkQoxYVBFN5acONzCgDZcx0X6yjuJSB-pVx6ir8zRpOuIKCLsMBRX5I2eaKJA80cf",
-            instructorName: t("edu.instructor.committee" as any), route: "/formaciones/trauma-webinar-18",
-            price: t("edu.btn.buy" as any)
+            img: "/images/webinar_flyer_1.png",
+            badge: t("edu.events.presencial" as any), badgeIcon: "location_on", badgeStyle: "text-amber-500",
+            category: "Psicodrama | Presencial",
+            title: "Introdução ao Psicodrama: Técnicas, Metodologia e Ateliê de Direção",
+            desc: "Neste curso presencial em Brasília, a Dra. Esly Carvalho irá guiá-lo por una jornada teórico-prática e vivencial.",
+            instructorImg: "/images/secrvetaria.jpg",
+            instructorName: "Dra. Esly Carvalho", route: "/formaciones",
+            price: t("webinars.event2.btn" as any)
         },
         {
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBg0CvRIYkg4wPoJolTJNC_Zr1bxk5BqCd5apRpWa9kG7s7SwxjPrL1-hBhzsdjlVhh66bZCjKoNMfKJtrZIqHod5P0f7aHH276s7_hU6gwn-WjS-absUJn2eZVKpMXblST-Uspy2TOfal2AGJNJMKBDRAEYgQqGNKf5NHrdH-sCyoIwhNNGVSQkzJSIED35BFfFIOqmVI0O-AkdDJDbfo2HE_wUdB4VjvFQlwN7r5PEf6IzgCsYH0N0tg67N4Bpqu4u-YEDGf05xER",
-            badge: t("edu.recordings.badge" as any), badgeIcon: "play_circle", badgeStyle: "text-white",
-            category: t("edu.cat.emdr" as any),
-            title: "Trauma Webinar #17 | IA para Psicoterapeutas EMDR",
-            desc: "Orientaciones prácticas para sesiones incorporando Inteligencia Artificial en el flujo clinico.",
-            instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtx3ZYvsza8SXCic3k-NtlmoM0Dpuz9uUrkFYAL5wpxD18NZyQawcnouB8ySDwZHw6qDl_wOzhsvekoEQMS3P94SiBuXtpcSR2hnN7XVfdyRP_T_6C6HrMaMxkE8_511L4PyGz78oeVbcARh5tlDvFFbjG1I7RQ8vXkhhBbI7ZBDSl9kNIrZr1xoXQLbebsU4nLB6tNzzBl14IpOB5noOXJjNLBPp6g_uGB35X6KA_JQL5hupKSc47Ag-otItC-HOV0s70XyJ--Ssj",
-            instructorName: "Comité", route: "/formaciones/trauma-webinar-17",
-            price: t("edu.btn.buy" as any)
+            img: "/images/3.png",
+            badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
+            category: "Protocolos Corporais | Online",
+            title: "Protocolos Corporais em Terapia EMDR - Online",
+            desc: "O curso inclui Teoria e Protocolos Corporais exclusivos desenvolvidos por Silvia Guz.",
+            instructorImg: "/images/secrvetaria.jpg",
+            instructorName: "Silvia Guz", route: "/formaciones",
+            price: t("webinars.event3.btn" as any)
         },
         {
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBFqVfbqfrxeVaN8arWBYhx92ysovO8ycmOEMqgLHphoqoaZX3YVyN8Iyj1ZQ68Js91JmFxn-SzqGm6Rizp9aLbIrzR_Qi5W95BJ_vTTQBs8fcqQjU5swef1wmJ9_TY_AIsTRbvo5Y2GXI34vl-Nnh0x8rhtUbHnq8MBPuEveAXUUT5D3-7wVp3aE8DmmWg5nX_-jyruUVicPwaf3E7d0JFEJ0gyvmwIL4nwtP9jxWcTEALOBbLPrq36rOShJ373bn90i1QkQ_djCIv",
-            badge: t("edu.recordings.badge" as any), badgeIcon: "play_circle", badgeStyle: "text-white",
-            category: t("edu.cat.infantil" as any),
-            title: "Trauma Webinar #16 | El abuso sexual infantil",
-            desc: "Desafíos en el acompañamiento y prevención en la terapia.",
-            instructorImg: "https://lh3.googleusercontent.com/aida-public/AB6AXuCgoOzwVvSo8OtzhSZ9ejd_KbxNBjpnhXQL9-Gw2H5V3FFwwQnXX5UjzfRAvUS4Y4L-dVuJixN9r2RorGMDH_M7mCaG0472485sdJvL6uD8UHUhJU3yWwtRrddQC8XZBo--UiwOn8LQEqAKqx50_Ar7sho3VrEyLybP8kOFAkqUMrTtvc4PegfqwK88cTsfAqjGwtiWMF-jnMkavODzqJe4tCRO5df6KLvWHegIBaYX3qVTvdQr9GQPdgp0rXMwg4Ya3Z8IbsvOgt0C",
-            instructorName: t("edu.instructor.pediatric" as any), route: "/formaciones/trauma-webinar-16",
-            price: t("edu.btn.buy" as any)
+            img: "/images/4.jpeg",
+            badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
+            category: "Formação EMDR | Brasil",
+            title: "Destravando o TDAH com EMDR e Autorregulação",
+            desc: "Uma formação teórico-vivencial com os psicólogos especialistas em EMDR: Beth Maio e Leo Garcia.",
+            instructorImg: "/images/secrvetaria.jpg",
+            instructorName: "Beth Maio & Leo Garcia", route: "/formaciones",
+            price: t("webinars.event4.btn" as any)
         }
     ];
+
+    // DATA FOR "GRABACIONES (VOD)" - MIGRATED TO INTERNAL ROUTES
+    const recordingsData = WEBINARS_DATA.map(w => ({
+        img: w.img,
+        badge: w.badge,
+        badgeIcon: w.badgeIcon,
+        badgeStyle: w.badgeStyle,
+        category: w.category,
+        title: w.title,
+        desc: w.descLong.length > 100 ? w.descLong.substring(0, 100) + "..." : w.descLong,
+        instructorImg: w.instructorImg,
+        instructorName: w.instructorName,
+        route: `/formaciones/${w.slug}`,
+        price: w.price
+    }));
 
     // DATA FOR "CURSOS ACREDITADOS"
     const accreditedData = [
@@ -125,11 +174,11 @@ function FormacionesContent() {
 
     // Select active data for list/grid view
     const currentData = useMemo(() => {
-        if (activeTab === "all") return [...eventsData, ...recordingsData];
+        if (activeTab === "all") return webinarsData;
         if (activeTab === "events") return eventsData;
         if (activeTab === "recordings") return recordingsData;
         return [];
-    }, [activeTab]);
+    }, [activeTab, webinarsData, eventsData, recordingsData]);
 
     const filteredData = useMemo(() => {
         let result = currentData;
@@ -152,6 +201,30 @@ function FormacionesContent() {
         return accreditedData.filter(a => a.title.toLowerCase().includes(term) || a.instructor.toLowerCase().includes(term));
     }, [searchTerm, accreditedData]);
 
+    // Handle incoming ?id URL parametr
+    useEffect(() => {
+        const idStr = searchParams.get("id");
+        if (idStr !== null) {
+            const index = parseInt(idStr, 10);
+            if (!isNaN(index)) {
+                let sourceData: any[] = [];
+                const tab = searchParams.get("tab");
+                if (tab === "events") {
+                    sourceData = eventsData;
+                } else if (tab === "recordings") {
+                    sourceData = recordingsData;
+                } else if (tab === "all") {
+                    sourceData = webinarsData;
+                }
+
+                if (index >= 0 && index < sourceData.length) {
+                    // Slight delay to ensure UI renders first
+                    setTimeout(() => setSelectedCourse(sourceData[index]), 100);
+                }
+            }
+        }
+    }, [searchParams, webinarsData, eventsData, recordingsData, activeTab]);
+
     return (
         <div className="pt-20 bg-cream dark:bg-bg-dark min-h-screen pb-20 relative overflow-hidden">
             {/* Ambient Backgrounds */}
@@ -166,32 +239,29 @@ function FormacionesContent() {
                         <nav className="flex items-center gap-2 text-sm text-text-muted dark:text-gray-400">
                             <Link className="hover:text-primary transition-colors" href="/">{t("edu.nav.home" as any)}</Link>
                             <span className="material-icons-round text-[16px]">chevron_right</span>
-                            <span className="font-medium text-primary">{t("edu.nav.edu" as any)}</span>
+                            <span
+                                className={`transition-colors cursor-pointer ${activeTab === 'all' ? "font-medium text-primary cursor-default" : "hover:text-primary"}`}
+                                onClick={() => setActiveTab('all')}
+                            >
+                                {t("edu.nav.edu" as any)}
+                            </span>
+                            {activeTab !== 'all' && (
+                                <>
+                                    <span className="material-icons-round text-[16px]">chevron_right</span>
+                                    <span className="font-medium text-primary">
+                                        {tabs.find(t => t.id === activeTab)?.label}
+                                    </span>
+                                </>
+                            )}
                         </nav>
                         <h2 className="text-3xl md:text-5xl font-extrabold font-display text-text-main dark:text-white leading-tight">
-                            {t("edu.hub.title" as any)}
+                            {tabs.find(t => t.id === activeTab)?.label || t("edu.hub.title" as any)}
                         </h2>
                         <p className="text-text-muted dark:text-gray-300 text-lg">
                             {t("edu.hub.desc" as any)}
                         </p>
                     </div>
                     <div className="flex flex-col items-start lg:items-end gap-4 w-full lg:w-auto flex-1">
-                        {/* Tabs Navigation (Filtros) moved next to search */}
-                        <div className="flex justify-start md:justify-end overflow-x-auto gap-3 py-2 no-scrollbar w-full">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 shadow-sm whitespace-nowrap ${activeTab === tab.id
-                                        ? "bg-primary text-white scale-105 shadow-md border-transparent"
-                                        : "bg-white/80 dark:bg-surface-dark/80 backdrop-blur-sm border border-accent/20 dark:border-gray-800 text-text-muted dark:text-white/70 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
-                                        }`}
-                                >
-                                    <span className="material-icons-round text-[18px]">{tab.icon}</span>
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
                         {/* Search Bar */}
                         <div className="relative group w-full lg:max-w-md">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -217,37 +287,29 @@ function FormacionesContent() {
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
                     >
-                        {/* VIEW 1 & 2: Events and Recordings (No Sidebar) */}
                         {(activeTab === "all" || activeTab === "events" || activeTab === "recordings") && (
                             <div className="flex-1">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {filteredData.map((course, idx) => (
                                         <article key={idx} className="group flex flex-col bg-white/90 dark:bg-surface-dark/90 backdrop-blur-sm rounded-2xl overflow-hidden border border-accent/20 dark:border-gray-800 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300">
-                                            <div 
-                                                className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer"
-                                                onClick={() => setSelectedCourse(course)}
-                                            >
-                                                <Image fill alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={course.img} />
-                                                <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-text-main dark:text-white flex items-center gap-1.5 shadow-sm">
-                                                    <span className={`material-icons-round ${course.badgeStyle} text-sm`}>{course.badgeIcon}</span>
-                                                    {course.badge}
+                                            <Link href={course.route}>
+                                                <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer">
+                                                    <Image fill alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={course.img} />
+                                                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-text-main dark:text-white flex items-center gap-1.5 shadow-sm">
+                                                        <span className={`material-icons-round ${course.badgeStyle} text-sm`}>{course.badgeIcon}</span>
+                                                        {course.badge}
+                                                    </div>
                                                 </div>
-                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="bg-white/90 text-primary px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                                                        Ver detalles
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            </Link>
                                             <div className="p-5 flex flex-col flex-1">
                                                 <div className="flex items-center gap-2 text-xs font-medium text-primary mb-2">
                                                     <span className="text-secondary dark:text-gray-300">{course.category}</span>
                                                 </div>
-                                                <h3 
-                                                    className="text-lg font-bold text-text-main dark:text-white leading-snug mb-2 group-hover:text-primary transition-colors cursor-pointer"
-                                                    onClick={() => setSelectedCourse(course)}
-                                                >
-                                                    {course.title}
-                                                </h3>
+                                                <Link href={course.route}>
+                                                    <h3 className="text-lg font-bold text-text-main dark:text-white leading-snug mb-2 group-hover:text-primary transition-colors cursor-pointer">
+                                                        {course.title}
+                                                    </h3>
+                                                </Link>
                                                 <p className="text-sm text-text-muted dark:text-gray-400 line-clamp-2 mb-4">
                                                     {course.desc}
                                                 </p>
@@ -260,8 +322,8 @@ function FormacionesContent() {
                                                     </div>
                                                     <div className="flex items-center justify-between mt-2 pt-1">
                                                         <span className="text-lg font-bold text-text-main dark:text-white">{activeTab === "recordings" ? course.price : ""}</span>
-                                                        <Link href={course.route} className="bg-primary hover:bg-[#689153] text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 transition-all shadow-md">
-                                                            {activeTab === "recordings" ? t("edu.btn.buy" as any) : course.price} <span className="material-icons-round text-[18px]">arrow_forward</span>
+                                                        <Link href={course.route} className="bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 transition-all shadow-md">
+                                                            ADQUIRIR <span className="material-icons-round text-[18px]">shopping_cart</span>
                                                         </Link>
                                                     </div>
                                                 </div>
@@ -272,7 +334,7 @@ function FormacionesContent() {
                             </div>
                         )}
 
-                        {/* VIEW 3: List of Accredited Courses */}
+                        {/* Accredited and Accreditation views remain same... */}
                         {activeTab === "accredited" && (
                             <div className="max-w-4xl mx-auto bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-accent/20 dark:border-gray-800 rounded-3xl p-6 md:p-10 shadow-lg">
                                 <div className="flex items-center gap-4 mb-8">
@@ -284,7 +346,6 @@ function FormacionesContent() {
                                         <p className="text-text-muted dark:text-gray-400">{t("edu.accredited.desc" as any)}</p>
                                     </div>
                                 </div>
-
                                 <div className="space-y-4">
                                     {filteredAccredited.map((item, idx) => (
                                         <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-white dark:bg-surface-light border border-accent/20 dark:border-gray-700 rounded-xl hover:border-primary/40 hover:shadow-md transition-all">
@@ -304,7 +365,6 @@ function FormacionesContent() {
                             </div>
                         )}
 
-                        {/* VIEW 4: Accreditation Info */}
                         {activeTab === "accreditation" && (
                             <div className="max-w-4xl mx-auto bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-accent/20 dark:border-gray-800 rounded-3xl p-6 md:p-10 shadow-lg text-center">
                                 <div className="w-20 h-20 bg-accent/20 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
@@ -312,30 +372,10 @@ function FormacionesContent() {
                                 </div>
                                 <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">{t("edu.accreditation.title" as any)}</h2>
                                 <p className="text-text-muted dark:text-gray-400 text-lg max-w-2xl mx-auto mb-10">{t("edu.accreditation.desc" as any)}</p>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                                    <div className="p-6 bg-white dark:bg-surface-light border border-accent/20 dark:border-gray-700 rounded-2xl">
-                                        <div className="text-3xl font-extrabold text-primary/20 mb-2">1</div>
-                                        <h4 className="font-bold text-text-main dark:text-white">{t("edu.accreditation.step1" as any)}</h4>
-                                    </div>
-                                    <div className="p-6 bg-white dark:bg-surface-light border border-accent/20 dark:border-gray-700 rounded-2xl">
-                                        <div className="text-3xl font-extrabold text-primary/20 mb-2">2</div>
-                                        <h4 className="font-bold text-text-main dark:text-white">{t("edu.accreditation.step2" as any)}</h4>
-                                    </div>
-                                    <div className="p-6 bg-white dark:bg-surface-light border border-accent/20 dark:border-gray-700 rounded-2xl">
-                                        <div className="text-3xl font-extrabold text-primary/20 mb-2">3</div>
-                                        <h4 className="font-bold text-text-main dark:text-white">{t("edu.accreditation.step3" as any)}</h4>
-                                    </div>
-                                </div>
-
                                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                                    <a href="https://esp.aibapt.org/38373/files/661d901c020ec_1713213468_esp-manual-normas-y-certificaci-n-acreditac-on-cursos-avanzados-2024.pdf" target="_blank" rel="noopener noreferrer" className="inline-flex justify-center items-center gap-2 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-[#689153] transition-colors shadow-md">
-                                        <span className="material-icons-round">picture_as_pdf</span>
-                                        {t("edu.accreditation.btn.pdf" as any)}
-                                    </a>
-                                    <a href="mailto:certificacion@aibapt.org" className="inline-flex justify-center items-center gap-2 px-8 py-3 bg-white dark:bg-surface-light text-primary border border-primary/20 font-bold rounded-xl hover:bg-primary/5 transition-colors">
+                                    <a href="mailto:certificacion@aibapt.org" className="inline-flex justify-center items-center gap-2 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-md">
                                         <span className="material-icons-round">email</span>
-                                        {t("edu.accreditation.btn.committee" as any)}
+                                        CONTACTAR COMITÉ
                                     </a>
                                 </div>
                             </div>
@@ -343,83 +383,6 @@ function FormacionesContent() {
                     </motion.div>
                 </AnimatePresence>
             </main>
-
-            {/* QUICK VIEW MODAL */}
-            <AnimatePresence>
-                {selectedCourse && (
-                    <>
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedCourse(null)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] cursor-pointer"
-                        />
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-4xl max-h-[90vh] bg-white dark:bg-surface-dark rounded-[32px] overflow-hidden shadow-2xl z-[101] flex flex-col md:flex-row"
-                        >
-                            <div className="md:w-5/12 relative h-64 md:h-auto bg-[#f0f2f0] dark:bg-gray-900 flex items-center justify-center">
-                                <Image fill src={selectedCourse.img} alt={selectedCourse.title} className="object-contain" />
-                                <div className="absolute top-6 left-6 bg-white/95 dark:bg-black/80 backdrop-blur-md px-4 py-2 rounded-2xl text-sm font-bold shadow-lg">
-                                    <div className="flex items-center gap-2">
-                                        <span className={`material-icons-round ${selectedCourse.badgeStyle}`}>{selectedCourse.badgeIcon}</span>
-                                        {selectedCourse.badge}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="md:w-7/12 p-8 md:p-12 overflow-y-auto no-scrollbar flex flex-col">
-                                <button 
-                                    onClick={() => setSelectedCourse(null)}
-                                    className="absolute top-6 right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 transition-colors group"
-                                >
-                                    <span className="material-icons-round text-gray-400 group-hover:text-primary transition-colors">close</span>
-                                </button>
-                                
-                                <div className="space-y-6">
-                                    <div>
-                                        <span className="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-2 block">{selectedCourse.category}</span>
-                                        <h2 className="text-2xl md:text-3xl font-bold text-secondary dark:text-white leading-tight">
-                                            {selectedCourse.title}
-                                        </h2>
-                                    </div>
-
-                                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                                        <p className="text-text-main dark:text-white/80 leading-relaxed text-lg italic border-l-4 border-primary/20 pl-4 py-1">
-                                            {selectedCourse.desc}
-                                        </p>
-                                    </div>
-
-                                    <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-full border-2 border-primary/20 overflow-hidden relative shadow-inner">
-                                            <Image fill src={selectedCourse.instructorImg} alt="Instructor" className="object-cover" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-text-muted dark:text-gray-400 font-medium uppercase tracking-wider">Instructor</p>
-                                            <h4 className="font-bold text-secondary dark:text-white text-lg">{selectedCourse.instructorName}</h4>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                                        <Link href={selectedCourse.route} className="flex-1 bg-primary hover:bg-[#689153] text-white font-bold py-4 px-8 rounded-2xl text-center shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
-                                            Inscribirse ahora
-                                            <span className="material-icons-round">arrow_forward</span>
-                                        </Link>
-                                        <button 
-                                            onClick={() => setSelectedCourse(null)}
-                                            className="px-8 py-4 rounded-2xl font-bold text-text-muted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                                        >
-                                            Cerrar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
         </div>
     );
 }

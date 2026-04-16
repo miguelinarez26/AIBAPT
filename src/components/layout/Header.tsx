@@ -39,7 +39,6 @@ export const Header = () => {
                                 <Link href="/contacto" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.contact")}</Link>
                                 <Link href="/docs/estatutos.pdf" target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Estatutos</Link>
                                 <Link href="/docs/reglamento_interno.pdf" target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Reglamento Interno</Link>
-                                <Link href="/organigrama" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Organigrama Funcional</Link>
                             </div>
                         </div>
 
@@ -66,9 +65,10 @@ export const Header = () => {
                                 <span className="material-icons-round text-[16px]">expand_more</span>
                             </button>
                             <div className="absolute top-full left-0 mt-6 w-64 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-300 py-2">
-                                <Link href="/formaciones" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.trainings")}</Link>
+                                <Link href="/formaciones?tab=all" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Webinars</Link>
+                                <Link href="/formaciones?tab=events" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Próximos Eventos</Link>
+                                <Link href="/formaciones?tab=recordings" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Eventos Grabados</Link>
                                 <Link href="/certificaciones" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.certifications")}</Link>
-                                <Link href="/recursos" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("footer.resources")}</Link>
                             </div>
                         </div>
 
@@ -110,7 +110,6 @@ export const Header = () => {
                             <Link href="/contacto" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.contact")}</Link>
                             <Link href="/docs/estatutos.pdf" target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Estatutos</Link>
                             <Link href="/docs/reglamento_interno.pdf" target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Reglamento Interno</Link>
-                            <Link href="/organigrama" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Organigrama Funcional</Link>
                         </div>
 
                         {/* Membresía */}
@@ -127,9 +126,10 @@ export const Header = () => {
                         <div className="flex flex-col space-y-3">
                             {/* @ts-ignore */}
                             <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.development" as any)}</span>
-                            <Link href="/formaciones" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.trainings")}</Link>
+                            <Link href="/formaciones?tab=all" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Webinars</Link>
+                            <Link href="/formaciones?tab=events" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Próximos Eventos</Link>
+                            <Link href="/formaciones?tab=recordings" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Eventos Grabados</Link>
                             <Link href="/certificaciones" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.certifications")}</Link>
-                            <Link href="/recursos" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("footer.resources")}</Link>
                         </div>
 
                         <Link href="/publicaciones" onClick={() => setIsMenuOpen(false)} className="text-text-main dark:text-white/80 hover:text-primary font-medium px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.news")}</Link>

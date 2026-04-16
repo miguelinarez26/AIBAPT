@@ -42,16 +42,6 @@ export const Footer = () => {
                         </ul>
                     </div>
                     <div>
-                        <h4 className="text-lg font-serif font-bold mb-6 text-white">{t("footer.resources")}</h4>
-                        <ul className="space-y-3 text-sm text-white font-medium">
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="#">{t("footer.portal")}</a></li>
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="#">{t("footer.certs")}</a></li>
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="#">{t("footer.library")}</a></li>
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="#">{t("footer.events")}</a></li>
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="#">{t("footer.news")}</a></li>
-                        </ul>
-                    </div>
-                    <div>
                         <h4 className="text-lg font-serif font-bold mb-6 text-white">{t("footer.contact")}</h4>
                         <ul className="space-y-4 text-sm text-white font-medium">
                             <li className="flex items-start gap-3">

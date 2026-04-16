@@ -1,5 +1,5 @@
 import { WEBINARS_DATA } from "@/data/webinars";
-import CourseDetailClient from "./CourseDetailClient";
+import CheckoutClient from "./CheckoutClient";
 import { notFound } from "next/navigation";
 
 export function generateStaticParams() {
@@ -16,5 +16,5 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     notFound();
   }
 
-  return <CourseDetailClient slug={slug} />;
+  return <CheckoutClient slug={slug} />;
 }

@@ -1,40 +1,43 @@
 "use client";
 
 import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { FiArrowRightCircle } from "react-icons/fi";
-import { LangKeys } from "@/i18n/translations";
-
+import { FiArrowRight, FiCalendar, FiUser } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 
 import flyer1 from "../../../public/images/webinar_flyer_1.png";
 import flyer2 from "../../../public/images/webinar_flyer_2.png";
+import flyer3 from "../../../public/images/3.png";
 
 export const WebinarTimeline = () => {
-    const { t, lang } = useLanguage();
-
+    const router = useRouter();
     const events = [
         {
-            category: t("webinars.event1.category" as LangKeys),
-            title: t("webinars.event1.title" as LangKeys),
-            subtitle: t("webinars.event1.subtitle" as LangKeys),
-            date: t("webinars.event1.date" as LangKeys),
-            desc: t("webinars.event1.desc" as LangKeys),
-            btnText: t("webinars.event1.btn" as LangKeys),
+            category: "Entrenamiento | Brasil",
+            title: "Práctica Supervisada y Manejo Online",
+            instructor: "Silvia Guz",
+            date: "Marzo 2026",
+            desc: "Curso vivencial con demostraciones en vivo y prácticas supervisionadas sobre manejo online.",
             imageUrl: flyer2,
         },
         {
-            category: t("webinars.event2.category" as LangKeys),
-            title: t("webinars.event2.title" as LangKeys),
-            subtitle: t("webinars.event2.subtitle" as LangKeys),
-            date: t("webinars.event2.date" as LangKeys),
-            desc: t("webinars.event2.desc" as LangKeys),
-            btnText: t("webinars.event2.btn" as LangKeys),
+            category: "Psicodrama | Presencial",
+            title: "Introducción al Psicodrama",
+            instructor: "Dra. Esly Carvalho",
+            date: "Abril 2026",
+            desc: "Jornada teórico-práctica y vivencial sobre técnicas y metodología del psicodrama.",
             imageUrl: flyer1,
         },
+        {
+            category: "Protocolos Corporais | Online",
+            title: "Protocolos Corporales en EMDR",
+            instructor: "Silvia Guz",
+            date: "Mayo 2026",
+            desc: "Teoría y protocolos corporales exclusivos desarrollados para la terapia EMDR.",
+            imageUrl: flyer3,
+        }
     ];
 
     return (
@@ -47,65 +50,73 @@ export const WebinarTimeline = () => {
                     className="text-center max-w-3xl mx-auto mb-16"
                 >
                     <span className="text-primary dark:text-gold font-display italic text-xl mb-2 block lowercase">
-                        {t("webinars.badge")}
+                        desarrollo profesional
                     </span>
                     <h2 className="text-4xl md:text-5xl font-bold text-secondary dark:text-white mb-6">
-                        {t("webinars.title")}
+                        Próximos Eventos <span className="text-primary italic font-serif">2026</span>
                     </h2>
-                    <p className="text-text-main dark:text-white/80 text-lg">
-                        {t("webinars.desc")}
+                    <p className="text-text-main dark:text-white/80 text-lg font-light">
+                        Entrenamientos intensivos y certificaciones internacionales para psicoterapeutas bajo el estándar de AIBAPT.
                     </p>
                 </motion.div>
 
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {events.map((event, index) => (
                         <motion.div
                             key={index}
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-50px" }}
-                            transition={{ duration: 0.6, delay: index * 0.1 }}
-                            whileHover={{ scale: 1.01 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className="flex flex-col group h-full"
                         >
-                            <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 group flex flex-col md:flex-row items-center transform-gpu ring-1 ring-black/5">
-                                {/* Flyer side - Full bleed to avoid margins */}
-                                <div className="md:w-[260px] shrink-0 relative h-64 md:h-56 overflow-hidden bg-gray-100 dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800">
+                            <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-white/10 rounded-[2rem] overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 h-full flex flex-col">
+                                {/* Flyer Area */}
+                                <div className="relative aspect-[4/5] overflow-hidden bg-gray-50 dark:bg-gray-900">
                                     <Image
                                         src={event.imageUrl}
                                         alt={event.title}
                                         fill
-                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6">
+                                        <p className="text-white text-sm font-medium leading-relaxed">
+                                            {event.desc}
+                                        </p>
+                                    </div>
+                                    <div className="absolute top-4 left-4">
+                                        <span className="bg-white/90 dark:bg-black/80 backdrop-blur-md text-primary dark:text-gold text-[10px] font-bold py-1.5 px-3 rounded-full shadow-sm uppercase tracking-wider">
+                                            {event.category}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                {/* Main Info - Stretched to fill space */}
-                                <div className="flex-1 p-6 md:px-10 flex flex-col md:flex-row items-center justify-between gap-10">
-                                    <div className="flex-1 space-y-3">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] md:text-xs font-bold text-primary dark:text-gold uppercase tracking-[0.2em] opacity-60">
-                                                {event.subtitle}
-                                            </p>
-                                            <h3 className="text-xl md:text-2xl font-bold text-secondary dark:text-white leading-tight group-hover:text-primary transition-colors duration-300">
-                                                {event.title}
-                                            </h3>
+                                {/* Content Area */}
+                                <div className="p-6 md:p-8 flex flex-col flex-1">
+                                    <h3 className="text-xl font-bold text-secondary dark:text-white mb-4 group-hover:text-primary transition-colors duration-300 flex-1">
+                                        {event.title}
+                                    </h3>
+                                    
+                                    <div className="space-y-3 mb-6 pt-4 border-t border-gray-50 dark:border-white/5">
+                                        <div className="flex items-center gap-2 text-text-muted dark:text-white/60">
+                                            <FiUser className="text-primary/60 shrink-0" />
+                                            <span className="text-sm font-medium">{event.instructor}</span>
                                         </div>
-                                        
-                                        <div className="flex items-center gap-2">
-                                            <span className="material-icons-round text-primary/40 text-lg">calendar_today</span>
-                                            <p className="text-base font-bold text-text-muted dark:text-gold opacity-90">
-                                                {event.date}
-                                            </p>
+                                        <div className="flex items-center gap-2 text-text-muted dark:text-white/60">
+                                            <FiCalendar className="text-primary/60 shrink-0" />
+                                            <span className="text-sm font-bold text-secondary dark:text-gold">{event.date}</span>
                                         </div>
                                     </div>
 
-                                    <div className="shrink-0">
-                                        <Link href={`/formaciones?tab=events&id=${index}`}>
-                                            <Button variant="primary" className="uppercase tracking-wide">
-                                                {event.btnText}
-                                                <FiArrowRightCircle className="text-xl md:text-2xl" />
-                                            </Button>
-                                        </Link>
-                                    </div>
+                                    <Button 
+                                        variant="primary" 
+                                        size="sm" 
+                                        className="w-full rounded-xl group/btn"
+                                        onClick={() => router.push("/formaciones?tab=events")}
+                                    >
+                                        MÁS INFORMACIÓN
+                                        <FiArrowRight className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                    </Button>
                                 </div>
                             </div>
                         </motion.div>
@@ -113,12 +124,15 @@ export const WebinarTimeline = () => {
                 </div>
 
                 <div className="mt-20 text-center flex justify-center">
-                    <Link href="/formaciones?tab=events">
-                        <Button variant="outline" size="lg" className="rounded-full shadow-lg group">
-                            {t("webinars.btn")}
-                            <FiArrowRightCircle className="transition-transform duration-300 group-hover:translate-x-1" />
-                        </Button>
-                    </Link>
+                    <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="rounded-full shadow-lg group px-10"
+                        onClick={() => router.push("/formaciones?tab=events")}
+                    >
+                        Ver Todos los Próximos Eventos
+                        <FiArrowRight className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                    </Button>
                 </div>
             </div>
         </section>

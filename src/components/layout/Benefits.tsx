@@ -65,62 +65,68 @@ export const Benefits = () => {
             <div className="absolute top-0 right-0 -mt-20 -mr-20 w-[40rem] h-[40rem] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-[40rem] h-[40rem] bg-accent/20 rounded-full blur-[100px] pointer-events-none" />
             
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-12">
-                <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-2">
+                <div className="text-center max-w-3xl mx-auto mb-6">
                     <span className="text-primary dark:text-gold font-display italic text-xl mb-2 block">
                         {t("benefits.badge")}
                     </span>
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-secondary dark:text-white mb-6">
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-secondary dark:text-white mb-4">
                         {t("benefits.title")}
                     </h2>
                     <p className="text-text-main dark:text-white/80 text-lg md:text-xl">
                         {t("benefits.desc")}
                     </p>
                 </div>
-
-                {/* Controles */}
-                <div className="flex justify-end gap-4 mb-4">
-                    <button 
-                        onClick={() => scroll("left")}
-                        disabled={isTransitioning}
-                        className="w-12 h-12 rounded-full border border-primary/20 bg-white dark:bg-surface-dark text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm disabled:opacity-50"
-                    >
-                        <FiChevronLeft className="text-2xl" />
-                    </button>
-                    <button 
-                        onClick={() => scroll("right")}
-                        disabled={isTransitioning}
-                        className="w-12 h-12 rounded-full border border-primary/20 bg-white dark:bg-surface-dark text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm disabled:opacity-50"
-                    >
-                        <FiChevronRight className="text-2xl" />
-                    </button>
-                </div>
             </div>
 
             {/* Contenedor del Carrusel Infinito (Ancho completo) */}
-            <div className="relative overflow-hidden w-full py-10">
-                <motion.div 
-                    className="flex shrink-0"
-                    style={{ 
-                        gap: "40px",
-                        paddingLeft: "calc(50% - 140px)", // 140px (mitad de 280px para alineación base móvil)
-                    }}
-                    animate={{ 
-                        x: `-${(middleIndex + currentIndex) * 320}px` // 280px + 40px gap
-                    }}
-                    transition={{ 
-                        type: "tween",
-                        ease: "easeOut",
-                        duration: isTransitioning ? 0.5 : 0
-                    }}
+            <div className="relative w-full py-4 group">
+                <div className="relative overflow-hidden w-full">
+                    <motion.div 
+                        className="flex shrink-0 cursor-grab active:cursor-grabbing"
+                        drag="x"
+                        dragElastic={0.2}
+                        onDragEnd={(e, { offset }) => {
+                            if (offset.x < -40) scroll("right");
+                            else if (offset.x > 40) scroll("left");
+                        }}
+                        style={{ 
+                            gap: "40px",
+                            paddingLeft: "calc(50% - 140px)", // 140px (mitad de 280px para alineación base móvil)
+                        }}
+                        animate={{ 
+                            x: `-${(middleIndex + currentIndex) * 320}px` // 280px + 40px gap
+                        }}
+                        transition={{ 
+                            type: "tween",
+                            ease: "easeOut",
+                            duration: isTransitioning ? 0.5 : 0
+                        }}
+                    >
+                        {cards.map((card, index) => (
+                            <BenefitCard key={index} card={card} index={index} />
+                        ))}
+                    </motion.div>
+                </div>
+
+                {/* Flechas a los lados (flotantes sobre las tarjetas en desktop) */}
+                <button 
+                    onClick={() => scroll("left")}
+                    disabled={isTransitioning}
+                    className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-16 md:h-16 rounded-full border border-primary/20 bg-white/95 backdrop-blur-md dark:bg-surface-dark/95 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-lg hover:shadow-xl disabled:opacity-50 opacity-100 xl:opacity-0 group-hover:opacity-100"
                 >
-                    {cards.map((card, index) => (
-                        <BenefitCard key={index} card={card} index={index} />
-                    ))}
-                </motion.div>
+                    <FiChevronLeft className="text-2xl md:text-3xl" />
+                </button>
+                <button 
+                    onClick={() => scroll("right")}
+                    disabled={isTransitioning}
+                    className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-16 md:h-16 rounded-full border border-primary/20 bg-white/95 backdrop-blur-md dark:bg-surface-dark/95 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-lg hover:shadow-xl disabled:opacity-50 opacity-100 xl:opacity-0 group-hover:opacity-100"
+                >
+                    <FiChevronRight className="text-2xl md:text-3xl" />
+                </button>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mt-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mt-8">
                 <div className="flex justify-center">
                     <Link href="/afiliacion" className={buttonVariants({ variant: "primary", size: "lg" })}>
                         {t("benefits.btn")} <FiArrowUpRight className="inline" />

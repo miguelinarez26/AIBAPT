@@ -1,15 +1,10 @@
 import React from "react";
+import { WEBINARS_DATA } from "@/data/webinars";
 
 export function generateStaticParams() {
-    return [
-        { slug: "trauma-webinar-20" },
-        { slug: "psicodrama-clinico" },
-        { slug: "emdr-cuerpo" },
-        { slug: "trauma-webinar-19" },
-        { slug: "trauma-webinar-18" },
-        { slug: "trauma-webinar-17" },
-        { slug: "trauma-webinar-16" }
-    ];
+    return WEBINARS_DATA.map((webinar) => ({
+        slug: webinar.slug
+    }));
 }
 
 export default function FormacionSlugLayout({

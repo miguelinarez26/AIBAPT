@@ -32,7 +32,7 @@ export default function PortalPage() {
                             {lang === 'es' ? 'Dando la bienvenida a tu espacio de' : 'Dando as boas-vindas ao seu espaço de'} <span className="font-black italic">{lang === 'es' ? 'crecimiento' : 'crescimento'}</span>.
                         </h2>
                         <p className="text-primary-content/80 text-sm leading-relaxed max-w-sm">
-                            {lang === 'es' ? 'Accede a tus formaciones automáticas, verifica tus certificaciones y gestiona tu membresía en un solo lugar.' : 'Acesse seus treinamentos, verifique suas certificações e gerencie sua assinatura em um só lugar.'}
+                            {lang === 'es' ? 'Accede a tus cursos automáticos, verifica tus certificaciones y gestiona tu membresía en un solo lugar.' : 'Acesse seus treinamentos, verifique suas certificações e gerencie sua assinatura em um só lugar.'}
                         </p>
                     </div>
 

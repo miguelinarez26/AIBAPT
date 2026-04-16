@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { WEBINARS_DATA } from "@/data/webinars";
 
 function DashboardContent() {
     const { t, lang } = useLanguage();
@@ -23,19 +24,21 @@ function DashboardContent() {
         }
         : { name: lang === 'es' ? "Usuario Invitado" : "Usuário Convidado", membershipStatus: lang === 'es' ? "Inactiva" : "Inativa", expiryDate: "N/A", roleTag: lang === 'es' ? "Cuenta Gratuita" : "Conta Gratuita" };
 
-    // Simulated array of purchased events for this user
+    // Simulated array of purchased events (Using Real Data)
     const myRecordedEvents = [
         {
-            title: "Trauma Webinar #19 | Mirando a través de la Voracidad",
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDwjFC5Lqrsmp9SkpZJBTVG_JbbrRAFgQ_3cZOFvZTEwTITGSrOiSNtbsvdTaDjq-mPDFM-0iiybDqdMIK2kUl_PHBeQ4k8JvOrv0miSzm5I5wRXjAPZ_UNmlI8Aric3V1sGRGnXPQdumg4ORULY_Ql3BDDqG03F_KQBtqbCbe93GCUcRZ-5Kd6hSenP-XA6nm7Zsv8QiRSDaPl7jNcEa-TNRBwnxFjRVyLPztesJWPiZT3vkgCQuTqyppKaciBZQC_7wSnF3bUvf7c",
+            title: WEBINARS_DATA[18].title, // Webinar #19
+            img: WEBINARS_DATA[18].img,
             daysLeft: 60,
-            hasExpired: false
+            hasExpired: false,
+            slug: WEBINARS_DATA[18].slug
         },
         {
-            title: "Trauma Webinar #16 | El abuso sexual infantil",
-            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBFqVfbqfrxeVaN8arWBYhx92ysovO8ycmOEMqgLHphoqoaZX3YVyN8Iyj1ZQ68Js91JmFxn-SzqGm6Rizp9aLbIrzR_Qi5W95BJ_vTTQBs8fcqQjU5swef1wmJ9_TY_AIsTRbvo5Y2GXI34vl-Nnh0x8rhtUbHnq8MBPuEveAXUUT5D3-7wVp3aE8DmmWg5nX_-jyruUVicPwaf3E7d0JFEJ0gyvmwIL4nwtP9jxWcTEALOBbLPrq36rOShJ373bn90i1QkQ_djCIv",
+            title: WEBINARS_DATA[15].title, // Webinar #16
+            img: WEBINARS_DATA[15].img,
             daysLeft: 0,
-            hasExpired: true
+            hasExpired: true,
+            slug: WEBINARS_DATA[15].slug
         }
     ];
 
@@ -94,7 +97,7 @@ function DashboardContent() {
                         {/* Recent Trainings / Certifications */}
                         <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-accent/50 dark:border-gray-800">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold font-display text-secondary">{lang === 'es' ? 'Mis formaciones e insignias' : 'Meus cursos e selos'}</h2>
+                                <h2 className="text-xl font-bold font-display text-secondary">{lang === 'es' ? 'Mis cursos e insignias' : 'Meus cursos e selos'}</h2>
                                 <Link href="#" className="text-sm font-bold text-primary hover:underline flex items-center gap-1">
                                     {lang === 'es' ? 'Ver todas' : 'Ver todos'} <span className="material-icons-round text-[16px]">arrow_forward</span>
                                 </Link>

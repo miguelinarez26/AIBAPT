@@ -5,7 +5,9 @@ Esta es la fuente de la verdad para el diseño y configuración visual del proye
 ## Paleta Principal
 - **Primario (Verde orgánico):** `#5a9954` (Color verde principal, base del logo)
 - **Secundario (Verde claro):** `#94d98d` (Color verde secundario, detalle del logo)
-- **Acento (Rojo/Naranja):** `#d95858` (Acento del logo)
+- **Acento (Rojo sangre):** `#d95858` (Acento del logo)
+- **Acento Claro (Naranja):** `#ff7a59` (Luz del degradado en el logo)
+- **Degradado Oficial de Acento:** `linear-gradient(to bottom left, #d95858, #ff7a59)`
 - **Destacado (Amarillo/Crema):** `#ffd47f` (Acento del logo)
 - **Texto Principal:** `#333333` (Lectura óptima en párrafos)
 - **Texto Secundario:** `#666666` (Textos de apoyo, etiquetas)
