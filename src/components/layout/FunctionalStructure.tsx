@@ -4,8 +4,27 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiMail, FiX, FiChevronRight, FiUsers } from "react-icons/fi";
 
-// Estructura de datos completa usando ARCHIVOS LOCALES (porque la web externa bloquea Hotlinking)
-const DIRECTIVA_DATA = [
+// Definición de Interfaces para evitar errores de tipos
+interface SubComite {
+    id: string;
+    rol: string;
+    lider: string;
+    img?: string;
+    email?: string;
+    desc?: string;
+}
+
+interface Directivo {
+    cargo: string;
+    nombre: string;
+    email?: string;
+    img?: string;
+    desc: string;
+    color: "primary" | "accent";
+    comites?: SubComite[];
+}
+
+const DIRECTIVA_DATA: Directivo[] = [
     {
         cargo: "Asamblea General",
         nombre: "Órgano Supremo",
@@ -80,8 +99,16 @@ const DIRECTIVA_DATA = [
     }
 ];
 
+interface ActiveMemberDetail {
+    cargo: string;
+    nombre: string;
+    desc: string;
+    img?: string;
+    email?: string;
+}
+
 export const FunctionalStructure = () => {
-    const [activeMember, setActiveMember] = useState<any>(null);
+    const [activeMember, setActiveMember] = useState<ActiveMemberDetail | null>(null);
 
     return (
         <section className="py-24 bg-cream/30 dark:bg-bg-dark/50 overflow-hidden">
