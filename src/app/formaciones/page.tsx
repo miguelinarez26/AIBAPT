@@ -145,8 +145,8 @@ function FormacionesContent() {
     const recordingsData = WEBINARS_DATA.map(w => ({
         img: w.img,
         badge: w.badge,
-        badgeIcon: w.badgeIcon,
-        badgeStyle: w.badgeStyle,
+        badgeIcon: w.badgeIcon || "play_circle",
+        badgeStyle: w.badgeStyle || "text-secondary",
         category: w.category,
         title: w.title,
         desc: w.descLong.length > 100 ? w.descLong.substring(0, 100) + "..." : w.descLong,

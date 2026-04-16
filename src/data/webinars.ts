@@ -10,6 +10,8 @@ export interface Webinar {
   descLong: string;
   duration: string;
   badge: string;
+  badgeIcon?: string;
+  badgeStyle?: string;
   category: string;
   includes: string[];
 }
