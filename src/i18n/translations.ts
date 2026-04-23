@@ -1189,12 +1189,6 @@ export const translations = {
         "news.post2.title": "[TR] news.post2.title",
         "news.post1.desc": "[TR] news.post1.desc",
         "news.post1.title": "[TR] news.post1.title",
-        "news.cat.interviews": "Entrevistas Gravadas",
-        "news.cat.research": "[TR] news.cat.research",
-        "news.cat.clinical": "Artigos Recomendados",
-        "news.cat.events": "[TR] news.cat.events",
-        "news.cat.prensa": "Notícias de Imprensa",
-        "news.cat.libros": "Livros Recomendados",
 
         // Extras
         "dash.vault.empty.title": "Nenhum webinar ainda",
