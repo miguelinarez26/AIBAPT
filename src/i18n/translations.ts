@@ -738,6 +738,13 @@ export const translations = {
         "news.title": "Perspectivas em Psicotrauma",
         "news.desc": "Conhecimento, pesquisa e atualizações de nossa comunidade clínica.",
         "news.search": "Buscar artigos...",
+        "news.cat.all": "Todos",
+        "news.cat.research": "Pesquisa",
+        "news.cat.clinical": "Artigos Recomendados",
+        "news.cat.events": "Eventos",
+        "news.cat.interviews": "Entrevistas Gravadas",
+        "news.cat.prensa": "Notícias de Imprensa",
+        "news.cat.libros": "Livros Recomendados",
         "news.read_more": "Ler Artigo Completo",
 
         // Certificaciones
