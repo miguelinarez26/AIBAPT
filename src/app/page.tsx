@@ -7,7 +7,6 @@ import { HeroSlider } from "@/components/layout/HeroSlider";
 import { WhatIsTrauma } from "@/components/layout/WhatIsTrauma";
 import { Benefits } from "@/components/layout/Benefits";
 import { FAQ } from "@/components/layout/FAQ";
-import { WebinarCalendarNotice } from "@/components/layout/WebinarCalendarNotice";
 import { AnnualCalendar } from "@/components/layout/AnnualCalendar";
 import { AccreditationCTA } from "@/components/layout/AccreditationCTA";
 import { WebinarTimeline } from "@/components/layout/WebinarTimeline";
@@ -16,7 +15,6 @@ export default function LandingPage() {
   const { t } = useLanguage();
   return (
     <div className="pt-20">
-      <WebinarCalendarNotice />
       
       {/* 1. El Gancho Visual */}
       <HeroSlider />

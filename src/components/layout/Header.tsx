@@ -37,8 +37,8 @@ export const Header = () => {
                                 <Link href="/quienes-somos" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.about")}</Link>
                                 <Link href="/socios" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.partners")}</Link>
                                 <Link href="/contacto" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.contact")}</Link>
-                                <Link href="/docs/estatutos.pdf" target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Estatutos</Link>
-                                <Link href="/docs/reglamento_interno.pdf" target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Reglamento Interno</Link>
+                                <Link href={lang === 'es' ? '/docs/Estatutos_AIBAPT_ESP.pdf' : '/docs/Estatutos_AIBAPT_PT.pdf'} target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.statutes" as any)}</Link>
+                                <Link href={lang === 'es' ? '/docs/Reglamento_Interno_AIBAPT_ESP.pdf' : '/docs/Reglamento_Interno_AIBAPT_PT.pdf'} target="_blank" download className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.rules" as any)}</Link>
                             </div>
                         </div>
 
@@ -65,14 +65,29 @@ export const Header = () => {
                                 <span className="material-icons-round text-[16px]">expand_more</span>
                             </button>
                             <div className="absolute top-full left-0 mt-6 w-64 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-300 py-2">
-                                <Link href="/formaciones?tab=all" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Webinars</Link>
                                 <Link href="/formaciones?tab=events" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Próximos Eventos</Link>
-                                <Link href="/formaciones?tab=recordings" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Eventos Grabados</Link>
-                                <Link href="/certificaciones" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.certifications")}</Link>
+                                <Link href="/formaciones?tab=recordings" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Videoteca</Link>
+                                <Link href="/formaciones?tab=accredited" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Cursos y eventos acreditados</Link>
+                                <Link href="/formaciones?tab=accreditation" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Acredita tu curso o evento</Link>
                             </div>
                         </div>
 
-                        <Link href="/publicaciones" className={`text-sm font-medium transition-colors ${pathname === '/publicaciones' ? 'text-primary dark:text-secondary' : 'text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white'}`}>{t("nav.news")}</Link>
+                        {/* Publicaciones Dropdown */}
+                        <div className="relative group">
+                            <button className="flex items-center gap-1 text-sm font-medium text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white transition-colors">
+                                {/* @ts-ignore */}
+                                {t("nav.news" as any)}
+                                <span className="material-icons-round text-[16px]">expand_more</span>
+                            </button>
+                            <div className="absolute top-full left-0 mt-6 w-64 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-300 py-2">
+                                <Link href="/publicaciones?cat=articulos" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.clinical")}</Link>
+                                <Link href="/publicaciones?cat=entrevistas" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.interviews")}</Link>
+                                <Link href="/publicaciones?cat=prensa" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.prensa")}</Link>
+                                <Link href="/publicaciones?cat=libros" className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.libros")}</Link>
+                                <div className="h-px bg-accent/10 my-1 mx-2"></div>
+                                <Link href="/publicaciones" className="block px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-colors uppercase tracking-wider">Ver Todo</Link>
+                            </div>
+                        </div>
                     </nav>
                     <div className="flex items-center gap-4">
                         <div className="hidden sm:flex items-center bg-accent/50 dark:bg-surface-dark rounded-full p-1 border border-accent dark:border-gray-700">
@@ -108,8 +123,8 @@ export const Header = () => {
                             <Link href="/quienes-somos" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.about")}</Link>
                             <Link href="/socios" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.partners")}</Link>
                             <Link href="/contacto" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.contact")}</Link>
-                            <Link href="/docs/estatutos.pdf" target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Estatutos</Link>
-                            <Link href="/docs/reglamento_interno.pdf" target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Reglamento Interno</Link>
+                            <Link href={lang === 'es' ? '/docs/Estatutos_AIBAPT_ESP.pdf' : '/docs/Estatutos_AIBAPT_PT.pdf'} target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.statutes" as any)}</Link>
+                            <Link href={lang === 'es' ? '/docs/Reglamento_Interno_AIBAPT_ESP.pdf' : '/docs/Reglamento_Interno_AIBAPT_PT.pdf'} target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.rules" as any)}</Link>
                         </div>
 
                         {/* Membresía */}
@@ -126,13 +141,22 @@ export const Header = () => {
                         <div className="flex flex-col space-y-3">
                             {/* @ts-ignore */}
                             <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.development" as any)}</span>
-                            <Link href="/formaciones?tab=all" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Webinars</Link>
                             <Link href="/formaciones?tab=events" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Próximos Eventos</Link>
-                            <Link href="/formaciones?tab=recordings" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Eventos Grabados</Link>
-                            <Link href="/certificaciones" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.certifications")}</Link>
+                            <Link href="/formaciones?tab=recordings" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Videoteca</Link>
+                            <Link href="/formaciones?tab=accredited" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Cursos y eventos acreditados</Link>
+                            <Link href="/formaciones?tab=accreditation" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Acredita tu curso o evento</Link>
                         </div>
 
-                        <Link href="/publicaciones" onClick={() => setIsMenuOpen(false)} className="text-text-main dark:text-white/80 hover:text-primary font-medium px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.news")}</Link>
+                        {/* Publicaciones */}
+                        <div className="flex flex-col space-y-3">
+                            {/* @ts-ignore */}
+                            <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.news" as any)}</span>
+                            <Link href="/publicaciones?cat=articulos" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.clinical")}</Link>
+                            <Link href="/publicaciones?cat=entrevistas" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.interviews")}</Link>
+                            <Link href="/publicaciones?cat=prensa" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.prensa")}</Link>
+                            <Link href="/publicaciones?cat=libros" onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.libros")}</Link>
+                            <Link href="/publicaciones" onClick={() => setIsMenuOpen(false)} className="pl-4 text-xs font-bold text-primary tracking-wider uppercase">Ver Todo</Link>
+                        </div>
 
                         <div className="pt-4 border-t border-accent/20 dark:border-gray-800">
                             <Link href="/portal" onClick={() => setIsMenuOpen(false)} className={buttonVariants({ variant: "primary", size: "default", fullWidth: true })}>

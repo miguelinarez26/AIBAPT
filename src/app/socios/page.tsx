@@ -29,7 +29,7 @@ export default function SociosPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCountry, setSelectedCountry] = useState("Todos");
     const [selectedCert, setSelectedCert] = useState("Todas");
-    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    const [viewMode, setViewMode] = useState<"grid" | "list">("list");
     const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
     // Dropdown state and references
@@ -241,18 +241,18 @@ export default function SociosPage() {
                     {/* Toggle: List vs Grid */}
                     <div className="hidden md:flex items-center bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1 border border-gray-200 dark:border-gray-700/50">
                         <button
-                            onClick={() => setViewMode("grid")}
-                            className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-white dark:bg-surface-dark shadow-sm text-primary dark:text-gold" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
-                            title={t("partners.view.grid")}
-                        >
-                            <span className="material-icons-round text-[20px]">grid_view</span>
-                        </button>
-                        <button
                             onClick={() => setViewMode("list")}
                             className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-white dark:bg-surface-dark shadow-sm text-primary dark:text-gold" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
                             title={t("partners.view.list")}
                         >
                             <span className="material-icons-round text-[20px]">view_list</span>
+                        </button>
+                        <button
+                            onClick={() => setViewMode("grid")}
+                            className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-white dark:bg-surface-dark shadow-sm text-primary dark:text-gold" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
+                            title={t("partners.view.grid")}
+                        >
+                            <span className="material-icons-round text-[20px]">grid_view</span>
                         </button>
                     </div>
                 </div>

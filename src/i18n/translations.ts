@@ -15,6 +15,8 @@ export const translations = {
         "nav.association": "La Asociación",
         "nav.membership": "Membresía",
         "nav.development": "Desarrollo Profesional",
+        "nav.statutes": "Estatutos",
+        "nav.rules": "Reglamento Interno",
 
         // Home Page - Hero
         "home.badge": "Asociación Iberoamericana de Psicotrauma",
@@ -134,9 +136,11 @@ export const translations = {
         "news.search": "Buscar artículos...",
         "news.cat.all": "Todos",
         "news.cat.research": "Investigación",
-        "news.cat.clinical": "Práctica Clínica",
+        "news.cat.clinical": "Artículos Recomendados",
         "news.cat.events": "Eventos",
-        "news.cat.interviews": "Entrevistas",
+        "news.cat.interviews": "Entrevistas Grabadas",
+        "news.cat.prensa": "Noticias de Prensa",
+        "news.cat.libros": "Libros Recomendados",
         "news.read_more": "Leer Artículo Completo",
         "news.post1.title": "El impacto del trauma colectivo en la salud mental comunitaria",
         "news.post1.desc": "Un análisis profundo sobre cómo los eventos a gran escala afectan el tejido psicosocial y estrategias de intervención temprana para comunidades hispanohablantes.",
@@ -221,7 +225,7 @@ export const translations = {
         "dash.welcome": "Hola, Bienvenido al Portal",
         "dash.welcome.desc": "Gestiona tu estado de afiliación y explora el contenido de tu interés.",
         "dash.tabs.overview": "Vista General",
-        "dash.tabs.events": "Mis Eventos Grabados",
+        "dash.tabs.events": "Videoteca",
         "dash.tabs.financial": "Gestión Financiera",
         "dash.tabs.profile": "Mi Perfil",
         "dash.status.title": "Estado de Membresía",
@@ -615,6 +619,8 @@ export const translations = {
         "nav.association": "A Associação",
         "nav.membership": "Membros",
         "nav.development": "Desenvolvimento Profissional",
+        "nav.statutes": "Estatutos",
+        "nav.rules": "Regulamento Interno",
 
         // Home Page - Hero
         "home.badge": "Associação Ibero-Americana de Psicotrauma",
@@ -1176,11 +1182,12 @@ export const translations = {
         "news.post2.title": "[TR] news.post2.title",
         "news.post1.desc": "[TR] news.post1.desc",
         "news.post1.title": "[TR] news.post1.title",
-        "news.cat.interviews": "[TR] news.cat.interviews",
-        "news.cat.events": "[TR] news.cat.events",
-        "news.cat.clinical": "[TR] news.cat.clinical",
+        "news.cat.interviews": "Entrevistas Gravadas",
         "news.cat.research": "[TR] news.cat.research",
-        "news.cat.all": "[TR] news.cat.all",
+        "news.cat.clinical": "Artigos Recomendados",
+        "news.cat.events": "[TR] news.cat.events",
+        "news.cat.prensa": "Notícias de Imprensa",
+        "news.cat.libros": "Livros Recomendados",
 
         // Extras
         "dash.vault.empty.title": "Nenhum webinar ainda",

@@ -43,7 +43,7 @@ export const WebinarTimeline = () => {
     return (
         <section className="py-24 bg-white dark:bg-background-dark relative overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -96,7 +96,7 @@ export const WebinarTimeline = () => {
                                     <h3 className="text-xl font-bold text-secondary dark:text-white mb-4 group-hover:text-primary transition-colors duration-300 flex-1">
                                         {event.title}
                                     </h3>
-                                    
+
                                     <div className="space-y-3 mb-6 pt-4 border-t border-gray-50 dark:border-white/5">
                                         <div className="flex items-center gap-2 text-text-muted dark:text-white/60">
                                             <FiUser className="text-primary/60 shrink-0" />
@@ -108,9 +108,9 @@ export const WebinarTimeline = () => {
                                         </div>
                                     </div>
 
-                                    <Button 
-                                        variant="primary" 
-                                        size="sm" 
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
                                         className="w-full rounded-xl group/btn"
                                         onClick={() => router.push("/formaciones?tab=events")}
                                     >
@@ -124,9 +124,9 @@ export const WebinarTimeline = () => {
                 </div>
 
                 <div className="mt-20 text-center flex justify-center">
-                    <Button 
-                        variant="outline" 
-                        size="lg" 
+                    <Button
+                        variant="outline"
+                        size="lg"
                         className="rounded-full shadow-lg group px-10"
                         onClick={() => router.push("/formaciones?tab=events")}
                     >

@@ -12,22 +12,21 @@ function FormacionesContent() {
     const { t } = useLanguage();
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeTab, setActiveTab] = useState<"all" | "events" | "recordings" | "accredited" | "accreditation">("all");
+    const [activeTab, setActiveTab] = useState<"events" | "recordings" | "accredited" | "accreditation">("events");
 
     useEffect(() => {
         const tab = searchParams.get("tab");
-        if (tab && ["all", "events", "recordings", "accredited", "accreditation"].includes(tab)) {
+        if (tab && ["events", "recordings", "accredited", "accreditation"].includes(tab)) {
             setActiveTab(tab as any);
         }
     }, [searchParams]);
 
     // TABS DEFINITION
     const tabs = [
-        { id: "all", label: "Webinars", icon: "grid_view" },
         { id: "events", label: "Próximos Eventos", icon: "event_available" },
-        { id: "recordings", label: "Eventos Grabados", icon: "ondemand_video" },
-        { id: "accredited", label: t("edu.tab.accredited" as any), icon: "verified" },
-        { id: "accreditation", label: t("edu.tab.accreditation" as any), icon: "history_edu" },
+        { id: "recordings", label: "Videoteca", icon: "ondemand_video" },
+        { id: "accredited", label: "Cursos y eventos acreditados", icon: "verified" },
+        { id: "accreditation", label: "Acredita tu curso o evento", icon: "history_edu" },
     ];
 
     // DATA FOR "WEBINARS" (Programa 2026)
@@ -174,8 +173,7 @@ function FormacionesContent() {
 
     // Select active data for list/grid view
     const currentData = useMemo(() => {
-        if (activeTab === "all") return webinarsData;
-        if (activeTab === "events") return eventsData;
+        if (activeTab === "events") return [...webinarsData, ...eventsData];
         if (activeTab === "recordings") return recordingsData;
         return [];
     }, [activeTab, webinarsData, eventsData, recordingsData]);
@@ -210,11 +208,9 @@ function FormacionesContent() {
                 let sourceData: any[] = [];
                 const tab = searchParams.get("tab");
                 if (tab === "events") {
-                    sourceData = eventsData;
+                    sourceData = [...webinarsData, ...eventsData];
                 } else if (tab === "recordings") {
                     sourceData = recordingsData;
-                } else if (tab === "all") {
-                    sourceData = webinarsData;
                 }
 
                 if (index >= 0 && index < sourceData.length) {
@@ -240,8 +236,8 @@ function FormacionesContent() {
                             <Link className="hover:text-primary transition-colors" href="/">{t("edu.nav.home" as any)}</Link>
                             <span className="material-icons-round text-[16px]">chevron_right</span>
                             <span
-                                className={`transition-colors cursor-pointer ${activeTab === 'all' ? "font-medium text-primary cursor-default" : "hover:text-primary"}`}
-                                onClick={() => setActiveTab('all')}
+                                className={`transition-colors cursor-pointer ${activeTab === 'events' ? "font-medium text-primary cursor-default" : "hover:text-primary"}`}
+                                onClick={() => setActiveTab('events')}
                             >
                                 {t("edu.nav.edu" as any)}
                             </span>
@@ -278,7 +274,6 @@ function FormacionesContent() {
                     </div>
                 </div>
 
-                {/* Content Section */}
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
@@ -287,7 +282,7 @@ function FormacionesContent() {
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
                     >
-                        {(activeTab === "all" || activeTab === "events" || activeTab === "recordings") && (
+                        {(activeTab === "events" || activeTab === "recordings") && (
                             <div className="flex-1">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {filteredData.map((course, idx) => (
@@ -334,34 +329,14 @@ function FormacionesContent() {
                             </div>
                         )}
 
-                        {/* Accredited and Accreditation views remain same... */}
+                        {/* Accredited and Accreditation views - Temporarily placeholder as requested */}
                         {activeTab === "accredited" && (
-                            <div className="max-w-4xl mx-auto bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-accent/20 dark:border-gray-800 rounded-3xl p-6 md:p-10 shadow-lg">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
-                                        <span className="material-icons-round text-3xl">verified</span>
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-text-main dark:text-white">{t("edu.tab.accredited" as any)}</h2>
-                                        <p className="text-text-muted dark:text-gray-400">{t("edu.accredited.desc" as any)}</p>
-                                    </div>
+                            <div className="max-w-4xl mx-auto bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-accent/20 dark:border-gray-800 rounded-3xl p-6 md:p-10 shadow-lg text-center">
+                                <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <span className="material-icons-round text-4xl">verified</span>
                                 </div>
-                                <div className="space-y-4">
-                                    {filteredAccredited.map((item, idx) => (
-                                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-white dark:bg-surface-light border border-accent/20 dark:border-gray-700 rounded-xl hover:border-primary/40 hover:shadow-md transition-all">
-                                            <div>
-                                                <h4 className="font-bold text-text-main dark:text-white text-lg mb-1">{item.title}</h4>
-                                                <div className="flex flex-wrap items-center gap-4 text-sm text-text-muted dark:text-gray-400">
-                                                    <span className="flex items-center gap-1"><span className="material-icons-round text-[16px]">person</span> {item.instructor}</span>
-                                                    <span className="flex items-center gap-1"><span className="material-icons-round text-[16px]">schedule</span> {item.hours.replace("horas", t("edu.label.hours" as any))}</span>
-                                                </div>
-                                            </div>
-                                            <a href={item.contact} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex justify-center items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-lg transition-colors">
-                                                <span className="material-icons-round text-[18px]">{item.linkTitle ? "language" : "mail"}</span> {item.linkTitle || t("edu.btn.contact" as any)}
-                                            </a>
-                                        </div>
-                                    ))}
-                                </div>
+                                <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">Cursos y eventos acreditados</h2>
+                                <p className="text-text-muted dark:text-gray-400 text-lg">Sección en construcción. Próximamente encontrarás aquí el catálogo de eventos externos avalados por AIBAPT.</p>
                             </div>
                         )}
 
@@ -370,14 +345,8 @@ function FormacionesContent() {
                                 <div className="w-20 h-20 bg-accent/20 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
                                     <span className="material-icons-round text-4xl">history_edu</span>
                                 </div>
-                                <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">{t("edu.accreditation.title" as any)}</h2>
-                                <p className="text-text-muted dark:text-gray-400 text-lg max-w-2xl mx-auto mb-10">{t("edu.accreditation.desc" as any)}</p>
-                                <div className="flex flex-col sm:flex-row justify-center gap-4">
-                                    <a href="mailto:certificacion@aibapt.org" className="inline-flex justify-center items-center gap-2 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-md">
-                                        <span className="material-icons-round">email</span>
-                                        CONTACTAR COMITÉ
-                                    </a>
-                                </div>
+                                <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">Acredita tu curso o evento</h2>
+                                <p className="text-text-muted dark:text-gray-400 text-lg">Sección en construcción. Aquí podrás enviar la documentación para que tus programas reciban el reconocimiento de AIBAPT.</p>
                             </div>
                         )}
                     </motion.div>

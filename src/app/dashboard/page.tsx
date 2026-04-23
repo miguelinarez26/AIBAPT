@@ -153,7 +153,7 @@ function DashboardContent() {
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-bold font-display text-secondary flex items-center gap-2">
                                     <span className="material-icons-round text-primary">video_library</span>
-                                    {lang === 'es' ? 'Mis Eventos Grabados' : 'Meus Eventos Gravados'}
+                                    {lang === 'es' ? 'Videoteca' : 'Videoteca'}
                                 </h2>
                                 <Link href="/formaciones" className="text-sm font-bold text-primary hover:underline">
                                     {lang === 'es' ? 'Explorar más' : 'Explorar mais'}
