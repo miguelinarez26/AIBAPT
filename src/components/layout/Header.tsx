@@ -5,8 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { buttonVariants } from "@/components/ui/Button";
+import { LogOut, User } from "lucide-react";
 import logoLight from "../../../public/images/logo_aibapt.png";
 import logoDark from "../../../public/images/logo_corto_en_blanco.png";
 
@@ -14,6 +17,12 @@ export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const pathname = usePathname();
     const { lang, setLang, t } = useLanguage();
+    const { session } = useAuth();
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        // Optional: reload or let AuthProvider handle the state update
+    };
 
     return (
         <header className="fixed w-full top-0 z-50 glass-header border-b border-accent/20 dark:border-accent/10 transition-all duration-300">
@@ -100,10 +109,25 @@ export const Header = () => {
                                 className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${lang === 'pt' ? 'bg-white dark:bg-surface-light shadow-sm text-primary dark:text-secondary' : 'text-text-muted dark:text-white/70 hover:text-primary cursor-pointer'}`}
                             >PT</button>
                         </div>
-                        <Link href="/portal" className={buttonVariants({ variant: "primary", size: "sm" })}>
-                            <span className="material-icons-round text-lg">account_circle</span>
-                            {t("nav.portal")}
-                        </Link>
+                        {session ? (
+                            <div className="relative group">
+                                <Link href="/dashboard" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                                    <span className="material-icons-round text-lg">account_circle</span>
+                                    {t("nav.portal")}
+                                </Link>
+                                <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-2">
+                                    <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                                        <LogOut className="w-4 h-4 mr-2" />
+                                        Cerrar Sesión
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <Link href="/login" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                                <span className="material-icons-round text-lg">account_circle</span>
+                                {t("nav.portal")}
+                            </Link>
+                        )}
                         <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 text-gray-600 dark:text-gray-300">
                             <span className="material-icons-round">menu</span>
                         </button>
@@ -159,10 +183,23 @@ export const Header = () => {
                         </div>
 
                         <div className="pt-4 border-t border-accent/20 dark:border-gray-800">
-                            <Link href="/portal" onClick={() => setIsMenuOpen(false)} className={buttonVariants({ variant: "primary", size: "default", fullWidth: true })}>
-                                <span className="material-icons-round text-lg">account_circle</span>
-                                {t("nav.portal")}
-                            </Link>
+                            {session ? (
+                                <div className="space-y-3">
+                                    <Link href="/dashboard" onClick={() => setIsMenuOpen(false)} className={buttonVariants({ variant: "primary", size: "default", fullWidth: true })}>
+                                        <span className="material-icons-round text-lg">account_circle</span>
+                                        {t("nav.portal")}
+                                    </Link>
+                                    <button onClick={() => { setIsMenuOpen(false); handleSignOut(); }} className="w-full flex items-center justify-center px-4 py-3 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 font-bold rounded-xl transition-colors">
+                                        <LogOut className="w-5 h-5 mr-2" />
+                                        Cerrar Sesión
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link href="/login" onClick={() => setIsMenuOpen(false)} className={buttonVariants({ variant: "primary", size: "default", fullWidth: true })}>
+                                    <span className="material-icons-round text-lg">account_circle</span>
+                                    {t("nav.portal")}
+                                </Link>
+                            )}
                         </div>
                     </nav>
                 </div>

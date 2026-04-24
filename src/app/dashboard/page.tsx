@@ -6,23 +6,43 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { WEBINARS_DATA } from "@/data/webinars";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function DashboardContent() {
     const { t, lang } = useLanguage();
     const searchParams = useSearchParams();
+    const { session, isLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !session) {
+            router.push("/login?redirectTo=/dashboard");
+        }
+    }, [session, isLoading, router]);
+
     const role = searchParams.get("role") || "no-socio";
     const isDirectiva = role === "directiva";
-    const isSocio = role === "socio" || isDirectiva;
+    const isSocio = role === "socio" || isDirectiva || !!session;
 
-    // Mock User Data based on role
-    const user = isSocio
+    // Mock User Data based on role / session
+    const user = session
         ? {
-            name: isDirectiva ? "Dra. Directiva" : "Dr. Socio Activo",
+            name: session.user?.email || "Usuario Activo",
             membershipStatus: lang === 'es' ? "Activa" : "Ativa",
             expiryDate: isDirectiva ? "Vitalicia" : "15 Oct 2025",
-            roleTag: isDirectiva ? "Junta Directiva" : (lang === 'es' ? "Socio Profesional" : "Sócio Profissional")
+            roleTag: lang === 'es' ? "Socio Profesional" : "Sócio Profissional"
         }
         : { name: lang === 'es' ? "Usuario Invitado" : "Usuário Convidado", membershipStatus: lang === 'es' ? "Inactiva" : "Inativa", expiryDate: "N/A", roleTag: lang === 'es' ? "Cuenta Gratuita" : "Conta Gratuita" };
+
+    if (isLoading || !session) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-accent/10 dark:bg-background-dark">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     // Simulated array of purchased events (Using Real Data)
     const myRecordedEvents = [
@@ -266,7 +286,7 @@ function DashboardContent() {
 
                             <div className="h-px w-full bg-accent/50 my-2"></div>
 
-                            <Link href="/portal" className="flex items-center gap-3 p-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors font-bold text-left mt-2">
+                            <Link href="/login" className="flex items-center gap-3 p-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors font-bold text-left mt-2">
                                 <span className="material-icons-round text-[20px]">logout</span> {t("dash.menu.logout")}
                             </Link>
                         </div>
