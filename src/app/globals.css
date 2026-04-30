@@ -13,6 +13,10 @@
   --color-surface-dark: #2C302B;
   --color-text-main: #333333;
   --color-text-muted: #666666;
+
+  /* Tokens de acreditación AIBAPT */
+  --color-aibapt-green: #5a9954;
+  --color-aibapt-gray: #64748b;
   
   /* Degradados de marca */
   --background-image-accent-gradient: linear-gradient(to bottom left, #d95858, #ff7a59);

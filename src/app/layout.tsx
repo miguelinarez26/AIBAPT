@@ -1,15 +1,10 @@
-import type { Metadata } from "next";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
-export const metadata: Metadata = {
-  title: "AIBAPT Organics Prototype",
-  description: "Sanando el trauma desde la raíz, cultivando bienestar.",
-};
-
+// Layout raíz — provee los providers globales a todas las rutas.
+// El HTML y metadata localizada se manejan en [lang]/layout.tsx,
+// pero las rutas legacy (fuera de [lang]) también necesitan los providers.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,16 +16,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round|Material+Icons" rel="stylesheet" />
       </head>
-      <body
-        className="font-sans antialiased min-h-screen flex flex-col overflow-x-hidden"
-      >
+      <body className="font-sans antialiased min-h-screen flex flex-col overflow-x-hidden">
         <AuthProvider>
           <LanguageProvider>
-            <Header />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
+            {children}
           </LanguageProvider>
         </AuthProvider>
       </body>

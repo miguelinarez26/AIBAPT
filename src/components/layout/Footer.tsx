@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import logoDark from "../../../public/images/logo_corto_en_blanco.png";
 
 export const Footer = () => {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
 
     return (
         <footer className="bg-primary text-white pt-20 pb-10">
@@ -34,11 +34,11 @@ export const Footer = () => {
                     <div>
                         <h4 className="text-lg font-serif font-bold mb-6 text-white">{t("footer.org")}</h4>
                         <ul className="space-y-3 text-sm text-white font-medium">
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="#">{t("footer.about")}</a></li>
-                            <li><Link href="/leadership" className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block">{t("footer.board")}</Link></li>
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="/quienes-somos">{t("footer.mission")}</a></li>
-                            <li><Link className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="/afiliacion">{t("footer.affiliates")}</Link></li>
-                            <li><a className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href="#">{t("footer.transparency")}</a></li>
+                            <li><Link className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href={`/${lang}/quienes-somos`}>{t("footer.about")}</Link></li>
+                            <li><Link href={`/${lang}/leadership`} className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block">{t("footer.board")}</Link></li>
+                            <li><Link className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href={`/${lang}/quienes-somos`}>{t("footer.mission")}</Link></li>
+                            <li><Link className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href={`/${lang}/afiliacion`}>{t("footer.affiliates")}</Link></li>
+                            <li><Link className="hover:text-gray-200 hover:translate-x-1 transition-all inline-block" href={`/${lang}/transparencia`}>{t("footer.transparency")}</Link></li>
                         </ul>
                     </div>
                     <div>

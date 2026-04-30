@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 type AuthContextType = {
   session: Session | null;
@@ -23,6 +23,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+
+    // Crear instancia del browser client con @supabase/ssr
+    const supabase = createBrowserSupabaseClient();
 
     async function getInitialSession() {
       try {

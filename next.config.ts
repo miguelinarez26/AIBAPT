@@ -1,18 +1,10 @@
 import type { NextConfig } from "next";
 
-const isGithubActions = process.env.GITHUB_ACTIONS || false;
-let repo = 'AIBAPT';
-if (isGithubActions && process.env.GITHUB_REPOSITORY) {
-  repo = process.env.GITHUB_REPOSITORY.replace(/.*?\//, '');
-}
-
 const nextConfig: NextConfig = {
-  output: "export",
-  trailingSlash: true,
-  assetPrefix: isGithubActions ? `/${repo}/` : '',
-  basePath: isGithubActions ? `/${repo}` : '',
+  // Despliegue full-stack en Vercel (SSR + ISR + Middleware habilitados)
+  // Se eliminó output: "export" y basePath para compatibilidad con servidor
+  trailingSlash: false,
   images: {
-    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -21,6 +13,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+      },
+      {
+        // Supabase Storage — bucket público y privado
+        protocol: 'https',
+        hostname: 'idpjomyvailowoltosaj.supabase.co',
+        pathname: '/storage/v1/object/**',
       },
     ],
   },

@@ -24,7 +24,7 @@ export const FileValidators = {
 
 export type FieldDefinition = {
   name: string;
-  label: string;
+  label: Record<'es' | 'pt', string> | string;
   description?: string;
   validator: z.ZodTypeAny;
   typeLabel: string;
@@ -33,41 +33,52 @@ export type FieldDefinition = {
 
 export type EscenarioEvento = {
   id: string;
-  label: string;
+  label: Record<'es' | 'pt', string> | string;
   monto: number;
-  description: string;
+  description: Record<'es' | 'pt', string> | string;
 };
 
 export type TramiteConfig = {
   id: string;
-  categoria: string;
-  title: string;
-  description: string;
+  categoria: Record<'es' | 'pt', string>;
+  title: Record<'es' | 'pt', string>;
+  description: Record<'es' | 'pt', string>;
   monto: number | string | EscenarioEvento[];
-  instrucciones_leer: string[];
-  descargas: { label: string; url: string }[];
+  instrucciones_leer: Record<'es' | 'pt', string[]>;
+  descargas: { label_es: string; label_pt: string; url_es: string; url_pt: string }[];
   fields: FieldDefinition[];
-  hasModalitySelection?: boolean; // For CCA Online where "Cuestionario de Evaluación" is required
+  hasModalitySelection?: boolean;
+  requiresMembership?: boolean;
+  accreditationTypeKey?: string;
 };
 
 export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   "cca": {
     id: "cca",
-    categoria: "CCA Y EVENTOS",
-    title: "Acreditación de Cursos Avanzados (CCA)",
-    description: "Validación de cursos para otorgar créditos oficiales.",
+    categoria: { es: "CCA Y EVENTOS", pt: "CCA E EVENTOS" },
+    title: { es: "Acreditación de Cursos Avanzados (CCA)", pt: "Acreditação de Cursos Avançados (CCA)" },
+    description: { es: "Validación de cursos para otorgar créditos oficiales.", pt: "Validação de cursos para concessão de créditos oficiais." },
     monto: 50,
+    accreditationTypeKey: "CCA",
     hasModalitySelection: true,
-    instrucciones_leer: [
-      "Objetivo: Validación de cursos para otorgar créditos oficiales.",
-      "Vigencia: 2 años.",
-      "Costo: 50 €.",
-      "Requisitos Clave: Solo para psicoterapeutas o supervisores certificados por AIBAPT."
-    ],
+    instrucciones_leer: {
+      es: [
+        "Objetivo: Validación de cursos para otorgar créditos oficiales.",
+        "Vigencia: 2 años.",
+        "Costo: 50 €.",
+        "Requisitos Clave: Solo para psicoterapeutas o supervisores certificados por AIBAPT."
+      ],
+      pt: [
+        "Objetivo: Validação de cursos para concessão de créditos oficiais.",
+        "Validade: 2 anos.",
+        "Custo: 50 €.",
+        "Requisitos Principais: Apenas para psicoterapeutas ou supervisores certificados pela AIBAPT."
+      ]
+    },
     descargas: [
-      { label: "Formulario de Solicitud CCA", url: "#" },
-      { label: "Ficha Técnica con cronograma", url: "#" },
-      { label: "Plantilla Control de Asistencia", url: "#" }
+      { label_es: "Formulario de Solicitud CCA", label_pt: "Formulário de Solicitação CCA", url_es: "#", url_pt: "#" },
+      { label_es: "Ficha Técnica con cronograma", label_pt: "Ficha Técnica com cronograma", url_es: "#", url_pt: "#" },
+      { label_es: "Plantilla Control de Asistencia", label_pt: "Modelo de Controle de Presença", url_es: "#", url_pt: "#" }
     ],
     fields: [
       { name: "cv_instructor", label: "CV del Instructor", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -82,23 +93,30 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "eventos": {
     id: "eventos",
-    categoria: "CCA Y EVENTOS",
-    title: "Eventos, Congresos y Seminarios",
-    description: "Acreditación de eventos puntuales o congresos completos.",
+    categoria: { es: "CCA Y EVENTOS", pt: "CCA E EVENTOS" },
+    title: { es: "Eventos, Congresos y Seminarios", pt: "Eventos, Congressos e Seminários" },
+    description: { es: "Acreditación de eventos puntuales o congresos completos.", pt: "Acreditação de eventos pontuais ou congressos completos." },
     monto: [
-      { id: "2A", label: "2A: Conferencias (Charla única)", monto: 20, description: "Acreditación para una charla individual." },
-      { id: "2B", label: "2B: Workshops/Talleres (Práctico)", monto: 30, description: "Acreditación para talleres con enfoque práctico." },
-      { id: "2C", label: "2C: Eventos Completos/Congresos", monto: 50, description: "Acreditación para congresos completos." }
+      { id: "2A", label: { es: "2A: Conferencias (Charla única)", pt: "2A: Conferências (Palestra única)" }, monto: 20, description: { es: "Acreditación para una charla individual.", pt: "Acreditação para uma palestra individual." } },
+      { id: "2B", label: { es: "2B: Workshops/Talleres (Práctico)", pt: "2B: Workshops/Oficinas (Prático)" }, monto: 30, description: { es: "Acreditación para talleres con enfoque práctico.", pt: "Acreditação para workshops com foco prático." } },
+      { id: "2C", label: { es: "2C: Eventos Completos/Congresos", pt: "2C: Eventos Completos/Congressos" }, monto: 50, description: { es: "Acreditación para congresos completos.", pt: "Acreditação para congressos completos." } }
     ],
-    instrucciones_leer: [
-      "Escenarios de Pago: 20€ (Charla), 30€ (Taller), 50€ (Congreso).",
-      "Documentos obligatorios incluyen CV del Facilitador, Material del Evento y Agenda.",
-      "Asegúrate de seleccionar el escenario correcto para que el comprobante de pago coincida con el monto establecido."
-    ],
+    instrucciones_leer: {
+      es: [
+        "Escenarios de Pago: 20€ (Charla), 30€ (Taller), 50€ (Congreso).",
+        "Documentos obligatorios incluyen CV del Facilitador, Material del Evento y Agenda.",
+        "Asegúrate de seleccionar el escenario correcto para que el comprobante de pago coincida con el monto establecido."
+      ],
+      pt: [
+        "Cenários de Pagamento: 20€ (Palestra), 30€ (Workshop), 50€ (Congresso).",
+        "Documentos obrigatórios incluem CV do Facilitador, Material do Evento e Agenda.",
+        "Certifique-se de selecionar o cenário correto para que o comprovante de pagamento corresponda ao valor estabelecido."
+      ]
+    },
     descargas: [
-      { label: "Ficha de Solicitación", url: "#" },
-      { label: "Ficha Técnica", url: "#" },
-      { label: "Formularios de Gestión/Registro", url: "#" }
+      { label_es: "Ficha de Solicitación", label_pt: "Ficha de Solicitação", url_es: "#", url_pt: "#" },
+      { label_es: "Ficha Técnica", label_pt: "Ficha Técnica", url_es: "#", url_pt: "#" },
+      { label_es: "Formularios de Gestión/Registro", label_pt: "Formulários de Gestão/Registro", url_es: "#", url_pt: "#" }
     ],
     fields: [
       { name: "cv_facilitador", label: "CV del Facilitador", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -111,14 +129,21 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "emision_cca": {
     id: "emision_cca",
-    categoria: "CCA Y EVENTOS",
-    title: "Emisión de Certificado CCA (Para Estudiantes)",
-    description: "Solicitud del certificado tras finalizar un curso acreditado.",
+    categoria: { es: "CCA Y EVENTOS", pt: "CCA E EVENTOS" },
+    title: { es: "Emisión de Certificado CCA (Para Estudiantes)", pt: "Emissão de Certificado CCA (Para Estudantes)" },
+    description: { es: "Solicitud del certificado tras finalizar un curso acreditado.", pt: "Solicitação do certificado após a conclusão de um curso creditado." },
     monto: "10 € (Socios) / 15 € (No Socios) por bloque de 12 créditos",
-    instrucciones_leer: [
-      "Plazo: Hasta 5 meses después de terminar el curso.",
-      "Tarifas: Socio Activo (10 €), No Socio (15 €) por bloque de 12 créditos."
-    ],
+    accreditationTypeKey: "Emision_CCA",
+    instrucciones_leer: {
+      es: [
+        "Plazo: Hasta 5 meses después de terminar el curso.",
+        "Tarifas: Socio Activo (10 €), No Socio (15 €) por bloque de 12 créditos."
+      ],
+      pt: [
+        "Prazo: Até 5 meses após o término do curso.",
+        "Tarifas: Sócio Ativo (10 €), Não Sócio (15 €) por bloco de 12 créditos."
+      ]
+    },
     descargas: [],
     fields: [
       { name: "certificado_formacion", label: "Certificado de Formación Básica reconocido", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -128,15 +153,23 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "renovacion_cca": {
     id: "renovacion_cca",
-    categoria: "CCA Y EVENTOS",
-    title: "Renovación y Mantenimiento (CCA / Equivalencia)",
-    description: "Trámites para renovar certificación CCA o Mantenimiento de Equivalencia.",
+    categoria: { es: "CCA Y EVENTOS", pt: "CCA E EVENTOS" },
+    title: { es: "Renovación y Mantenimiento (CCA / Equivalencia)", pt: "Renovação e Manutenção (CCA / Equivalência)" },
+    description: { es: "Trámites para renovar certificación CCA o Mantenimiento de Equivalencia.", pt: "Procedimentos para renovar a certificação CCA ou Manutenção de Equivalência." },
     monto: "50 € (Renovación) / 25 € (Mantenimiento Equivalencia)",
-    instrucciones_leer: [
-      "Costo Renovación Curso: 50 €.",
-      "Costo Mantenimiento Equivalencia: 25 €.",
-      "Requisito: Haber sumado 12 créditos CCA en los últimos 2 años (mínimo 8 en PsicoTrauma)."
-    ],
+    accreditationTypeKey: "Renovacion_CCA",
+    instrucciones_leer: {
+      es: [
+        "Costo Renovación Curso: 50 €.",
+        "Costo Mantenimiento Equivalencia: 25 €.",
+        "Requisito: Haber sumado 12 créditos CCA en los últimos 2 años (mínimo 8 en PsicoTrauma)."
+      ],
+      pt: [
+        "Custo Renovação do Curso: 50 €.",
+        "Custo Manutenção de Equivalência: 25 €.",
+        "Requisito: Ter somado 12 créditos CCA nos últimos 2 anos (mínimo 8 em Psicotrauma)."
+      ]
+    },
     descargas: [],
     fields: [
       { name: "evidencia_creditos", label: "Evidencia de los 12 créditos CCA", typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
@@ -145,17 +178,25 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "cert_psicoterapeuta": {
     id: "cert_psicoterapeuta",
-    categoria: "CERTIFICACIONES EMDR",
-    title: "Certificación Inicial - Psicoterapeuta",
-    description: "Certificación inicial en EMDR como psicoterapeuta.",
+    categoria: { es: "CERTIFICACIONES EMDR", pt: "CERTIFICAÇÕES EMDR" },
+    title: { es: "Certificación Inicial - Psicoterapeuta", pt: "Certificação Inicial - Psicoterapeuta" },
+    description: { es: "Certificación inicial en EMDR como psicoterapeuta.", pt: "Certificação inicial em EMDR como psicoterapeuta." },
     monto: 20,
-    instrucciones_leer: [
-      "Costo: 20 €.",
-      "Requisitos: 2 años de práctica, 50 sesiones con 25 pacientes, 20h de supervisión AIBAPT."
-    ],
+    requiresMembership: true,
+    accreditationTypeKey: "EMDR_Psicoterapeuta",
+    instrucciones_leer: {
+      es: [
+        "Costo: 20 €.",
+        "Requisitos: 2 años de práctica, 50 sesiones con 25 pacientes, 20h de supervisión AIBAPT."
+      ],
+      pt: [
+        "Custo: 20 €.",
+        "Requisitos: 2 anos de prática, 50 sessões com 25 pacientes, 20h de supervisão AIBAPT."
+      ]
+    },
     descargas: [
-      { label: "Formulario de Solicitud", url: "#" },
-      { label: "Plantilla de Carta de Recomendación", url: "#" }
+      { label_es: "Formulario de Solicitud", label_pt: "Formulário de Solicitação", url_es: "#", url_pt: "#" },
+      { label_es: "Plantilla de Carta de Recomendación", label_pt: "Modelo de Carta de Recomendação", url_es: "#", url_pt: "#" }
     ],
     fields: [
       { name: "formulario_solicitud", label: "Formulario de Solicitud", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -167,16 +208,24 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "cert_supervisor": {
     id: "cert_supervisor",
-    categoria: "CERTIFICACIONES EMDR",
-    title: "Certificación Inicial - Supervisor",
-    description: "Certificación inicial en EMDR como supervisor.",
+    categoria: { es: "CERTIFICACIONES EMDR", pt: "CERTIFICAÇÕES EMDR" },
+    title: { es: "Certificación Inicial - Supervisor", pt: "Certificação Inicial - Supervisor" },
+    description: { es: "Certificación inicial en EMDR como supervisor.", pt: "Certificação inicial em EMDR como supervisor." },
     monto: 40,
-    instrucciones_leer: [
-      "Costo: 40 €.",
-      "Requisitos: Psicoterapeuta certificado por 3 años, 300 sesiones con 75 pacientes, 20h de 'supervisión de la supervisión'."
-    ],
+    requiresMembership: true,
+    accreditationTypeKey: "EMDR_Supervisor",
+    instrucciones_leer: {
+      es: [
+        "Costo: 40 €.",
+        "Requisitos: Psicoterapeuta certificado por 3 años, 300 sesiones con 75 pacientes, 20h de 'supervisión de la supervisión'."
+      ],
+      pt: [
+        "Custo: 40 €.",
+        "Requisitos: Psicoterapeuta certificado há 3 anos, 300 sessões com 75 pacientes, 20h de 'supervisão da supervisão'."
+      ]
+    },
     descargas: [
-      { label: "Formulario de Supervisor", url: "#" }
+      { label_es: "Formulario de Supervisor", label_pt: "Formulário de Supervisor", url_es: "#", url_pt: "#" }
     ],
     fields: [
       { name: "formulario_supervisor", label: "Formulario de Supervisor", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -188,13 +237,20 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "equivalencia_emdr": {
     id: "equivalencia_emdr",
-    categoria: "CERTIFICACIONES EMDR",
-    title: "Procesos de Equivalencia EMDR",
-    description: "Proceso para profesionales con certificación de otras asociaciones reconocidas.",
+    categoria: { es: "CERTIFICACIONES EMDR", pt: "CERTIFICAÇÕES EMDR" },
+    title: { es: "Procesos de Equivalencia EMDR", pt: "Processos de Equivalência EMDR" },
+    description: { es: "Proceso para profesionales con certificación de otras asociaciones reconocidas.", pt: "Processo para profissionais com certificação de outras associações reconhecidas." },
     monto: "20 € (Psicoterapeuta) / 40 € (Supervisor)",
-    instrucciones_leer: [
-      "Requisito: Certificación vigente de otras asociaciones reconocidas (EMDRIA, etc.)."
-    ],
+    requiresMembership: true,
+    accreditationTypeKey: "Equivalencia_EMDR",
+    instrucciones_leer: {
+      es: [
+        "Requisito: Certificación vigente de otras asociaciones reconocidas (EMDRIA, etc.)."
+      ],
+      pt: [
+        "Requisito: Certificação vigente de outras associações reconhecidas (EMDRIA, etc.)."
+      ]
+    },
     descargas: [],
     fields: [
       { name: "certificacion_vigente", label: "Certificación vigente de otras asociaciones", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -203,16 +259,22 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "cert_psicotrauma": {
     id: "cert_psicotrauma",
-    categoria: "FORMACIONES EN PSICOTRAUMA",
-    title: "Certificación Individual (Psicoterapeuta)",
-    description: "Certificación en Psicotrauma.",
+    categoria: { es: "FORMACIONES EN PSICOTRAUMA", pt: "FORMAÇÕES EM PSICOTRAUMA" },
+    title: { es: "Certificación Individual (Psicoterapeuta)", pt: "Certificação Individual (Psicoterapeuta)" },
+    description: { es: "Certificación en Psicotrauma.", pt: "Certificação em Psicotrauma." },
     monto: 20,
-    instrucciones_leer: [
-      "Documento Crítico: Caso Clínico. Formato: PDF, máximo 20 páginas, Calibri 12, interlineado 1.5.",
-      "Incluir Declaración de Adhesión al Código Ético y Certificados académicos previos."
-    ],
+    instrucciones_leer: {
+      es: [
+        "Documento Crítico: Caso Clínico. Formato: PDF, máximo 20 páginas, Calibri 12, interlineado 1.5.",
+        "Incluir Declaración de Adhesión al Código Ético y Certificados académicos previos."
+      ],
+      pt: [
+        "Documento Crítico: Caso Clínico. Formato: PDF, máximo 20 páginas, Calibri 12, entrelinhas 1.5.",
+        "Incluir Declaração de Adesão ao Código Ético e Certificados acadêmicos prévios."
+      ]
+    },
     descargas: [
-      { label: "Declaración de Adhesión al Código Ético", url: "#" }
+      { label_es: "Declaración de Adhesión al Código Ético", label_pt: "Declaração de Adesão ao Código Ético", url_es: "#", url_pt: "#" }
     ],
     fields: [
       { name: "caso_clinico", label: "Caso Clínico (Máx 20 págs, Calibri 12, int. 1.5)", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -223,13 +285,18 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "acred_programas": {
     id: "acred_programas",
-    categoria: "FORMACIONES EN PSICOTRAUMA",
-    title: "Acreditación de Programas de Formación",
-    description: "Dirigido a institutos o universidades.",
+    categoria: { es: "FORMACIONES EN PSICOTRAUMA", pt: "FORMAÇÕES EM PSICOTRAUMA" },
+    title: { es: "Acreditación de Programas de Formación", pt: "Acreditação de Programas de Formação" },
+    description: { es: "Dirigido a institutos o universidades.", pt: "Dirigido a institutos ou universidades." },
     monto: 50,
-    instrucciones_leer: [
-      "Requisitos: Programa de mínimo 5 módulos, contenidos mínimos obligatorios, equipo docente especialista."
-    ],
+    instrucciones_leer: {
+      es: [
+        "Requisitos: Programa de mínimo 5 módulos, contenidos mínimos obligatorios, equipo docente especialista."
+      ],
+      pt: [
+        "Requisitos: Programa de no mínimo 5 módulos, conteúdos mínimos obrigatórios, equipe docente especialista."
+      ]
+    },
     descargas: [],
     fields: [
       { name: "proyecto_pedagogico", label: "Proyecto Pedagógico", typeLabel: "PDF", validator: FileValidators.pdf },
@@ -240,13 +307,18 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
   },
   "equivalencia_basica": {
     id: "equivalencia_basica",
-    categoria: "FORMACIONES EN PSICOTRAUMA",
-    title: "Reconocimiento de Formación Básica",
-    description: "Proceso de equivalencia para formación básica externa.",
+    categoria: { es: "FORMACIONES EN PSICOTRAUMA", pt: "FORMAÇÕES EM PSICOTRAUMA" },
+    title: { es: "Reconocimiento de Formación Básica", pt: "Reconhecimento de Formação Básica" },
+    description: { es: "Proceso de equivalencia para formación básica externa.", pt: "Processo de equivalência para formação básica externa." },
     monto: "20 € (Alumnos) / 50 € (Formadores)",
-    instrucciones_leer: [
-      "Requisito: El curso externo debe durar mínimo 1 año y coincidir en contenidos con AIBAPT."
-    ],
+    instrucciones_leer: {
+      es: [
+        "Requisito: El curso externo debe durar mínimo 1 año y coincidir en contenidos con AIBAPT."
+      ],
+      pt: [
+        "Requisito: O curso externo deve durar no mínimo 1 ano e coincidir em conteúdos com a AIBAPT."
+      ]
+    },
     descargas: [],
     fields: [
       { name: "programa_curso", label: "Programa del Curso Externo", typeLabel: "PDF", validator: FileValidators.pdf },

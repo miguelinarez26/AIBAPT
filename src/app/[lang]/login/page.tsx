@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, Suspense } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/lib/supabase";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -22,6 +22,7 @@ function LoginContent() {
         setLoading(true);
         setError("");
 
+        const supabase = createBrowserSupabaseClient();
         const { error: authError } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -32,7 +33,7 @@ function LoginContent() {
             setLoading(false);
         } else {
             const redirectTo = searchParams.get("redirectTo");
-            router.push(redirectTo || "/");
+            router.push(redirectTo || `/${lang}/dashboard`);
         }
     };
 
