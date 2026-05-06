@@ -144,6 +144,12 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                             <span className="font-medium text-text-main dark:text-white">
                               {formatTypeName(app.accreditation_type_name)}
                             </span>
+                            {app.status === 'rejected' && (app.metadata as any)?.admin_notes && (
+                              <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-2 rounded-md border border-red-100 dark:border-red-900/30">
+                                <span className="font-bold block mb-1">Nota del Revisor:</span>
+                                {(app.metadata as any).admin_notes}
+                              </div>
+                            )}
                           </td>
                           <td className="py-4 px-3 text-text-muted dark:text-gray-400 hidden md:table-cell">
                             {formatDate(app.created_at)}

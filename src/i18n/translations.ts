@@ -642,7 +642,18 @@ export const translations = {
         "profile.updated": "Perfil Actualizado",
         "profile.save": "Guardar Cambios",
         "profile.lang_pref": "Idioma de Preferencia",
-        "profile.lang_desc": "Cambiar el idioma guardará automáticamente tu preferencia y actualizará la página."
+        "profile.lang_desc": "Cambiar el idioma guardará automáticamente tu preferencia y actualizará la página.",
+        
+        // Application Statuses
+        "status.draft": "Borrador",
+        "status.uploading": "Subiendo...",
+        "status.pending": "Pendiente",
+        "status.under_review": "En Revisión",
+        "status.approved": "Aprobado",
+        "status.rejected": "Rechazado",
+        "status.cancelled": "Cancelado",
+        "status.unknown": "Desconocido",
+        "status.uploading_fallback": "Finalizando subida..."
     },
     pt: {
         // Header
@@ -662,6 +673,17 @@ export const translations = {
         "nav.development": "Desenvolvimento Profissional",
         "nav.statutes": "Estatutos",
         "nav.rules": "Regulamento Interno",
+
+        // Application Statuses
+        "status.draft": "Rascunho",
+        "status.uploading": "Subindo...",
+        "status.pending": "Pendente",
+        "status.under_review": "Em Revisão",
+        "status.approved": "Aprovado",
+        "status.rejected": "Rejeitado",
+        "status.cancelled": "Cancelado",
+        "status.unknown": "Desconhecido",
+        "status.uploading_fallback": "Finalizando envio...",
 
         // Home Page - Hero
         "home.badge": "Associação Ibero-Americana de Psicotrauma",

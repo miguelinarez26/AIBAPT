@@ -169,29 +169,6 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
     resolver: zodResolver(schema),
   });
 
-  const uploadFile = async (file: File, prefix: string) => {
-    const supabase = createBrowserSupabaseClient();
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${prefix}-${Math.random()}.${fileExt}`;
-    // La carpeta raíz DEBE ser el uid del usuario para cumplir con la política RLS
-    const filePath = `${session?.user?.id || 'anon'}/${tramiteId}/${fileName}`;
-
-    console.log('[UniversalStepper] Subiendo archivo:', { bucket: 'private-certifications', filePath, fileSize: file.size });
-
-    const { error: uploadError } = await supabase.storage
-      .from('private-certifications')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error('[UniversalStepper] ❌ Error subiendo archivo:', uploadError.message);
-      console.error('[UniversalStepper] Detalles de Storage:', JSON.stringify(uploadError, null, 2));
-      throw new Error(`Error de permisos al subir archivos: ${uploadError.message}. Contacte al administrador.`);
-    }
-
-    console.log('[UniversalStepper] ✅ Archivo subido correctamente:', filePath);
-    return filePath;
-  };
-
   // Estado de error de envío visible en la UI
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -200,50 +177,29 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    try {
-      const archivosSubidos: Record<string, string> = {};
-      const archivosConLabels: Record<string, string> = {};
-      
-      // Paso 1: Subir todos los archivos al Storage
-      console.log('[UniversalStepper] Iniciando subida de archivos...');
-      for (const field of config.fields) {
-        if (field.name === "cuestionario_evaluacion" && !isOnline) continue;
-        
-        const fileList = data[field.name];
-        if (fileList && fileList.length > 0 && fileList[0] && fileList[0].size > 0) {
-          try {
-            const path = await uploadFile(fileList[0], field.name);
-            archivosSubidos[field.name] = path;
-            archivosConLabels[field.label] = path;
-          } catch (uploadErr) {
-            // Error de permisos de Storage — detener proceso inmediatamente
-            const msg = uploadErr instanceof Error ? uploadErr.message : 'Error desconocido al subir archivo';
-            console.error('[UniversalStepper] ❌ Upload fallido para campo:', field.name, msg);
-            setSubmitError(`Error al subir "${field.label}": ${msg}`);
-            setIsSubmitting(false);
-            return; // Detener — no continuar con los demás archivos
-          }
-        }
-      }
+    const supabase = createBrowserSupabaseClient();
+    let applicationId: string | null = null;
+    const archivosSubidos: Record<string, string> = {};
+    const archivosConLabels: Record<string, string> = {};
 
-      // Paso 2: Determinar monto final
+    try {
+      // Paso 1: Determinar monto final
       let montoFinal = config.monto;
       if (Array.isArray(config.monto)) {
         montoFinal = config.monto.find((e: EscenarioEvento) => e.id === data.escenario)?.monto || 0;
       }
 
-      // Paso 3: Guardar solicitud en la base de datos (tabla applications)
-      const supabase = createBrowserSupabaseClient();
-      console.log('[UniversalStepper] Guardando solicitud en DB:', { type_id: accreditationType?.id, user: session.user.id });
-      
       if (!accreditationType?.id) {
         throw new Error("No se pudo determinar el tipo de trámite (falta type_id).");
       }
 
+      // Paso 2: Guardar solicitud en BD como 'uploading'
+      console.log('[UniversalStepper] Guardando solicitud inicial (uploading):', { type_id: accreditationType.id, user: session.user.id });
+      
       const { data: applicationData, error: dbError } = await supabase.from('applications').insert({
         user_id: session.user.id,
         type_id: accreditationType.id,
-        status: 'pending',
+        status: 'uploading',
         metadata: {
           escenario: data.escenario,
           monto_pagado: montoFinal,
@@ -252,35 +208,86 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
       }).select('id').single();
 
       if (dbError) {
-        console.error('[UniversalStepper] ❌ ERROR DB - Insert en applications falló:', dbError.message);
-        console.error('[UniversalStepper] Detalles:', JSON.stringify(dbError, null, 2));
-        setSubmitError(`Error al guardar solicitud: ${dbError.message}. Contacte al administrador.`);
-        setIsSubmitting(false);
-        return;
+        throw new Error(`Error al crear la solicitud inicial: ${dbError.message}`);
       }
 
-      console.log('[UniversalStepper] ✅ Solicitud creada con ID:', applicationData.id);
+      applicationId = applicationData.id;
+      console.log('[UniversalStepper] ✅ Solicitud creada con ID:', applicationId);
+
+      // Función helper para subir archivos con el ID de la solicitud y timeout
+      const uploadFile = async (file: File, prefix: string, appId: string) => {
+        // Sanitizar el prefijo y el nombre del archivo para evitar el error 406
+        const safePrefix = prefix.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const fileExt = file.name.split('.').pop()?.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'bin';
+        const fileName = `${safePrefix}_${Date.now()}.${fileExt}`;
+        
+        // Nueva ruta: incluye el ID de la solicitud para agrupar archivos
+        const filePath = `${session.user.id}/${tramiteId}/${appId}/${fileName}`;
+        
+        console.log(`[UniversalStepper] Subiendo ${fileName} a private-certifications...`);
+        
+        const uploadPromise = supabase.storage
+          .from('private-certifications')
+          .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+        // Timeout de 10 segundos
+        const timeoutPromise = new Promise<{ error: Error }>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout: La subida de archivo tardó demasiado.')), 10000)
+        );
+
+        const { error: uploadError } = await Promise.race([uploadPromise, timeoutPromise]) as any;
+
+        if (uploadError) {
+          throw uploadError;
+        }
+        return filePath;
+      };
+
+      // Paso 3: Subir todos los archivos al Storage
+      console.log('[UniversalStepper] Iniciando subida de archivos...');
+      for (const field of config.fields) {
+        if (field.name === "cuestionario_evaluacion" && !isOnline) continue;
+        
+        const fileList = data[field.name];
+        if (fileList && fileList.length > 0 && fileList[0] && fileList[0].size > 0) {
+          try {
+            const path = await uploadFile(fileList[0], field.name, applicationId);
+            archivosSubidos[field.name] = path;
+            archivosConLabels[field.label] = path;
+          } catch (uploadErr) {
+            throw new Error(`Error al subir "${field.label}": ${uploadErr instanceof Error ? uploadErr.message : 'Error desconocido'}`);
+          }
+        }
+      }
 
       // Paso 4: Guardar archivos en la tabla documents
       if (Object.keys(archivosSubidos).length > 0) {
         const documentsToInsert = Object.entries(archivosSubidos).map(([fieldName, path]) => ({
-          application_id: applicationData.id,
+          application_id: applicationId as string,
           file_path: path,
-          document_type: fieldName, // Guardamos el nombre del campo como tipo de documento
+          document_type: fieldName,
           is_private: true
         }));
 
         const { error: docsError } = await supabase.from('documents').insert(documentsToInsert);
-        
         if (docsError) {
-          console.error('[UniversalStepper] ❌ ERROR DB - Insert en documents falló:', docsError.message);
-          // Opcional: Podríamos decidir borrar la solicitud si fallan los documentos, pero de momento solo alertamos
-        } else {
-          console.log('[UniversalStepper] ✅ Documentos vinculados exitosamente.');
+          throw new Error(`Error vinculando documentos: ${docsError.message}`);
         }
       }
 
-      // Paso 5: Notificar al admin (no crítico — no bloquea el éxito)
+      // Paso 5: Actualizar estado de la solicitud a 'pending'
+      const { error: updateError } = await supabase
+        .from('applications')
+        .update({ status: 'pending' })
+        .eq('id', applicationId);
+
+      if (updateError) {
+        throw new Error(`Error actualizando estado final: ${updateError.message}`);
+      }
+
+      console.log('[UniversalStepper] ✅ Proceso completado exitosamente.');
+
+      // Paso 6: Notificar al admin
       try {
         await fetch('/api/notify-admin', {
           method: 'POST',
@@ -296,11 +303,26 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
       }
 
       setSubmitSuccess(true);
-      reset(); // Limpia la caché y los archivos de memoria para futuros intentos
+      reset();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Error inesperado';
       console.error('[UniversalStepper] ❌ Error general en onSubmit:', errorMsg, error);
       setSubmitError(errorMsg);
+
+      // Rollback: Si falló después de crear la solicitud, intentamos limpiar
+      if (applicationId) {
+        console.log('[UniversalStepper] Iniciando rollback por error...');
+        
+        // 1. Borrar archivos huérfanos
+        if (Object.keys(archivosSubidos).length > 0) {
+          const pathsToRemove = Object.values(archivosSubidos);
+          await supabase.storage.from('private-certifications').remove(pathsToRemove);
+        }
+        
+        // 2. Borrar la solicitud fallida (los documentos se borrarán en cascada si hay foreign key)
+        await supabase.from('applications').delete().eq('id', applicationId);
+        console.log('[UniversalStepper] ✅ Rollback completado.');
+      }
     } finally {
       setIsSubmitting(false);
     }

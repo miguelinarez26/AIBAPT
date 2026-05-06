@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { translations, LangKeys } from "@/i18n/translations";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 type Language = "es" | "pt";
 
@@ -23,13 +25,27 @@ export const LanguageProvider = ({ children, initialLang = "es" }: LanguageProvi
     const [lang, setLangState] = useState<Language>(initialLang);
     const pathname = usePathname();
     const router = useRouter();
+    const { session } = useAuth();
 
-    // Cambiar idioma: actualiza cookie, estado y navega al prefijo correcto
-    const changeLanguage = useCallback((newLang: Language) => {
+    // Cambiar idioma: actualiza cookie, estado, DB y navega al prefijo correcto
+    const changeLanguage = useCallback(async (newLang: Language) => {
         setLangState(newLang);
 
         // Guardar en cookie para que el middleware lo detecte en futuras visitas
         document.cookie = `aibapt-lang=${newLang};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+
+        // Sincronizar con la base de datos si hay un usuario autenticado
+        if (session?.user) {
+            const supabase = createBrowserSupabaseClient();
+            const { error } = await supabase
+                .from('profiles')
+                .update({ language_preference: newLang })
+                .eq('id', session.user.id);
+                
+            if (error) {
+                console.error("Error sincronizando idioma:", error);
+            }
+        }
 
         // Reemplazar el prefijo de idioma en la ruta actual
         // Ej: /es/formaciones → /pt/formaciones
@@ -39,7 +55,7 @@ export const LanguageProvider = ({ children, initialLang = "es" }: LanguageProvi
         }
         const newPath = segments.join('/') || `/${newLang}`;
         router.push(newPath);
-    }, [pathname, router]);
+    }, [pathname, router, session]);
 
     const t = (key: LangKeys): string => {
         const val = translations[lang][key];

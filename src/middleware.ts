@@ -21,7 +21,7 @@ const IGNORED_PATHS = [
  * 2. Manejar la detección e inyección de idioma (i18n con prefijos /es y /pt).
  * 3. Inyectar el header x-aibapt-lang para que los Server Components lo lean.
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Ignorar archivos estáticos, API routes y assets internos de Next.js
@@ -135,7 +135,13 @@ function detectLocale(request: NextRequest): string {
 // Configurar qué rutas procesa el proxy
 export const config = {
   matcher: [
-    // Todas las rutas excepto las de Next.js internals y archivos estáticos
-    '/((?!_next/static|_next/image|favicon.ico|icon.png|.*\\..*).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, icon.png (metadata files)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.png).*)',
   ],
 }

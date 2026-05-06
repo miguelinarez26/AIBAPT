@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         hostname: 'idpjomyvailowoltosaj.supabase.co',
         pathname: '/storage/v1/object/**',
       },
+      {
+        protocol: 'https',
+        hostname: 's3.amazonaws.com',
+      },
     ],
   },
 };

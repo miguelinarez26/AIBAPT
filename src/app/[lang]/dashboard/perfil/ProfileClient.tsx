@@ -8,6 +8,7 @@ import { MembershipBadge } from "@/components/dashboard/MembershipBadge";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { translations } from "@/i18n/translations";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProfileClientProps {
   profile: Profile | null;
@@ -54,24 +55,14 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
     }
   };
 
+  const { setLang } = useLanguage();
+
   const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLang = e.target.value as 'es' | 'pt';
     setLangPref(newLang);
-    if (!profile) return;
     
-    setIsSaving(true);
-    const supabase = createBrowserSupabaseClient();
-    await (supabase as any)
-      .from('profiles')
-      .update({ language_preference: newLang })
-      .eq('id', profile.id);
-    setIsSaving(false);
-
-    // Redirect to the new locale path
-    if (pathname) {
-      const newPath = pathname.replace(`/${lang}`, `/${newLang}`);
-      router.push(newPath);
-    }
+    // Usar el LanguageContext como única fuente de verdad
+    setLang(newLang);
   };
 
   return (

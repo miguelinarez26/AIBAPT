@@ -28,11 +28,20 @@ export default async function ProfilePage({
   );
 
   // Fetch perfil del usuario
-  const { data: profile } = await supabaseAdmin
+  const { data: profile, error: profileError } = await supabaseAdmin
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single();
+
+  // Si el perfil no se encuentra (PGRST116 o 406) o es null, redirigir a onboarding
+  if (!profile || (profileError && (profileError.code === 'PGRST116' || profileError.code === '406'))) {
+    redirect(`/${validLang}/onboarding`);
+  } else if (profileError) {
+    // Si es otro tipo de error, redirigir al login
+    console.error('Error fetching profile:', profileError);
+    redirect(`/${validLang}/login?error=profile_fetch_error`);
+  }
 
   return <ProfileClient profile={profile} lang={validLang as 'es' | 'pt'} />;
 }

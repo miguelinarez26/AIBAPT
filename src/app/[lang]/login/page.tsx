@@ -23,7 +23,7 @@ function LoginContent() {
         setError("");
 
         const supabase = createBrowserSupabaseClient();
-        const { error: authError } = await supabase.auth.signInWithPassword({
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
@@ -32,8 +32,18 @@ function LoginContent() {
             setError(authError.message);
             setLoading(false);
         } else {
+            // Obtener perfil para determinar rol y redirección
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', authData.user?.id)
+                .single();
+
+            const role = profile?.role || 'member';
+            const defaultRoute = role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`;
+            
             const redirectTo = searchParams.get("redirectTo");
-            router.push(redirectTo || `/${lang}/dashboard`);
+            router.push(role === 'admin' ? defaultRoute : (redirectTo || defaultRoute));
         }
     };
 

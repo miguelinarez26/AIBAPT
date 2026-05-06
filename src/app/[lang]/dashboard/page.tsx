@@ -45,10 +45,19 @@ export default async function DashboardPage({
     .eq('id', userId)
     .single();
 
-  // Si hay un error que no sea "no se encontró" (PGRST116), redirigir
-  if (profileError && profileError.code !== 'PGRST116') {
-    console.error('Error fetching profile:', profileError);
-    redirect(`/${validLang}/login?error=profile_fetch_error`);
+  // Lógica segura para determinar si falta el perfil vs. un error real
+  const isProfileMissing = !profileData && profileError && (profileError.code === 'PGRST116' || profileError.code === '406');
+
+  if (isProfileMissing) {
+    redirect(`/${validLang}/onboarding`);
+  } else if (profileError) {
+    // Si es otro tipo de error (ej. timeout de BD), lo registramos pero redirigimos a login
+    // para evitar un bucle de /dashboard -> /onboarding infinito.
+    console.error('Error crítico consultando el perfil:', profileError);
+    redirect(`/${validLang}/login?error=critical_profile_error`);
+  } else if (!profileData) {
+    // Failsafe por si la data es null pero no hubo un error explícito
+    redirect(`/${validLang}/onboarding`);
   }
 
   const profile = profileData as Profile | null;

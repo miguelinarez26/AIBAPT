@@ -13,7 +13,7 @@ export type Json =
 
 // --- Enums como union types ---
 export type UserRole = 'member' | 'admin'
-export type ApplicationStatus = 'pending' | 'under_review' | 'approved' | 'rejected'
+export type ApplicationStatus = 'draft' | 'uploading' | 'pending' | 'under_review' | 'approved' | 'rejected' | 'cancelled'
 export type DocumentType = 'cv' | 'formulario' | 'caso_clinico' | 'pago'
 export type SupportedLanguage = 'es' | 'pt'
 
