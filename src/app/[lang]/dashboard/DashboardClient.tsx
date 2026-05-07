@@ -85,23 +85,71 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
 
             {/* Alerta para No Socios */}
             {!isMember && (
-              <div className="bg-white border-l-4 border-l-amber-500 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50">
-                <div>
-                  <h3 className="font-bold font-display text-amber-600 text-lg flex items-center gap-2 mb-2">
-                    <span className="material-icons-round">warning_amber</span>
-                    {t["dashboard.inactive_membership"]}
-                  </h3>
-                  <p className="text-sm text-text-muted leading-relaxed">
-                    {t["dashboard.inactive_desc"]}
-                  </p>
-                </div>
-                <Link
-                  href={`/${lang}/afiliacion`}
-                  className="shrink-0 w-full md:w-auto px-6 py-3 bg-amber-500 text-white font-bold rounded-xl shadow-md shadow-amber-500/20 hover:bg-amber-600 transition-colors text-center"
-                >
-                  {t["dashboard.start_affiliation"]}
-                </Link>
-              </div>
+              (() => {
+                const pendingMembershipApp = applications.find(
+                  (app) => app.type_id === 'solicitud_membresia' && (app.status === 'pending' || app.status === 'under_review' || app.status === 'uploading')
+                );
+
+                if (pendingMembershipApp) {
+                  return (
+                    <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-blue-100 dark:border-blue-900/30">
+                      <div>
+                        <h3 className="font-bold font-display text-blue-700 dark:text-blue-400 text-lg flex items-center gap-2 mb-2">
+                          <span className="material-icons-round">info</span>
+                          {t["dashboard.membership_under_review"] || "Tu solicitud de membresía está en revisión"}
+                        </h3>
+                        <p className="text-sm text-blue-600/80 dark:text-blue-300/80 leading-relaxed">
+                          {t["dashboard.membership_under_review_desc"] || "Estamos verificando tus documentos. Te notificaremos pronto."}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (applications.length === 0) {
+                  return (
+                    <div className="bg-white dark:bg-surface-dark border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50 dark:border-gray-800">
+                      <div>
+                        <h3 className="font-bold font-display text-aibapt-green text-lg flex items-center gap-2 mb-2">
+                          <span className="material-icons-round">waving_hand</span>
+                          {lang === 'es' ? '¡Bienvenido a AIBAPT!' : 'Bem-vindo à AIBAPT!'}
+                        </h3>
+                        <p className="text-sm text-text-muted dark:text-gray-400 leading-relaxed">
+                          {lang === 'es' 
+                            ? '¡Hola! Tu cuenta ha sido creada. Para disfrutar de los beneficios de AIBAPT, completa tu solicitud de membresía aquí.' 
+                            : 'Olá! Sua conta foi criada. Para aproveitar os benefícios da AIBAPT, preencha sua solicitação de membresia aqui.'}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/${lang}/afiliacion`}
+                        className="shrink-0 w-full md:w-auto px-6 py-3 bg-aibapt-green text-white font-bold rounded-xl shadow-md shadow-aibapt-green/20 hover:bg-aibapt-green/90 transition-colors text-center"
+                      >
+                        {t["dashboard.start_affiliation"] || "Comenzar Afiliación"}
+                      </Link>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="bg-white border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50">
+                    <div>
+                      <h3 className="font-bold font-display text-aibapt-green text-lg flex items-center gap-2 mb-2">
+                        <span className="material-icons-round">verified_user</span>
+                        {t["dashboard.inactive_membership"]}
+                      </h3>
+                      <p className="text-sm text-text-muted leading-relaxed">
+                        {t["dashboard.inactive_desc"]}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/${lang}/afiliacion`}
+                      className="shrink-0 w-full md:w-auto px-6 py-3 bg-aibapt-green text-white font-bold rounded-xl shadow-md shadow-aibapt-green/20 hover:bg-aibapt-green/90 transition-colors text-center"
+                    >
+                      {t["dashboard.start_affiliation"] || "Quiero ser Socio"}
+                    </Link>
+                  </div>
+                );
+              })()
             )}
 
             {/* Tabla de Trámites Recientes */}
@@ -144,10 +192,10 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                             <span className="font-medium text-text-main dark:text-white">
                               {formatTypeName(app.accreditation_type_name)}
                             </span>
-                            {app.status === 'rejected' && (app.metadata as any)?.admin_notes && (
+                            {app.status === 'rejected' && (app as any).admin_notes && (
                               <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-2 rounded-md border border-red-100 dark:border-red-900/30">
                                 <span className="font-bold block mb-1">Nota del Revisor:</span>
-                                {(app.metadata as any).admin_notes}
+                                {(app as any).admin_notes}
                               </div>
                             )}
                           </td>

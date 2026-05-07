@@ -2,13 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FiArrowUpRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { buttonVariants } from "@/components/ui/Button";
 
 export const Benefits = () => {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
+    const { session } = useAuth();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -128,9 +130,15 @@ export const Benefits = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mt-8">
                 <div className="flex justify-center">
-                    <Link href="/afiliacion" className={buttonVariants({ variant: "primary", size: "lg" })}>
-                        {t("benefits.btn")} <FiArrowUpRight className="inline" />
-                    </Link>
+                    {session ? (
+                        <Link href={`/${lang}/afiliacion`} className={buttonVariants({ variant: "primary", size: "lg" })}>
+                            {t("benefits.btn")} <FiArrowUpRight className="inline" />
+                        </Link>
+                    ) : (
+                        <Link href={`/${lang}/registro?redirectTo=/${lang}/afiliacion`} className={buttonVariants({ variant: "primary", size: "lg" })}>
+                            {lang === 'es' ? 'Regístrate para iniciar tu afiliación' : 'Registre-se para iniciar sua afiliação'} <FiArrowUpRight className="inline" />
+                        </Link>
+                    )}
                 </div>
             </div>
         </section>

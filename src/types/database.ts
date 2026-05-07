@@ -27,6 +27,7 @@ export interface Database {
           full_name: string | null
           email: string | null
           is_member: boolean
+          membership_type: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'certificado' | 'supervisor' | 'ninguno' | null
           membership_expiry: string | null
           role: UserRole
           created_at: string
@@ -36,6 +37,7 @@ export interface Database {
           full_name?: string | null
           email?: string | null
           is_member?: boolean
+          membership_type?: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'certificado' | 'supervisor' | 'ninguno' | null
           membership_expiry?: string | null
           role?: UserRole
           created_at?: string
@@ -45,6 +47,7 @@ export interface Database {
           full_name?: string | null
           email?: string | null
           is_member?: boolean
+          membership_type?: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'certificado' | 'supervisor' | 'ninguno' | null
           membership_expiry?: string | null
           role?: UserRole
           created_at?: string
@@ -79,6 +82,8 @@ export interface Database {
           user_id: string
           type_id: string
           status: ApplicationStatus
+          metadata: Json | null
+          admin_notes: string | null
           created_at: string
         }
         Insert: {
@@ -86,6 +91,8 @@ export interface Database {
           user_id: string
           type_id: string
           status?: ApplicationStatus
+          metadata?: Json | null
+          admin_notes?: string | null
           created_at?: string
         }
         Update: {
@@ -93,6 +100,8 @@ export interface Database {
           user_id?: string
           type_id?: string
           status?: ApplicationStatus
+          metadata?: Json | null
+          admin_notes?: string | null
           created_at?: string
         }
       }

@@ -14,9 +14,10 @@ import type { Profile, AccreditationType } from "@/types/database";
 interface UniversalStepperProps {
   tramiteId: string;
   onBack: () => void;
+  initialEscenario?: string;
 }
 
-export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
+export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: UniversalStepperProps) {
   const params = useParams();
   const lang = (params?.lang as "es" | "pt") || "es";
   const [step, setStep] = useState(1);
@@ -28,16 +29,30 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
   
   // Custom states for conditional fields
   const [isOnline, setIsOnline] = useState(false);
-  const [selectedEscenario, setSelectedEscenario] = useState<string>("");
+  const [selectedEscenario, setSelectedEscenario] = useState<string>(initialEscenario);
+
+  // Contact form states for "Bienhechor"
+  const [contactMessage, setContactMessage] = useState("");
+  const [isSendingContact, setIsSendingContact] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Solo leer URL params si no vino un escenario pre-seleccionado del padre
+  useEffect(() => {
+    if (initialEscenario) return; // Escenario ya establecido desde la página de membresía
+    const scenarioParam = searchParams.get("tipo_membresia") || searchParams.get("escenario");
+    if (scenarioParam) {
+      setSelectedEscenario(scenarioParam);
+    }
+  }, [searchParams, initialEscenario]);
 
   // Estado de membresía y precios dinámicos
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [accreditationType, setAccreditationType] = useState<AccreditationType | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [membershipError, setMembershipError] = useState<string | null>(null);
-  
-  const searchParams = useSearchParams();
-  const router = useRouter();
 
   // Función para cargar perfil del usuario y precios dinámicos
   const loadMembershipData = async () => {
@@ -53,27 +68,16 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
     try {
       const supabase = createBrowserSupabaseClient();
 
-      // Paso 1: Verificar que la sesión del browser client está activa
-      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-
-      if (authError || !currentUser) {
-        console.error('[UniversalStepper] ❌ Error validando sesión de Supabase:', authError?.message || 'Usuario no encontrado');
-        console.error('[UniversalStepper] Detalle completo:', JSON.stringify(authError, null, 2));
-        setMembershipError(
-          `Error de autenticación: ${authError?.message || 'Sesión expirada'}. Intenta cerrar sesión y volver a entrar.`
-        );
-        setIsLoadingProfile(false);
-        return;
-      }
-
-      console.log('[UniversalStepper] ✅ Sesión válida para usuario:', currentUser.id);
+      // Paso 1: Usar la sesión ya existente de AuthProvider
+      const currentUser = session.user;
+      console.log('[UniversalStepper] ✅ Usando sesión de AuthProvider para usuario:', currentUser.id);
 
       // Paso 2: Fetch perfil para verificar membresía
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('[UniversalStepper] ❌ Error obteniendo perfil:', profileError.message);
@@ -101,7 +105,7 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
           .from('accreditation_types')
           .select('*')
           .eq('name', config.accreditationTypeKey)
-          .single();
+          .maybeSingle();
 
         if (accTypeError) {
           console.error('[UniversalStepper] ❌ Error obteniendo tipo de acreditación:', accTypeError.message);
@@ -135,6 +139,48 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
     ? (isMember ? accreditationType.fee_member : accreditationType.fee_non_member)
     : null;
 
+  // Determinar si el escenario seleccionado es de contacto
+  const currentEscenarioObj = Array.isArray(config.monto) 
+    ? config.monto.find((e: EscenarioEvento) => selectedEscenario === e.id || selectedEscenario.startsWith(e.id + '_')) 
+    : null;
+  const isContactFormMode = currentEscenarioObj?.isContactForm === true;
+
+  // Validar si la selección es completa (si tiene subProfiles, debe haber elegido uno)
+  const isSelectionValid = Array.isArray(config.monto) 
+    ? (selectedEscenario && (!currentEscenarioObj?.subProfiles || currentEscenarioObj.subProfiles.some(sp => sp.id === selectedEscenario)))
+    : true;
+
+  // Handler for contact form
+  const handleSendContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session?.user || !contactMessage.trim()) return;
+
+    setIsSendingContact(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch('/api/admin/notify-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: 'contacto_bienhechor',
+          userName: userProfile?.full_name || session.user.email,
+          accreditationName: 'Solicitud de Miembro Bienhechor',
+          message: contactMessage,
+          email: session.user.email
+        }),
+      });
+
+      if (!response.ok) throw new Error("Error enviando mensaje de contacto");
+      
+      setContactSuccess(true);
+    } catch (err: any) {
+      setSubmitError(err.message || "Error al enviar el formulario.");
+    } finally {
+      setIsSendingContact(false);
+    }
+  };
+
   useEffect(() => {
     const stepParam = searchParams.get("step");
     if (stepParam && !isNaN(Number(stepParam))) {
@@ -143,7 +189,7 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
   }, [searchParams]);
 
   // Generate dynamic Zod schema
-  const generateSchema = () => {
+  const generateSchema = (escenarioValue?: string) => {
     const shape: any = {};
     
     // Add Escenario if required
@@ -155,6 +201,7 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
     config.fields.forEach(field => {
       // Skip conditional fields if their condition is not met
       if (field.name === "cuestionario_evaluacion" && !isOnline) return;
+      if (field.dependsOnEscenario && escenarioValue && !field.dependsOnEscenario.includes(escenarioValue)) return;
       
       shape[field.name] = field.validator;
     });
@@ -162,12 +209,21 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
     return z.object(shape);
   };
 
-  const schema = generateSchema();
-  type FormData = z.infer<typeof schema>;
-
-  const { control, handleSubmit, formState: { errors }, watch, reset } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<any>({
+    resolver: (values, context, options) => {
+      return zodResolver(generateSchema(values.escenario))(values, context, options);
+    },
+    defaultValues: {
+      escenario: searchParams.get("tipo_membresia") || searchParams.get("escenario") || ""
+    }
   });
+
+  // Sync state with form
+  useEffect(() => {
+    if (selectedEscenario) {
+      setValue("escenario", selectedEscenario);
+    }
+  }, [selectedEscenario, setValue]);
 
   // Estado de error de envío visible en la UI
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -221,8 +277,9 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
         const fileExt = file.name.split('.').pop()?.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'bin';
         const fileName = `${safePrefix}_${Date.now()}.${fileExt}`;
         
-        // Nueva ruta: incluye el ID de la solicitud para agrupar archivos
-        const filePath = `${session.user.id}/${tramiteId}/${appId}/${fileName}`;
+        // Nueva ruta: incluye el ID de la solicitud para agrupar archivos, con subcarpeta especial para membresías
+        const folderName = tramiteId === 'solicitud_membresia' ? 'membresias' : tramiteId;
+        const filePath = `${session.user.id}/${folderName}/${appId}/${fileName}`;
         
         console.log(`[UniversalStepper] Subiendo ${fileName} a private-certifications...`);
         
@@ -369,8 +426,8 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
     );
   }
 
-  // Bloqueo preventivo: Trámite exclusivo para socios
-  if (config.requiresMembership && !isMember) {
+  // Bloqueo preventivo: Trámite exclusivo para socios (excepto para la solicitud de membresía misma)
+  if (config.requiresMembership && !isMember && tramiteId !== 'solicitud_membresia') {
     return (
       <div className="bg-white dark:bg-surface-dark border border-[var(--color-aibapt-gray)]/20 rounded-3xl p-10 text-center shadow-lg">
         <div className="w-20 h-20 bg-[var(--color-aibapt-gray)]/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -388,13 +445,13 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
             onClick={onBack}
             className="px-6 py-3 text-text-muted border border-accent rounded-xl hover:bg-accent/10 transition-colors font-medium"
           >
-            <ArrowLeft className="w-4 h-4 inline mr-2" />Volver a Acreditaciones
+            <ArrowLeft className="w-4 h-4 inline mr-2" />{lang === 'es' ? 'Volver' : 'Voltar'}
           </button>
           <a
-            href="/afiliacion"
+            href={`/${lang}/afiliacion`}
             className="px-8 py-3 bg-[var(--color-aibapt-green)] text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity"
           >
-            Activar Membresía
+            {lang === 'es' ? 'Activar Membresía' : 'Ativar Membresia'}
           </a>
         </div>
       </div>
@@ -463,48 +520,86 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
               </ul>
             </div>
             
-            {/* COMPARATIVA EVENTOS */}
+            {/* COMPARATIVA EVENTOS / SELECCIÓN */}
             {Array.isArray(config.monto) && (
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                <h4 className="font-bold text-text-main dark:text-white mb-4">Comparativa de Escenarios</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {Array.isArray(config.monto) && config.monto.map((esc: EscenarioEvento) => (
-                    <div key={esc.id} className="bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                      <div className="font-bold text-primary text-lg">{typeof esc.label === 'string' ? esc.label : esc.label[lang]}</div>
-                      <div className="text-2xl font-black text-accent my-2">{esc.monto} €</div>
-                      <p className="text-sm text-text-muted dark:text-gray-400">{typeof esc.description === 'string' ? esc.description : esc.description[lang]}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Banner de Precio Dinámico según membresía */}
-            {dynamicPrice !== null && !Array.isArray(config.monto) && (
-              <div className={`rounded-2xl p-5 border flex items-center justify-between ${
-                isMember
-                  ? 'bg-[var(--color-aibapt-green)]/5 border-[var(--color-aibapt-green)]/20'
-                  : 'bg-[var(--color-aibapt-gray)]/5 border-[var(--color-aibapt-gray)]/20'
-              }`}>
-                <div>
-                  <p className="text-sm font-bold text-text-main dark:text-white">
-                    {isMember ? (lang === 'es' ? '✓ Tarifa de Socio Activo' : '✓ Tarifa de Sócio Ativo') : (lang === 'es' ? 'Tarifa de No Socio' : 'Tarifa de Não Sócio')}
-                  </p>
-                  <p className="text-xs text-text-muted dark:text-gray-400">
-                    {isMember
-                      ? (lang === 'es' ? 'Estás disfrutando del precio preferencial para miembros.' : 'Você está aproveitando o preço preferencial para membros.')
-                      : (lang === 'es' ? 'Afíliate para acceder a tarifas preferenciales.' : 'Associe-se para acessar tarifas preferenciais.')}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className={`text-3xl font-black ${isMember ? 'text-[var(--color-aibapt-green)]' : 'text-[var(--color-aibapt-gray)]'}`}>
-                    {dynamicPrice} €
-                  </span>
-                  {!isMember && accreditationType && (
-                    <p className="text-[10px] text-[var(--color-aibapt-green)] font-bold">
-                      {lang === 'es' ? 'Socios:' : 'Sócios:'} {accreditationType.fee_member} €
-                    </p>
-                  )}
+                <h4 className="font-bold text-text-main dark:text-white mb-4">
+                  {lang === 'es' ? 'Selecciona tu Categoría' : 'Selecione sua Categoria'}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {config.monto.map((esc: EscenarioEvento) => {
+                    const isSelected = selectedEscenario === esc.id || selectedEscenario.startsWith(esc.id + '_');
+                    return (
+                      <div 
+                        key={esc.id} 
+                        onClick={() => {
+                          if (esc.subProfiles && esc.subProfiles.length > 0) {
+                            if (!isSelected) setSelectedEscenario(esc.subProfiles[0].id);
+                          } else {
+                            setSelectedEscenario(esc.id);
+                          }
+                        }}
+                        className={`cursor-pointer transition-all duration-300 p-5 rounded-2xl border-2 text-center flex flex-col justify-between h-full ${
+                          isSelected 
+                            ? 'bg-primary/5 border-primary shadow-lg scale-[1.02]' 
+                            : 'bg-white dark:bg-surface-dark border-gray-100 dark:border-gray-700 hover:border-primary/50'
+                        }`}
+                      >
+                        <div>
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4 ${isSelected ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
+                            {isSelected ? <CheckCircle className="w-6 h-6" /> : <div className="w-3 h-3 rounded-full border-2 border-current" />}
+                          </div>
+                          <div className={`font-bold text-lg mb-1 ${isSelected ? 'text-primary' : 'text-text-main dark:text-white'}`}>
+                            {typeof esc.label === 'string' ? esc.label : esc.label[lang]}
+                          </div>
+                          <div className="text-2xl font-black text-accent mb-3">{esc.monto} €</div>
+                          <p className="text-sm text-text-muted dark:text-gray-400 line-clamp-3">
+                            {typeof esc.description === 'string' ? esc.description : esc.description[lang]}
+                          </p>
+                        </div>
+                        
+                        {esc.subProfiles && isSelected && (
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-left animate-fade-in-up">
+                            <div className="font-bold text-sm mb-3 text-text-main dark:text-white">
+                              {lang === 'es' ? 'Elige tu Perfil:' : 'Escolha seu Perfil:'}
+                            </div>
+                            <div className="space-y-3">
+                              {esc.subProfiles.map(sp => (
+                                <label key={sp.id} className="flex items-start cursor-pointer group">
+                                  <input 
+                                    type="radio" 
+                                    name={`subprofile-${esc.id}`} 
+                                    value={sp.id} 
+                                    checked={selectedEscenario === sp.id}
+                                    onChange={() => setSelectedEscenario(sp.id)}
+                                    className="mt-1 form-radio text-primary focus:ring-primary h-4 w-4 shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <span className="ml-2 text-sm">
+                                    <span className="font-medium block text-text-main dark:text-white">
+                                      {typeof sp.label === 'string' ? sp.label : sp.label[lang]}
+                                    </span>
+                                    {sp.examples && (
+                                      <span className="text-xs text-gray-400 dark:text-gray-500 italic block mt-0.5">
+                                        {sp.examples[lang]}
+                                      </span>
+                                    )}
+                                    {selectedEscenario === sp.id && sp.requirements && (
+                                      <ul className="mt-2 text-xs text-text-muted dark:text-gray-400 list-disc list-inside space-y-1">
+                                        {sp.requirements[lang].map((req: string, i: number) => (
+                                          <li key={i}>{req}</li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -512,52 +607,123 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
             <div className="flex justify-end pt-4">
               {!session ? (
                 <button 
-                  onClick={() => router.push(`/login?redirectTo=${encodeURIComponent(`/formaciones?tab=accredited&tramiteId=${tramiteId}&step=2`)}`)} 
-                  className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors"
+                  onClick={() => router.push(`/${lang}/registro?redirectTo=${encodeURIComponent(`/${lang}/afiliacion`)}`)} 
+                  className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!isSelectionValid}
                 >
-                  {lang === 'es' ? 'Iniciar sesión para continuar' : 'Faça login para continuar'}
+                  {lang === 'es' ? 'Registrarse para continuar' : 'Registrar-se para continuar'}
                 </button>
               ) : (
-                <button onClick={() => setStep(2)} className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors">
-                  {lang === 'es' ? 'Continuar a Plantillas' : 'Continuar para Modelos'}
+                <button 
+                  onClick={() => setStep(2)} 
+                  disabled={!isSelectionValid}
+                  className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isContactFormMode 
+                    ? (lang === 'es' ? 'Ir al Formulario de Contacto' : 'Ir para o Formulário de Contato')
+                    : (lang === 'es' ? 'Continuar a Plantillas' : 'Continuar para Modelos')}
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {/* PASO 2: DESCARGAS */}
+        {/* PASO 2: DESCARGAS O FORMULARIO DE CONTACTO */}
         {step === 2 && (
           <div className="space-y-6 animate-fade-in-up">
-            <h3 className="text-xl font-bold text-text-main dark:text-white flex items-center mb-6">
-              <FileDown className="w-6 h-6 mr-2 text-primary" /> {lang === 'es' ? 'B. Bajar (Plantillas)' : 'B. Baixar (Modelos)'}
-            </h3>
-            
-            {config.descargas.length === 0 ? (
-              <p className="text-text-muted dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl text-center">
-                {lang === 'es' ? 'No hay plantillas requeridas para este trámite. Puedes avanzar directamente a la carga de documentos.' : 'Não há modelos exigidos para este trâmite. Você pode avançar diretamente para o envio de documentos.'}
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {config.descargas.map((doc, idx) => {
-                  const docLabel = lang === 'pt' ? doc.label_pt : doc.label_es;
-                  const docUrl = lang === 'pt' ? doc.url_pt : doc.url_es;
-                  return (
-                    <a key={idx} href={docUrl} download className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 hover:bg-primary/5 dark:hover:bg-primary/10 border border-gray-200 dark:border-gray-700 rounded-xl transition-colors group">
-                      <span className="font-medium text-text-main dark:text-gray-300">{docLabel}</span>
-                      <FileDown className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
-                    </a>
-                  );
-                })}
+            {isContactFormMode ? (
+              // FORMULARIO DE CONTACTO (BIENHECHOR)
+              <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-text-main dark:text-white flex items-center mb-6">
+                  <FileText className="w-6 h-6 mr-2 text-primary" /> {lang === 'es' ? 'Formulario de Contacto' : 'Formulário de Contato'}
+                </h3>
+                
+                {contactSuccess ? (
+                  <div className="text-center py-10">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-xl font-bold mb-2">{lang === 'es' ? '¡Mensaje Enviado!' : 'Mensagem Enviada!'}</h4>
+                    <p className="text-text-muted">{lang === 'es' ? 'Nuestra secretaría se pondrá en contacto contigo a la brevedad.' : 'Nossa secretaria entrará em contato em breve.'}</p>
+                    <button onClick={onBack} className="mt-6 px-6 py-2 bg-primary text-white rounded-full font-bold hover:bg-primary-dark transition-colors">
+                      {lang === 'es' ? 'Volver al Inicio' : 'Voltar ao Início'}
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSendContact} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-text-muted mb-1">{lang === 'es' ? 'Nombre Completo' : 'Nome Completo'}</label>
+                        <input type="text" disabled value={userProfile?.full_name || ''} className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-none opacity-70" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-text-muted mb-1">{lang === 'es' ? 'Correo Electrónico' : 'Email'}</label>
+                        <input type="email" disabled value={session?.user?.email || ''} className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-none opacity-70" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-text-muted mb-1">{lang === 'es' ? 'Asunto' : 'Assunto'}</label>
+                      <input type="text" disabled value={lang === 'es' ? 'Solicitud de miembro bienhechor o simpatizante' : 'Solicitação de membro benfeitor ou simpatizante'} className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-none opacity-70 font-medium" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-text-muted mb-1">{lang === 'es' ? 'Mensaje / Motivos *' : 'Mensagem / Motivos *'}</label>
+                      <textarea 
+                        required 
+                        rows={5} 
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                        placeholder={lang === 'es' ? 'Cuéntanos por qué deseas colaborar con AIBAPT...' : 'Conte-nos por que deseja colaborar com a AIBAPT...'}
+                        className="w-full p-3 rounded-xl bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:outline-none"
+                      ></textarea>
+                    </div>
+                    {submitError && <p className="text-red-500 text-sm font-bold">{submitError}</p>}
+                    
+                    <div className="flex justify-between pt-4">
+                      <button type="button" onClick={() => setStep(1)} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
+                      <button type="submit" disabled={isSendingContact || !contactMessage.trim()} className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors flex items-center disabled:opacity-50">
+                        {isSendingContact ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
+                        {lang === 'es' ? 'Enviar Solicitud' : 'Enviar Solicitação'}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
+            ) : (
+              // FLUJO NORMAL DE DESCARGAS
+              <>
+                <h3 className="text-xl font-bold text-text-main dark:text-white flex items-center mb-6">
+                  <FileDown className="w-6 h-6 mr-2 text-primary" /> {lang === 'es' ? 'B. Bajar (Plantillas)' : 'B. Baixar (Modelos)'}
+                </h3>
+                
+                {config.descargas.length === 0 ? (
+                  <p className="text-text-muted dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl text-center">
+                    {lang === 'es' ? 'No hay plantillas requeridas para este trámite. Puedes avanzar directamente a la carga de documentos.' : 'Não há modelos exigidos para este trâmite. Você pode avançar diretamente para o envio de documentos.'}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {config.descargas
+                      .filter(doc => !doc.dependsOnEscenario || !selectedEscenario || doc.dependsOnEscenario.includes(selectedEscenario))
+                      .map((doc, idx) => {
+                        const docLabel = lang === 'pt' ? doc.label_pt : doc.label_es;
+                        const docUrl = lang === 'pt' ? doc.url_pt : doc.url_es;
+                        return (
+                          <a key={idx} href={docUrl} download className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 hover:bg-primary/5 dark:hover:bg-primary/10 border border-gray-200 dark:border-gray-700 rounded-xl transition-colors group">
+                            <span className="font-medium text-text-main dark:text-gray-300">{docLabel}</span>
+                            <FileDown className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
+                          </a>
+                        );
+                      })}
+                  </div>
+                )}
+                
+                <div className="flex justify-between pt-8">
+                  <button onClick={() => setStep(1)} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
+                  <button onClick={() => setStep(3)} className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors">
+                    {lang === 'es' ? 'Continuar a Carga' : 'Continuar para Envio'}
+                  </button>
+                </div>
+              </>
             )}
-            
-            <div className="flex justify-between pt-8">
-              <button onClick={() => setStep(1)} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
-              <button onClick={() => setStep(3)} className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors">
-                {lang === 'es' ? 'Continuar a Carga' : 'Continuar para Envio'}
-              </button>
-            </div>
           </div>
         )}
 
@@ -583,30 +749,83 @@ export function UniversalStepper({ tramiteId, onBack }: UniversalStepperProps) {
                </div>
             )}
 
-            {/* Lógica Condicional: Selector de Escenario */}
-            {Array.isArray(config.monto) && (
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-text-main dark:text-gray-300 mb-2">{lang === 'es' ? 'Selecciona el Escenario del Evento *' : 'Selecione o Cenário do Evento *'}</label>
+            {/* Lógica Condicional: Selector de Escenario (Solo si no se eligió en el Paso 1 o para otros trámites) */}
+            {Array.isArray(config.monto) && !selectedEscenario && (
+              <div className="mb-8">
+                <label className="block text-lg font-bold text-text-main dark:text-white mb-4">
+                  {tramiteId === 'solicitud_membresia' 
+                    ? (lang === 'es' ? 'Selecciona tu Categoría de Socio *' : 'Selecione sua Categoria de Sócio *')
+                    : (lang === 'es' ? 'Selecciona el Escenario del Evento *' : 'Selecione o Cenário do Evento *')
+                  }
+                </label>
                 <Controller
                   name="escenario"
                   control={control}
                   render={({ field }) => (
-                    <select {...field} value={field.value as string ?? ''} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-                      <option value="">{lang === 'es' ? '-- Elige una opción --' : '-- Escolha uma opção --'}</option>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {(config.monto as EscenarioEvento[]).map((esc: EscenarioEvento) => (
-                        <option key={esc.id} value={esc.id}>{esc.label}</option>
+                        <div 
+                          key={esc.id}
+                          onClick={() => {
+                            field.onChange(esc.id);
+                            setSelectedEscenario(esc.id);
+                          }}
+                          className={`cursor-pointer rounded-2xl p-5 border-2 transition-all duration-200 ${
+                            field.value === esc.id 
+                              ? 'border-primary bg-primary/5 shadow-md scale-[1.02]' 
+                              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <span className={`font-bold text-lg ${field.value === esc.id ? 'text-primary' : 'text-text-main dark:text-white'}`}>
+                              {typeof esc.label === 'string' ? esc.label : esc.label[lang]}
+                            </span>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${field.value === esc.id ? 'border-primary' : 'border-gray-300 dark:border-gray-600'}`}>
+                              {field.value === esc.id && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                            </div>
+                          </div>
+                          <div className="text-2xl font-black text-accent mb-2">{esc.monto} €</div>
+                          <p className="text-sm text-text-muted dark:text-gray-400">
+                            {typeof esc.description === 'string' ? esc.description : esc.description[lang]}
+                          </p>
+                        </div>
                       ))}
-                    </select>
+                    </div>
                   )}
                 />
-                {errors.escenario && <p className="text-red-500 text-sm mt-1">{errors.escenario.message as string}</p>}
+                {errors.escenario && <p className="text-red-500 text-sm mt-2 font-bold">{errors.escenario.message as string}</p>}
+              </div>
+            )}
+
+            {/* Resumen de Selección (si ya se eligió) */}
+            {selectedEscenario && (
+              <div className="mb-8 p-4 bg-primary/5 rounded-2xl border border-primary/20 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
+                    {lang === 'es' ? 'Categoría Seleccionada' : 'Categoria Selecionada'}
+                  </p>
+                  <p className="text-lg font-black text-secondary dark:text-white">
+                    {(() => {
+                      const esc = (config.monto as EscenarioEvento[]).find(e => e.id === selectedEscenario);
+                      return typeof esc?.label === 'string' ? esc.label : esc?.label[lang];
+                    })()}
+                  </p>
+                </div>
+                <div className="text-right">
+                   <p className="text-2xl font-black text-accent">
+                    { (config.monto as EscenarioEvento[]).find(e => e.id === selectedEscenario)?.monto } €
+                   </p>
+                </div>
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {config.fields.map((field) => {
+                const currentEscenario = watch('escenario');
                 // Condicional para "Cuestionario de Evaluación"
                 if (field.name === "cuestionario_evaluacion" && !isOnline) return null;
+                // Condicional según Escenario (Categoría de Membresía)
+                if (field.dependsOnEscenario && currentEscenario && !field.dependsOnEscenario.includes(currentEscenario)) return null;
 
                 return (
                   <div key={field.name}>

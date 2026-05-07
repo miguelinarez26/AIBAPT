@@ -156,9 +156,9 @@ function LoginContent() {
                         </form>
 
                         <div className="mt-8 text-center text-sm text-text-muted dark:text-white/60">
-                            {lang === 'es' ? '¿Aún no eres miembro de AIBAPT? ' : 'Ainda não é membro da AIBAPT? '}
-                            <Link href="#" className="font-bold text-secondary dark:text-primary hover:underline">
-                                {lang === 'es' ? 'Inicia tu afiliación aquí' : 'Inicie sua afiliação aqui'}
+                            {lang === 'es' ? '¿Aún no tienes cuenta? ' : 'Ainda não tem conta? '}
+                            <Link href={`/${lang}/registro?redirectTo=/${lang}/afiliacion`} className="font-bold text-secondary dark:text-primary hover:underline">
+                                {lang === 'es' ? 'Regístrate aquí' : 'Registre-se aqui'}
                             </Link>
                         </div>
                     </div>

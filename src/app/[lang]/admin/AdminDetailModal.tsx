@@ -1,276 +1,327 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { ApplicationWithDetails } from "./page";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { X, FileDown, Check, Ban, Clock, Loader2 } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { createBrowserSupabaseClient } from '@/lib/supabase/client';
+import { ApplicationStatusBadge } from '@/components/dashboard/ApplicationStatusBadge';
 
 interface AdminDetailModalProps {
-  application: ApplicationWithDetails;
+  applicationId: string;
+  lang: 'es' | 'pt';
   onClose: () => void;
   onUpdate: () => void;
-  lang: "es" | "pt";
 }
 
-interface DocFile {
-  id: string;
-  document_type: string;
-  url: string;
-}
-
-export default function AdminDetailModal({ application, onClose, onUpdate, lang }: AdminDetailModalProps) {
-  const [documents, setDocuments] = useState<DocFile[]>([]);
-  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [rejectNotes, setRejectNotes] = useState("");
-  const [actionType, setActionType] = useState<"approve" | "reject" | "review" | null>(null);
-  const [error, setError] = useState("");
+export default function AdminDetailModal({ applicationId, lang, onClose, onUpdate }: AdminDetailModalProps) {
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [appData, setAppData] = useState<any>(null);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [action, setAction] = useState<'approve' | 'reject' | null>(null);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const supabase = createBrowserSupabaseClient();
 
   useEffect(() => {
-    const fetchDocuments = async () => {
-      setIsLoadingDocs(true);
-      const { data: docs, error: docsError } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('application_id', application.id);
+    async function loadDetail() {
+      setLoading(true);
+      
+      // 1. Fetch App details
+      const { data: application, error: appError } = await supabase
+        .from('applications')
+        .select('*, profiles(full_name, email), accreditation_types(name)')
+        .eq('id', applicationId)
+        .single();
 
-      if (docsError) {
-        console.error("Error fetching docs:", docsError);
-        setIsLoadingDocs(false);
+      if (appError) {
+        console.error(appError);
+        setLoading(false);
         return;
       }
+      setAppData(application);
 
-      // Generar Signed URLs
-      const docsWithUrls: DocFile[] = [];
-      for (const doc of docs || []) {
-        const { data: urlData } = await supabase
-          .storage
-          .from('private-certifications')
-          .createSignedUrl(doc.file_path, 60 * 5); // 5 minutos
+      // 2. Fetch Documents and generate signed URLs
+      const { data: docsData, error: docsError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('application_id', applicationId);
 
-        if (urlData) {
-          docsWithUrls.push({
-            id: doc.id,
-            document_type: doc.document_type,
-            url: urlData.signedUrl
-          });
-        }
+      if (!docsError && docsData) {
+        const docsWithUrls = await Promise.all(docsData.map(async (doc) => {
+          const { data: urlData, error: urlError } = await supabase
+            .storage
+            .from('private-certifications')
+            .createSignedUrl(doc.file_path, 3600);
+            
+          return {
+            ...doc,
+            signedUrl: urlError ? null : urlData.signedUrl
+          };
+        }));
+        setDocuments(docsWithUrls);
       }
-      setDocuments(docsWithUrls);
-      setIsLoadingDocs(false);
-    };
 
-    fetchDocuments();
-  }, [application.id, supabase]);
+      setLoading(false);
+    }
 
-  const handleUpdateStatus = async (newStatus: "pending" | "under_review" | "approved" | "rejected") => {
-    if (newStatus === "rejected" && !rejectNotes.trim()) {
-      setError("Debes ingresar un motivo para rechazar la solicitud.");
+    loadDetail();
+  }, [applicationId]);
+
+  const handleProcess = async (newStatus: 'approved' | 'rejected') => {
+    if (newStatus === 'rejected' && !adminNotes.trim()) {
+      setError('El motivo del rechazo es obligatorio.');
       return;
     }
 
-    setIsUpdating(true);
-    setError("");
+    setSubmitting(true);
+    setError(null);
 
     try {
-      // 1. Update Application Status & Metadata (Notas)
-      const newMetadata = {
-        ...(application.metadata as Record<string, unknown> || {}),
-        admin_notes: newStatus === "rejected" ? rejectNotes : undefined
-      };
+      const isCCA = appData?.accreditation_types?.name?.includes('CCA');
+      const res = await fetch('/api/admin/process-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId,
+          newStatus,
+          adminNotes,
+          actionType: isCCA ? 'CCA' : 'GENERAL'
+        })
+      });
 
-      const { error: updateError } = await supabase
-        .from('applications')
-        .update({ status: newStatus, metadata: newMetadata })
-        .eq('id', application.id);
-
-      if (updateError) throw updateError;
-
-      // 2. Automate CCA Course Creation
-      if (newStatus === "approved" && application.accreditation_type_name === "CCA") {
-        const { error: ccaError } = await supabase
-          .from('courses_accredited')
-          .insert({
-            title: `CCA - ${application.applicant_name}`,
-            instructor_name: application.applicant_name,
-            language: lang,
-            credits: 10, // Defecto
-            is_public: true
-          });
-        
-        if (ccaError) console.error("Error creando CCA auto:", ccaError);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error procesando solicitud');
       }
 
       onUpdate();
-    } catch (err) {
-      console.error("Update error:", err);
-      setError((err as Error).message || "Error al actualizar la solicitud.");
-    } finally {
-      setIsUpdating(false);
+      onClose();
+    } catch (err: any) {
+      setError(err.message);
+      setSubmitting(false);
     }
   };
 
-  const metadata = (application.metadata as Record<string, unknown>) || {};
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Cargando auditoría...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!appData) return null;
+
+  const metadata = appData.metadata as Record<string, any> || {};
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-surface-dark w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-          <h2 className="text-xl font-bold font-display text-text-main dark:text-white">
-            Detalle de Solicitud
-          </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <span className="material-icons-round text-primary">policy</span>
+              Auditoría de Solicitud
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">ID: {appData.id}</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <span className="material-icons-round">close</span>
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-200">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">Solicitante</p>
-                <p className="font-bold text-lg text-text-main dark:text-white">{application.applicant_name}</p>
-                <p className="text-sm text-text-muted">{application.applicant_email}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">Trámite</p>
-                <p className="font-medium text-[var(--color-aibapt-green)] bg-[var(--color-aibapt-green)]/10 px-3 py-1 rounded-lg inline-block">
-                  {application.accreditation_type_name}
-                </p>
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+          
+          {/* Info Blocks */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span className="material-icons-round text-[18px]">person</span> Datos del Solicitante
+              </h3>
+              <div className="space-y-3 text-sm">
+                <p><span className="text-gray-500">Nombre:</span> <strong className="text-gray-900 dark:text-white">{appData.profiles?.full_name || 'N/A'}</strong></p>
+                <p><span className="text-gray-500">Email:</span> <strong className="text-gray-900 dark:text-white">{appData.profiles?.email || 'N/A'}</strong></p>
+                <p><span className="text-gray-500">ID Usuario:</span> <code className="text-xs bg-gray-200 dark:bg-gray-800 px-1 py-0.5 rounded text-gray-700 dark:text-gray-300">{appData.user_id}</code></p>
               </div>
             </div>
 
-            <div className="space-y-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
-              <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-2">Metadatos</p>
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Monto Pagado:</span>
-                  <span className="font-bold">€{metadata?.monto_pagado || 0}</span>
-                </div>
-                {metadata?.escenario && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Escenario:</span>
-                    <span className="font-bold">{metadata.escenario}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Modalidad:</span>
-                  <span className="font-bold">{metadata?.modalidad_online ? 'Online' : 'Presencial'}</span>
-                </div>
+            <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30">
+              <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span className="material-icons-round text-[18px]">info</span> Información del Trámite
+              </h3>
+              <div className="space-y-3 text-sm">
+                <p><span className="text-gray-500">Trámite:</span> <strong className="text-gray-900 dark:text-white">{appData.accreditation_types?.name}</strong></p>
+                <p><span className="text-gray-500">Estado Actual:</span> <ApplicationStatusBadge status={appData.status} /></p>
+                <p><span className="text-gray-500">Fecha de envío:</span> <strong className="text-gray-900 dark:text-white">{new Date(appData.created_at).toLocaleString()}</strong></p>
               </div>
             </div>
           </div>
 
-          <h3 className="text-lg font-bold text-text-main dark:text-white mb-4 border-b border-gray-100 dark:border-gray-800 pb-2">
-            Documentos Adjuntos
-          </h3>
-          
-          {isLoadingDocs ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : documents.length === 0 ? (
-            <p className="text-gray-500 text-sm py-4">No hay documentos adjuntos.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-              {documents.map((doc) => (
-                <a
-                  key={doc.id}
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-primary/5 hover:border-primary/30 transition-colors group"
-                >
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary mr-3 shrink-0">
-                    <FileDown className="w-5 h-5" />
-                  </div>
-                  <div className="truncate flex-1">
-                    <p className="text-sm font-bold text-text-main dark:text-white truncate">
-                      {doc.document_type}
-                    </p>
-                    <p className="text-xs text-primary group-hover:underline">Ver Documento</p>
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
+          {/* Metadata */}
+          {Object.keys(metadata).length > 0 && (
+            <div>
+              <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3">Datos Adicionales (Formulario)</h3>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <ul className="space-y-2 text-sm">
+                  {Object.entries(metadata).map(([key, value]) => {
+                    let displayValue = String(value);
+                    
+                    // Lógica de formateo según el tipo de dato y clave
+                    if (typeof value === 'boolean') {
+                      if (key === 'modalidad_online') {
+                        displayValue = value ? 'Online' : (lang === 'es' ? 'Presencial' : 'Presencial');
+                      } else {
+                        if (lang === 'es') displayValue = value ? 'Sí' : 'No';
+                        else displayValue = value ? 'Sim' : 'Não';
+                      }
+                    } else if (key === 'monto_pagado' || key === 'monto') {
+                      displayValue = new Intl.NumberFormat(lang === 'es' ? 'es-ES' : 'pt-BR', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      }).format(Number(value));
+                    } else if (key === 'escenario') {
+                      if (value === 'institucional') displayValue = lang === 'es' ? 'Miembro Institucional' : 'Membro Institucional';
+                      else if (value === 'pleno') displayValue = lang === 'es' ? 'Miembro Pleno' : 'Membro Pleno';
+                      else if (value === 'certificado') displayValue = lang === 'es' ? 'Miembro Certificado' : 'Membro Certificado';
+                      else if (value === 'supervisor') displayValue = lang === 'es' ? 'Miembro Supervisor / Profesor' : 'Membro Supervisor / Professor';
+                      else displayValue = String(value).replace(/_/g, ' ');
+                    }
 
-          {actionType === "reject" && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900 rounded-2xl animate-fade-in-up">
-              <label className="block text-sm font-bold text-red-800 dark:text-red-400 mb-2">
-                Motivo del Rechazo (Obligatorio)
-              </label>
-              <textarea
-                value={rejectNotes}
-                onChange={(e) => setRejectNotes(e.target.value)}
-                className="w-full rounded-xl border border-red-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
-                rows={3}
-                placeholder="Explica al usuario qué falta o por qué se rechaza..."
-              />
-              <div className="flex justify-end gap-2 mt-3">
-                <button 
-                  onClick={() => setActionType(null)}
-                  className="px-4 py-2 text-sm text-gray-500 font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus("rejected")}
-                  disabled={isUpdating}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold text-sm hover:bg-red-600 disabled:opacity-50"
-                >
-                  {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar Rechazo"}
-                </button>
+                    // Formatear etiqueta
+                    let displayKey = key.replace(/_/g, ' ');
+                    if (key === 'escenario' && appData.accreditation_types?.name?.includes('Membresia')) {
+                      displayKey = lang === 'es' ? 'Categoría de Socio' : 'Categoria de Sócio';
+                    }
+
+                    return (
+                      <li key={key} className="flex flex-col sm:flex-row sm:gap-4 border-b border-gray-200 dark:border-gray-800 pb-2 last:border-0 last:pb-0">
+                        <span className="text-gray-500 dark:text-gray-400 capitalize w-1/3">
+                          {displayKey}
+                        </span>
+                        <span className="text-gray-900 dark:text-white font-medium">
+                          {displayValue}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Footer Actions */}
-        <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 flex flex-wrap gap-3 justify-end">
-          {application.status !== 'under_review' && (
-            <button
-              onClick={() => handleUpdateStatus("under_review")}
-              disabled={isUpdating || actionType === 'reject'}
-              className="flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-xl font-bold hover:bg-blue-200 transition-colors"
-            >
-              <Clock className="w-4 h-4 mr-2" /> En Revisión
-            </button>
-          )}
-          
-          <button
-            onClick={() => setActionType("reject")}
-            disabled={isUpdating || actionType === 'reject'}
-            className="flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-xl font-bold hover:bg-red-200 transition-colors"
-          >
-            <Ban className="w-4 h-4 mr-2" /> Rechazar
-          </button>
-          
-          <button
-            onClick={() => handleUpdateStatus("approved")}
-            disabled={isUpdating || actionType === 'reject'}
-            className="flex items-center px-6 py-2 bg-[var(--color-aibapt-green)] text-white rounded-xl font-bold hover:opacity-90 transition-colors shadow-md shadow-green-500/20"
-          >
-            {isUpdating && actionType !== 'reject' ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          {/* Documents */}
+          <div>
+            <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <span className="material-icons-round text-gray-400">folder_open</span> Documentos Adjuntos
+            </h3>
+            {documents.length === 0 ? (
+              <p className="text-sm text-gray-500 italic bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">No se encontraron documentos.</p>
             ) : (
-              <Check className="w-4 h-4 mr-2" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {documents.map(doc => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg flex items-center justify-center shrink-0">
+                        <span className="material-icons-round">picture_as_pdf</span>
+                      </div>
+                      <div className="truncate">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{doc.document_type.replace(/_/g, ' ').toUpperCase()}</p>
+                        <p className="text-xs text-gray-500 truncate">{doc.file_path.split('/').pop()}</p>
+                      </div>
+                    </div>
+                    {doc.signedUrl ? (
+                      <a 
+                        href={doc.signedUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors shrink-0"
+                        title="Ver Documento"
+                      >
+                        <span className="material-icons-round">visibility</span>
+                      </a>
+                    ) : (
+                      <span className="text-xs text-red-500 px-2">Error de enlace</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
-            Aprobar Solicitud
-          </button>
-        </div>
+          </div>
 
+          {/* Decision Area */}
+          {(appData.status === 'pending' || appData.status === 'under_review') && (
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h3 className="text-md font-bold text-gray-900 dark:text-white mb-4">Resolución de Auditoría</h3>
+              
+              {!action ? (
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setAction('approve')}
+                    className="flex-1 bg-aibapt-green hover:bg-aibapt-green/90 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <span className="material-icons-round">check_circle</span> Aprobar Solicitud
+                  </button>
+                  <button 
+                    onClick={() => setAction('reject')}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <span className="material-icons-round">cancel</span> Rechazar Solicitud
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 animate-fade-in-up">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {action === 'approve' ? 'Notas de Aprobación (Opcional)' : 'Motivo del Rechazo (Obligatorio)'}
+                    </label>
+                    <textarea
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
+                      rows={3}
+                      placeholder={action === 'approve' ? 'Notas internas (ej. ID de certificado generado)...' : 'Explique qué documentos faltan o por qué se rechaza el trámite...'}
+                    ></textarea>
+                  </div>
+
+                  {error && (
+                    <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm flex items-center gap-2">
+                      <span className="material-icons-round text-[18px]">error</span> {error}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 justify-end">
+                    <button 
+                      disabled={submitting}
+                      onClick={() => setAction(null)}
+                      className="px-4 py-2 text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      disabled={submitting}
+                      onClick={() => handleProcess(action === 'approve' ? 'approved' : 'rejected')}
+                      className={`px-6 py-2 text-white rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                        action === 'approve' ? 'bg-aibapt-green hover:bg-aibapt-green/90' : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      {submitting ? (
+                        <span className="material-icons-round animate-spin">refresh</span>
+                      ) : (
+                        <span className="material-icons-round">gavel</span>
+                      )}
+                      Confirmar {action === 'approve' ? 'Aprobación' : 'Rechazo'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

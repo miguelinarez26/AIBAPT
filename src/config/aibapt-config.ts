@@ -29,6 +29,7 @@ export type FieldDefinition = {
   validator: z.ZodTypeAny;
   typeLabel: string;
   isOptional?: boolean;
+  dependsOnEscenario?: string[];
 };
 
 export type EscenarioEvento = {
@@ -36,6 +37,14 @@ export type EscenarioEvento = {
   label: Record<'es' | 'pt', string> | string;
   monto: number;
   description: Record<'es' | 'pt', string> | string;
+  examples?: Record<'es' | 'pt', string>;
+  isContactForm?: boolean;
+  subProfiles?: {
+    id: string;
+    label: Record<'es' | 'pt', string> | string;
+    examples?: Record<'es' | 'pt', string>;
+    requirements: Record<'es' | 'pt', string[]>;
+  }[];
 };
 
 export type TramiteConfig = {
@@ -45,7 +54,13 @@ export type TramiteConfig = {
   description: Record<'es' | 'pt', string>;
   monto: number | string | EscenarioEvento[];
   instrucciones_leer: Record<'es' | 'pt', string[]>;
-  descargas: { label_es: string; label_pt: string; url_es: string; url_pt: string }[];
+  descargas: { 
+    label_es: string; 
+    label_pt: string; 
+    url_es: string; 
+    url_pt: string;
+    dependsOnEscenario?: string[];
+  }[];
   fields: FieldDefinition[];
   hasModalitySelection?: boolean;
   requiresMembership?: boolean;
@@ -53,6 +68,117 @@ export type TramiteConfig = {
 };
 
 export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
+  "solicitud_membresia": {
+    id: "solicitud_membresia",
+    categoria: { es: "MEMBRESÍA", pt: "MEMBRESIA" },
+    title: { es: "Solicitud de Membresía AIBAPT", pt: "Solicitação de Membresia AIBAPT" },
+    description: { es: "Proceso formal para convertirse en Socio Activo de la asociación.", pt: "Processo formal para se tornar Sócio Ativo da associação." },
+    monto: [
+      { 
+        id: 'pleno', 
+        label: { es: 'Miembro Pleno', pt: 'Membro Pleno' }, 
+        monto: 45, 
+        description: { es: 'Personas físicas con formación profesional.', pt: 'Pessoas físicas com formação profissional.' },
+        subProfiles: [
+          { 
+            id: 'pleno_salud_mental', 
+            label: { es: 'Profesional de Salud Mental', pt: 'Profissional de Saúde Mental' },
+            examples: { es: 'Psicólogos, Psicoterapeutas, Psiquiatras y médicos con enfoque clínico.', pt: 'Psicólogos, Psicoterapeutas, Psiquiatras e médicos com foco clínico.' },
+            requirements: {
+              es: ['Diploma de especialidad en abordaje de trauma', 'Hoja y Solicitud firmada', '1 Carta de Recomendación'],
+              pt: ['Diploma de especialidade em abordagem de trauma', 'Folha e Solicitação assinada', '1 Carta de Recomendação']
+            }
+          },
+          { 
+            id: 'pleno_agente_social', 
+            label: { es: 'Agente de Intervención Social', pt: 'Agente de Intervenção Social' },
+            examples: { es: 'Trabajadores Sociales, Enfermeros, Socorristas, Policías, Bomberos y consejeros.', pt: 'Assistentes Sociais, Enfermeiros, Socorristas, Policiais, Bombeiros e conselheiros.' },
+            requirements: {
+              es: ['Taller de 10h sobre Teoría del Trauma', 'Hoja y Solicitud firmada', '1 Carta de Recomendación'],
+              pt: ['Oficina de 10h sobre Teoria do Trauma', 'Folha e Solicitação assinada', '1 Carta de Recomendação']
+            }
+          }
+        ]
+      },
+      { 
+        id: 'institucional', 
+        label: { es: 'Miembro Institucional', pt: 'Membro Institucional' }, 
+        monto: 60, 
+        description: { es: 'Persona Jurídica (Organizaciones).', pt: 'Pessoa Jurídica (Organizações).' },
+        examples: { es: 'Institutos de entrenamiento, Universidades, Clínicas y centros de salud mental.', pt: 'Institutos de treinamento, Universidades, Clínicas e centros de saúde mental.' }
+      },
+      { id: 'bienhechor', label: { es: 'Miembro Bienhechor', pt: 'Membro Benfeitor' }, monto: 0, description: { es: 'Personas que desean realizar aportes financieros voluntarios a la asociación.', pt: 'Pessoas que desejam fazer contribuições financeiras voluntárias à associação.' }, isContactForm: true }
+    ],
+    accreditationTypeKey: "Membresia",
+    hasModalitySelection: false,
+    requiresMembership: false,
+    instrucciones_leer: {
+      es: [
+        "Selecciona tu categoría para ver los requisitos específicos.",
+        "Miembros Plenos: Serán auditados bajo la norma de 50h de formación específica en psicotrauma y 10h de supervisión.",
+        "Aprobación: Una vez verificados los documentos, tu perfil se actualizará automáticamente a Socio Activo con tu categoría elegida."
+      ],
+      pt: [
+        "Selecione sua categoria para ver os requisitos específicos.",
+        "Membros Plenos: Serão auditados sob a norma de 50h de formação específica em psicotrauma e 10h de supervisão.",
+        "Aprovação: Uma vez verificados os documentos, seu perfil será atualizado automaticamente para Sócio Ativo com a categoria escolhida."
+      ]
+    },
+    descargas: [
+      { 
+        label_es: "Hoja de Inscripción (Institucional)", label_pt: "Folha de Inscrição (Institucional)", 
+        url_es: "https://esp.aibapt.org/38373/files/6476042666b2c_1685455910_esp-hoja-de-inscripci-n-para-miembro-institucional-update.pdf", 
+        url_pt: "https://esp.aibapt.org/38373/files/6476042666b2c_1685455910_esp-hoja-de-inscripci-n-para-miembro-institucional-update.pdf",
+        dependsOnEscenario: ['institucional']
+      },
+      { 
+        label_es: "Solicitud de Ingreso (Institucional)", label_pt: "Solicitação de Ingresso (Institucional)", 
+        url_es: "https://esp.aibapt.org/38373/files/6476042b422f5_1685455915_esp-solicitud-de-ingreso-para-miembro-institucional-update.pdf", 
+        url_pt: "https://esp.aibapt.org/38373/files/6476042b422f5_1685455915_esp-solicitud-de-ingreso-para-miembro-institucional-update.pdf",
+        dependsOnEscenario: ['institucional']
+      },
+      { 
+        label_es: "Carta de Recomendación (Institucional)", label_pt: "Carta de Recomendação (Institucional)", 
+        url_es: "https://esp.aibapt.org/38373/files/64760423d6279_1685455907_esp-carta-de-recomendaci-n-para-miembro-institucional-update.pdf", 
+        url_pt: "https://esp.aibapt.org/38373/files/64760423d6279_1685455907_esp-carta-de-recomendaci-n-para-miembro-institucional-update.pdf",
+        dependsOnEscenario: ['institucional']
+      },
+      // Pleno
+      { 
+        label_es: "Hoja de Inscripción (Pleno)", label_pt: "Folha de Inscrição (Pleno)", 
+        url_es: "https://esp.aibapt.org/38373/files/6476042666b2c_1685455910_esp-hoja-de-inscripci-n-para-miembro-institucional-update.pdf", 
+        url_pt: "https://esp.aibapt.org/38373/files/6476042666b2c_1685455910_esp-hoja-de-inscripci-n-para-miembro-institucional-update.pdf",
+        dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social']
+      },
+      { 
+        label_es: "Solicitud de Ingreso (Pleno)", label_pt: "Solicitação de Ingresso (Pleno)", 
+        url_es: "https://esp.aibapt.org/38373/files/6476042b422f5_1685455915_esp-solicitud-de-ingreso-para-miembro-institucional-update.pdf", 
+        url_pt: "https://esp.aibapt.org/38373/files/6476042b422f5_1685455915_esp-solicitud-de-ingreso-para-miembro-institucional-update.pdf",
+        dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social']
+      },
+      { 
+        label_es: "Carta de Recomendación (Pleno)", label_pt: "Carta de Recomendação (Pleno)", 
+        url_es: "https://esp.aibapt.org/38373/files/64760423d6279_1685455907_esp-carta-de-recomendaci-n-para-miembro-institucional-update.pdf", 
+        url_pt: "https://esp.aibapt.org/38373/files/64760423d6279_1685455907_esp-carta-de-recomendaci-n-para-miembro-institucional-update.pdf",
+        dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social']
+      }
+    ],
+    fields: [
+      { name: "hoja_inscripcion", label: "Hoja de Inscripción firmada", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social', 'institucional'] },
+      { name: "solicitud_ingreso", label: "Solicitud de Ingreso firmada", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social', 'institucional'] },
+      
+      { name: "titulo_profesional", label: "Título Profesional (Diploma)", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social'] },
+      { name: "cv", label: "Currículum Vitae", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social'] },
+      { name: "comprobante_formacion_sm", label: "Diploma especialidad abordaje de trauma", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno_salud_mental'] },
+      { name: "comprobante_formacion_as", label: "Certificado taller 10h Teoría del Trauma", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno_agente_social'] },
+      { name: "carta_recomendacion_1", label: "Carta de Recomendación (1)", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno', 'pleno_salud_mental', 'pleno_agente_social', 'institucional'] },
+      
+      { name: "registro_legal", label: "Registro Legal de la Institución", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['institucional'] },
+      { name: "carta_recomendacion_2", label: "Carta de Recomendación (2)", typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['institucional'] },
+      
+      { name: "comprobante_pago", label: "Comprobante de Pago Anual", typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+    ]
+  },
   "cca": {
     id: "cca",
     categoria: { es: "CCA Y EVENTOS", pt: "CCA E EVENTOS" },
