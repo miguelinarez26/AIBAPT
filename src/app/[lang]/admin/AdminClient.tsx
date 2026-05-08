@@ -11,8 +11,38 @@ interface ApplicationRow {
   created_at: string;
   status: ApplicationStatus;
   user_id: string;
-  profiles: { full_name: string | null } | null;
+  profiles: { 
+    first_name: string; 
+    last_name: string; 
+    full_name: string | null; 
+    email: string | null; 
+    member_number: string | null 
+  } | null;
   accreditation_types: { name: string } | null;
+}
+
+// Mapeo de slugs técnicos a nombres legibles para el Admin
+const TRAMITE_DISPLAY_NAMES: Record<string, string> = {
+  'solicitud_membresia': 'Solicitud de Membresía',
+  'solicitud_simpatizante': 'Solicitud de Simpatizante',
+  'CCA': 'Acreditación CCA',
+  'Eventos_Conferencia': 'Evento — Conferencia',
+  'Eventos_Workshop': 'Evento — Workshop',
+  'Eventos_Congreso': 'Evento — Congreso',
+  'Emision_CCA': 'Emisión de CCA',
+  'Renovacion_CCA': 'Renovación de CCA',
+  'EMDR_Psicoterapeuta': 'EMDR Psicoterapeuta',
+  'EMDR_Supervisor': 'EMDR Supervisor',
+  'Equivalencia_EMDR': 'Equivalencia EMDR',
+  'Psicotrauma_Individual': 'Psicotrauma Individual',
+  'Psicotrauma_Programa': 'Psicotrauma Programa',
+  'Equivalencia_Basica_Alumno': 'Equivalencia Básica (Alumno)',
+  'Equivalencia_Basica_Formador': 'Equivalencia Básica (Formador)',
+};
+
+function humanizeTramiteName(slug: string | undefined): string {
+  if (!slug) return 'Trámite Desconocido';
+  return TRAMITE_DISPLAY_NAMES[slug] || slug.replace(/_/g, ' ');
 }
 
 export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
@@ -25,7 +55,7 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
 
   const loadApplications = async () => {
     setLoading(true);
-    // Joining with profiles and accreditation_types
+    // JOIN con profiles y accreditation_types
     const { data, error } = await supabase
       .from('applications')
       .select(`
@@ -33,9 +63,10 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
         created_at,
         status,
         user_id,
-        profiles ( full_name ),
+        profiles ( first_name, last_name, full_name, email, member_number ),
         accreditation_types ( name )
       `)
+      .neq('status', 'uploading')
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -74,7 +105,6 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
               <option value="under_review">En Revisión</option>
               <option value="approved">Aprobados</option>
               <option value="rejected">Rechazados</option>
-              <option value="uploading">Subiendo (Borrador)</option>
             </select>
           </div>
           <button onClick={loadApplications} className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors flex items-center gap-2">
@@ -109,12 +139,20 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                       {new Date(app.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'pt-BR', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                      {app.profiles?.full_name || 'Usuario sin nombre'}
-                      <div className="text-xs text-gray-500 font-normal mt-0.5">{app.user_id}</div>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 dark:text-white">
+                          {app.profiles?.first_name ? `${app.profiles.first_name} ${app.profiles.last_name}`.trim() : app.profiles?.full_name || 'Usuario sin nombre'}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {app.profiles?.member_number ? (
+                            <span className="text-primary font-bold tracking-wider">#{app.profiles.member_number}</span>
+                          ) : app.profiles?.email || app.user_id}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-                      {app.accreditation_types?.name || 'Trámite Desconocido'}
+                      {humanizeTramiteName(app.accreditation_types?.name)}
                     </td>
                     <td className="px-6 py-4">
                       <ApplicationStatusBadge status={app.status} />

@@ -107,9 +107,10 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
         description: { es: 'Persona Jurídica (Organizaciones).', pt: 'Pessoa Jurídica (Organizações).' },
         examples: { es: 'Institutos de entrenamiento, Universidades, Clínicas y centros de salud mental.', pt: 'Institutos de treinamento, Universidades, Clínicas e centros de saúde mental.' }
       },
-      { id: 'bienhechor', label: { es: 'Miembro Bienhechor', pt: 'Membro Benfeitor' }, monto: 0, description: { es: 'Personas que desean realizar aportes financieros voluntarios a la asociación.', pt: 'Pessoas que desejam fazer contribuições financeiras voluntárias à associação.' }, isContactForm: true }
+      { id: 'bienhechor', label: { es: 'Miembro Bienhechor', pt: 'Membro Benfeitor' }, monto: 0, description: { es: 'Personas que desean realizar aportes financieros voluntarios a la asociación.', pt: 'Pessoas que desejam fazer contribuições financeiras voluntárias à associação.' }, isContactForm: true },
+      { id: 'simpatizante', label: { es: 'Miembro Simpatizante', pt: 'Membro Simpatizante' }, monto: 0, description: { es: 'Personas que desean apoyar los fines de la asociación sin ser profesionales del trauma.', pt: 'Pessoas que desejam apoiar os fins da associação sem serem profissionais do trauma.' }, isContactForm: true }
     ],
-    accreditationTypeKey: "Membresia",
+    accreditationTypeKey: "solicitud_membresia",
     hasModalitySelection: false,
     requiresMembership: false,
     instrucciones_leer: {

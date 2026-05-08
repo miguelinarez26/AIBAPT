@@ -29,7 +29,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
       // 1. Fetch App details
       const { data: application, error: appError } = await supabase
         .from('applications')
-        .select('*, profiles(full_name, email), accreditation_types(name)')
+        .select('*, profiles(first_name, last_name, full_name, email, member_number, language_preference), accreditation_types(id, name)')
         .eq('id', applicationId)
         .single();
 
@@ -47,7 +47,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
         .eq('application_id', applicationId);
 
       if (!docsError && docsData) {
-        const docsWithUrls = await Promise.all(docsData.map(async (doc) => {
+        const docsWithUrls = await Promise.all((docsData as any[]).map(async (doc: any) => {
           const { data: urlData, error: urlError } = await supabase
             .storage
             .from('private-certifications')
@@ -78,6 +78,12 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
 
     try {
       const isCCA = appData?.accreditation_types?.name?.includes('CCA');
+      const isMembresia = appData?.accreditation_types?.name?.includes('membresia');
+      
+      let actionType = 'GENERAL';
+      if (isCCA) actionType = 'CCA';
+      if (isMembresia) actionType = 'Membresia';
+
       const res = await fetch('/api/admin/process-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,7 +91,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
           applicationId,
           newStatus,
           adminNotes,
-          actionType: isCCA ? 'CCA' : 'GENERAL'
+          actionType
         })
       });
 
@@ -116,6 +122,52 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
   if (!appData) return null;
 
   const metadata = appData.metadata as Record<string, any> || {};
+  const isMembresia = appData.accreditation_types?.name?.includes('membresia');
+
+  // Mapeo de slugs técnicos a nombres legibles
+  const TRAMITE_NAMES: Record<string, string> = {
+    'solicitud_membresia': 'Solicitud de Membresía',
+    'CCA': 'Acreditación CCA',
+    'Eventos_Conferencia': 'Evento — Conferencia',
+    'Eventos_Workshop': 'Evento — Workshop',
+    'Eventos_Congreso': 'Evento — Congreso',
+    'Emision_CCA': 'Emisión de CCA',
+    'Renovacion_CCA': 'Renovación de CCA',
+    'EMDR_Psicoterapeuta': 'EMDR Psicoterapeuta',
+    'EMDR_Supervisor': 'EMDR Supervisor',
+    'Equivalencia_EMDR': 'Equivalencia EMDR',
+    'Psicotrauma_Individual': 'Psicotrauma Individual',
+    'Psicotrauma_Programa': 'Psicotrauma Programa',
+    'Equivalencia_Basica_Alumno': 'Equivalencia Básica (Alumno)',
+    'Equivalencia_Basica_Formador': 'Equivalencia Básica (Formador)',
+  };
+  const humanTramiteName = TRAMITE_NAMES[appData.accreditation_types?.name || ''] || appData.accreditation_types?.name?.replace(/_/g, ' ') || 'Desconocido';
+
+  // Mapeo de document_type (slug) a etiquetas legibles para el visor
+  const DOC_TYPE_LABELS: Record<string, string> = {
+    'hoja_inscripcion': 'Hoja de Inscripción',
+    'solicitud_ingreso': 'Solicitud de Ingreso',
+    'titulo_profesional': 'Título Profesional',
+    'cv': 'Currículum Vitae',
+    'comprobante_formacion_sm': 'Diploma Abordaje Trauma',
+    'comprobante_formacion_as': 'Certificado Taller 10h',
+    'carta_recomendacion_1': 'Carta de Recomendación (1)',
+    'carta_recomendacion_2': 'Carta de Recomendación (2)',
+    'registro_legal': 'Registro Legal Institución',
+    'comprobante_pago': 'Comprobante de Pago',
+    'cv_instructor': 'CV del Instructor',
+    'formulario_solicitud': 'Formulario de Solicitud',
+    'ficha_tecnica': 'Ficha Técnica',
+    'calendario_marketing': 'Calendario y Marketing',
+    'material_didactico': 'Material Didáctico',
+    'control_asistencia': 'Control de Asistencia',
+    'cuestionario_evaluacion': 'Cuestionario de Evaluación',
+    'cv_facilitador': 'CV del Facilitador',
+    'ficha_solicitacion_tecnica': 'Ficha de Solicitación',
+    'calendario_evento': 'Calendario del Evento',
+    'material_evento': 'Material del Evento',
+    'formularios_gestion': 'Formularios de Gestión',
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -144,9 +196,26 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                 <span className="material-icons-round text-[18px]">person</span> Datos del Solicitante
               </h3>
               <div className="space-y-3 text-sm">
-                <p><span className="text-gray-500">Nombre:</span> <strong className="text-gray-900 dark:text-white">{appData.profiles?.full_name || 'N/A'}</strong></p>
-                <p><span className="text-gray-500">Email:</span> <strong className="text-gray-900 dark:text-white">{appData.profiles?.email || 'N/A'}</strong></p>
-                <p><span className="text-gray-500">ID Usuario:</span> <code className="text-xs bg-gray-200 dark:bg-gray-800 px-1 py-0.5 rounded text-gray-700 dark:text-gray-300">{appData.user_id}</code></p>
+                <p>
+                  <span className="text-gray-500">Nombre:</span>{" "}
+                  <strong className="text-gray-900 dark:text-white">
+                    {appData.profiles?.first_name ? `${appData.profiles.first_name} ${appData.profiles.last_name}`.trim() : appData.profiles?.full_name || 'N/A'}
+                  </strong>
+                </p>
+                <p>
+                  <span className="text-gray-500">Email:</span>{" "}
+                  <strong className="text-gray-900 dark:text-white">{appData.profiles?.email || 'N/A'}</strong>
+                </p>
+                {appData.profiles?.member_number && (
+                  <p>
+                    <span className="text-gray-500">Matrícula:</span>{" "}
+                    <strong className="text-primary font-black uppercase tracking-wider">{appData.profiles.member_number}</strong>
+                  </p>
+                )}
+                <p>
+                  <span className="text-gray-500">ID Usuario:</span>{" "}
+                  <code className="text-xs bg-gray-200 dark:bg-gray-800 px-1 py-0.5 rounded text-gray-700 dark:text-gray-300">{appData.user_id}</code>
+                </p>
               </div>
             </div>
 
@@ -155,7 +224,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                 <span className="material-icons-round text-[18px]">info</span> Información del Trámite
               </h3>
               <div className="space-y-3 text-sm">
-                <p><span className="text-gray-500">Trámite:</span> <strong className="text-gray-900 dark:text-white">{appData.accreditation_types?.name}</strong></p>
+                <p><span className="text-gray-500">Trámite:</span> <strong className="text-gray-900 dark:text-white">{humanTramiteName}</strong></p>
                 <p><span className="text-gray-500">Estado Actual:</span> <ApplicationStatusBadge status={appData.status} /></p>
                 <p><span className="text-gray-500">Fecha de envío:</span> <strong className="text-gray-900 dark:text-white">{new Date(appData.created_at).toLocaleString()}</strong></p>
               </div>
@@ -168,7 +237,13 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
               <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3">Datos Adicionales (Formulario)</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <ul className="space-y-2 text-sm">
-                  {Object.entries(metadata).map(([key, value]) => {
+                  {Object.entries(metadata)
+                    .filter(([key]) => {
+                      // Ocultar modalidad_online en membresías (no aplica, no es un evento)
+                      if (key === 'modalidad_online' && isMembresia) return false;
+                      return true;
+                    })
+                    .map(([key, value]) => {
                     let displayValue = String(value);
                     
                     // Lógica de formateo según el tipo de dato y clave
@@ -184,19 +259,38 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                         style: 'currency',
                         currency: 'EUR'
                       }).format(Number(value));
-                    } else if (key === 'escenario') {
-                      if (value === 'institucional') displayValue = lang === 'es' ? 'Miembro Institucional' : 'Membro Institucional';
-                      else if (value === 'pleno') displayValue = lang === 'es' ? 'Miembro Pleno' : 'Membro Pleno';
-                      else if (value === 'certificado') displayValue = lang === 'es' ? 'Miembro Certificado' : 'Membro Certificado';
-                      else if (value === 'supervisor') displayValue = lang === 'es' ? 'Miembro Supervisor / Profesor' : 'Membro Supervisor / Professor';
-                      else displayValue = String(value).replace(/_/g, ' ');
+                    } else if (key === 'escenario' || key === 'categoria_membresia') {
+                      // Mapeo legible de escenarios y categorías de membresía
+                      const categoryMap: Record<string, string> = {
+                        'pleno_salud_mental': lang === 'es' ? 'Miembro Pleno — Profesional de Salud Mental' : 'Membro Pleno — Profissional de Saúde Mental',
+                        'pleno_agente_social': lang === 'es' ? 'Miembro Pleno — Agente de Intervención Social' : 'Membro Pleno — Agente de Intervenção Social',
+                        'pleno': lang === 'es' ? 'Miembro Pleno' : 'Membro Pleno',
+                        'institucional': lang === 'es' ? 'Miembro Institucional' : 'Membro Institucional',
+                        'bienhechor': lang === 'es' ? 'Miembro Bienhechor' : 'Membro Benfeitor',
+                        'simpatizante': lang === 'es' ? 'Miembro Simpatizante' : 'Membro Simpatizante',
+                        'certificado': lang === 'es' ? 'Miembro Certificado' : 'Membro Certificado',
+                        'supervisor': lang === 'es' ? 'Miembro Supervisor / Profesor' : 'Membro Supervisor / Professor',
+                      };
+                      displayValue = categoryMap[String(value)] || String(value).replace(/_/g, ' ');
+                    } else if (key === 'idioma_solicitud') {
+                      displayValue = value === 'es' ? 'Español' : value === 'pt' ? 'Português' : String(value);
+                    } else if (key === 'tramite_tipo') {
+                      displayValue = value === 'membresia' ? (lang === 'es' ? 'Solicitud de Membresía' : 'Solicitação de Membresia') : String(value);
                     }
 
-                    // Formatear etiqueta
+                    // Formatear etiqueta legible
                     let displayKey = key.replace(/_/g, ' ');
-                    if (key === 'escenario' && appData.accreditation_types?.name?.includes('Membresia')) {
-                      displayKey = lang === 'es' ? 'Categoría de Socio' : 'Categoria de Sócio';
-                    }
+                    const keyLabelMap: Record<string, string> = {
+                      'escenario': appData.accreditation_types?.name?.includes('membresia') 
+                        ? (lang === 'es' ? 'Categoría de Socio' : 'Categoria de Sócio')
+                        : (lang === 'es' ? 'Escenario' : 'Cenário'),
+                      'categoria_membresia': lang === 'es' ? 'Categoría de Membresía' : 'Categoria de Membresia',
+                      'monto_pagado': lang === 'es' ? 'Monto Pagado' : 'Valor Pago',
+                      'modalidad_online': lang === 'es' ? 'Modalidad' : 'Modalidade',
+                      'idioma_solicitud': lang === 'es' ? 'Idioma de Solicitud' : 'Idioma da Solicitação',
+                      'tramite_tipo': lang === 'es' ? 'Tipo de Trámite' : 'Tipo de Trâmite',
+                    };
+                    displayKey = keyLabelMap[key] || displayKey;
 
                     return (
                       <li key={key} className="flex flex-col sm:flex-row sm:gap-4 border-b border-gray-200 dark:border-gray-800 pb-2 last:border-0 last:pb-0">
@@ -230,7 +324,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                         <span className="material-icons-round">picture_as_pdf</span>
                       </div>
                       <div className="truncate">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{doc.document_type.replace(/_/g, ' ').toUpperCase()}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{DOC_TYPE_LABELS[doc.document_type] || doc.document_type.replace(/_/g, ' ')}</p>
                         <p className="text-xs text-gray-500 truncate">{doc.file_path.split('/').pop()}</p>
                       </div>
                     </div>

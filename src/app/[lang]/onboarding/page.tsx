@@ -8,7 +8,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2 } from "lucide-react";
 
 export default function OnboardingPage() {
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -29,7 +30,9 @@ export default function OnboardingPage() {
       const { error: insertError } = await supabase.from("profiles").insert({
         id: session.user.id,
         email: session.user.email,
-        full_name: fullName,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        full_name: `${firstName.trim()} ${lastName.trim()}`,
         language_preference: lang,
       });
 
@@ -65,18 +68,33 @@ export default function OnboardingPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-semibold text-text-main dark:text-gray-300 mb-2">
-              {lang === "es" ? "Nombre Completo" : "Nome Completo"}
-            </label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-text-main dark:text-white"
-              placeholder={lang === "es" ? "Ej. María Pérez" : "Ex. Maria Silva"}
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-text-main dark:text-gray-300 mb-2">
+                {lang === "es" ? "Nombres" : "Nomes"}
+              </label>
+              <input
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-text-main dark:text-white"
+                placeholder={lang === "es" ? "Ej. Juan" : "Ex. João"}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-text-main dark:text-gray-300 mb-2">
+                {lang === "es" ? "Apellidos" : "Sobrenomes"}
+              </label>
+              <input
+                type="text"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-text-main dark:text-white"
+                placeholder={lang === "es" ? "Ej. Pérez" : "Ex. Silva"}
+              />
+            </div>
           </div>
 
           {error && (
@@ -87,7 +105,7 @@ export default function OnboardingPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting || !fullName.trim()}
+            disabled={isSubmitting || !firstName.trim() || !lastName.trim()}
             className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 flex justify-center items-center"
           >
             {isSubmitting ? (

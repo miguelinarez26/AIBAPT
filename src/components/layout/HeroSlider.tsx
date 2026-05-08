@@ -6,29 +6,40 @@ import { FiArrowUpRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { buttonVariants } from "@/components/ui/Button";
 
+type Lang = 'es' | 'pt';
+
 const slidesData = [
   {
     id: "introduccion",
     image: "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?q=80&w=2600&auto=format&fit=crop",
-    getTitle: (_t?: any) => "Sanando Heridas Invisibles",
-    getDesc: (_t?: any) => "Acompañamos el proceso de transformación profunda mediante un abordaje multidisciplinario, basado en la empatía y la ciencia.",
-    buttonText: "Nuestro impacto",
+    title: { es: "Sanando Heridas Invisibles", pt: "Curando Feridas Invisíveis" },
+    desc: {
+      es: "Acompañamos el proceso de transformación profunda mediante un abordaje multidisciplinario, basado en la empatía y la ciencia.",
+      pt: "Acompanhamos o processo de transformação profunda por meio de uma abordagem multidisciplinar, baseada na empatia e na ciência."
+    },
+    buttonText: { es: "Nuestro impacto", pt: "Nosso impacto" },
     href: "#que-es-trauma"
   },
   {
     id: "mision-indirecta",
     image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=2670&auto=format&fit=crop",
-    getTitle: (_t?: any) => "Uniendo Profesionales en Iberoamérica",
-    getDesc: (_t?: any) => "Construimos una sólida red de conocimiento para fomentar la prevención y tratamiento efectivo del trauma psicológico sin fronteras.",
-    buttonText: "Conoce la comunidad",
+    title: { es: "Uniendo Profesionales en Iberoamérica", pt: "Unindo Profissionais na Ibero-América" },
+    desc: {
+      es: "Construimos una sólida red de conocimiento para fomentar la prevención y tratamiento efectivo del trauma psicológico sin fronteras.",
+      pt: "Construímos uma sólida rede de conhecimento para fomentar a prevenção e tratamento eficaz do trauma psicológico sem fronteiras."
+    },
+    buttonText: { es: "Conoce la comunidad", pt: "Conheça a comunidade" },
     href: "#equipo"
   },
   {
     id: "objetivos-indirectos",
     image: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=2649&auto=format&fit=crop",
-    getTitle: (_t?: any) => "Liderando con Rigor y Evidencia",
-    getDesc: (_t?: any) => "Establecemos los más altos estándares clínicos a través de certificaciones, investigación constante y la formación continua de nuestros asociados.",
-    buttonText: "Ver beneficios",
+    title: { es: "Liderando con Rigor y Evidencia", pt: "Liderando com Rigor e Evidência" },
+    desc: {
+      es: "Establecemos los más altos estándares clínicos a través de certificaciones, investigación constante y la formación continua de nuestros asociados.",
+      pt: "Estabelecemos os mais altos padrões clínicos por meio de certificações, pesquisa constante e formação contínua dos nossos associados."
+    },
+    buttonText: { es: "Ver beneficios", pt: "Ver benefícios" },
     href: "#beneficios"
   }
 ];
@@ -39,7 +50,7 @@ const swipePower = (offset: number, velocity: number) => {
 };
 
 export const HeroSlider = () => {
-  const { t } = useLanguage();
+  const { lang } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -156,10 +167,10 @@ export const HeroSlider = () => {
                 </span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-md leading-tight">
-                {currentSlide.getTitle(t)}
+                {currentSlide.title[lang]}
               </h1>
               <p className="text-lg md:text-xl lg:text-2xl text-white/90 mb-6 md:mb-10 drop-shadow-sm max-w-xl">
-                {currentSlide.getDesc(t)}
+                {currentSlide.desc[lang]}
               </p>
               
               <div className="inline-flex">
@@ -168,7 +179,7 @@ export const HeroSlider = () => {
                   onClick={(e) => scrollToSection(e, currentSlide.href)}
                   className={buttonVariants({ variant: "primary", size: "lg", className: "rounded-full px-8 py-6 text-lg hover:shadow-[0_0_20px_rgba(var(--color-primary),0.5)] transition-all flex items-center gap-2" })}
                 >
-                  {currentSlide.buttonText} 
+                  {currentSlide.buttonText[lang]} 
                   <FiArrowUpRight className="text-xl" />
                 </a>
               </div>

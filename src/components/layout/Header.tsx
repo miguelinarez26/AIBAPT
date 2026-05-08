@@ -75,10 +75,10 @@ export const Header = () => {
                                 <span className="material-icons-round text-[16px]">expand_more</span>
                             </button>
                             <div className="absolute top-full left-0 mt-6 w-64 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-300 py-2">
-                                <Link href={`/${lang}/formaciones?tab=events`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Próximos Eventos</Link>
-                                <Link href={`/${lang}/formaciones?tab=recordings`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Videoteca</Link>
-                                <Link href={`/${lang}/formaciones?tab=accredited`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Cursos y eventos acreditados</Link>
-                                <Link href={`/${lang}/formaciones?tab=accreditation`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">Acredita tu curso o evento</Link>
+                                <Link href={`/${lang}/formaciones?tab=events`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.events" as any)}</Link>
+                                <Link href={`/${lang}/formaciones?tab=recordings`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.recordings" as any)}</Link>
+                                <Link href={`/${lang}/formaciones?tab=accredited`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.accredited" as any)}</Link>
+                                <Link href={`/${lang}/formaciones?tab=accreditation`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.accreditation" as any)}</Link>
                             </div>
                         </div>
 
@@ -95,7 +95,7 @@ export const Header = () => {
                                 <Link href={`/${lang}/publicaciones?cat=prensa`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.prensa")}</Link>
                                 <Link href={`/${lang}/publicaciones?cat=libros`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.libros")}</Link>
                                 <div className="h-px bg-accent/10 my-1 mx-2"></div>
-                                <Link href={`/${lang}/publicaciones`} className="block px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-colors uppercase tracking-wider">Ver Todo</Link>
+                                <Link href={`/${lang}/publicaciones`} className="block px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-colors uppercase tracking-wider">{t("nav.see_all" as any)}</Link>
                             </div>
                         </div>
                     </nav>
@@ -119,7 +119,7 @@ export const Header = () => {
                                 <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-2">
                                     <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
                                         <LogOut className="w-4 h-4 mr-2" />
-                                        Cerrar Sesión
+                                        {t("nav.logout" as any)}
                                     </button>
                                 </div>
                             </div>
@@ -166,10 +166,10 @@ export const Header = () => {
                         <div className="flex flex-col space-y-3">
                             {/* @ts-ignore */}
                             <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.development" as any)}</span>
-                            <Link href={`/${lang}/formaciones?tab=events`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Próximos Eventos</Link>
-                            <Link href={`/${lang}/formaciones?tab=recordings`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Videoteca</Link>
-                            <Link href={`/${lang}/formaciones?tab=accredited`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Cursos y eventos acreditados</Link>
-                            <Link href={`/${lang}/formaciones?tab=accreditation`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">Acredita tu curso o evento</Link>
+                            <Link href={`/${lang}/formaciones?tab=events`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.events" as any)}</Link>
+                            <Link href={`/${lang}/formaciones?tab=recordings`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.recordings" as any)}</Link>
+                            <Link href={`/${lang}/formaciones?tab=accredited`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.accredited" as any)}</Link>
+                            <Link href={`/${lang}/formaciones?tab=accreditation`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.accreditation" as any)}</Link>
                         </div>
 
                         {/* Publicaciones */}
@@ -180,7 +180,7 @@ export const Header = () => {
                             <Link href={`/${lang}/publicaciones?cat=entrevistas`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.interviews")}</Link>
                             <Link href={`/${lang}/publicaciones?cat=prensa`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.prensa")}</Link>
                             <Link href={`/${lang}/publicaciones?cat=libros`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.libros")}</Link>
-                            <Link href={`/${lang}/publicaciones`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-xs font-bold text-primary tracking-wider uppercase">Ver Todo</Link>
+                            <Link href={`/${lang}/publicaciones`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-xs font-bold text-primary tracking-wider uppercase">{t("nav.see_all" as any)}</Link>
                         </div>
 
                         <div className="pt-4 border-t border-accent/20 dark:border-gray-800">
@@ -192,7 +192,7 @@ export const Header = () => {
                                     </Link>
                                     <button onClick={() => { setIsMenuOpen(false); handleSignOut(); }} className="w-full flex items-center justify-center px-4 py-3 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 font-bold rounded-xl transition-colors">
                                         <LogOut className="w-5 h-5 mr-2" />
-                                        Cerrar Sesión
+                                        {t("nav.logout" as any)}
                                     </button>
                                 </div>
                             ) : (

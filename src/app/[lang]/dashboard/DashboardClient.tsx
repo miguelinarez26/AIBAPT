@@ -26,10 +26,16 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
 
   const t = translations[lang] as Record<string, string>;
   const isMember = profile?.is_member ?? false;
-  const displayName = profile?.full_name || profile?.email || t["dashboard.hello"] === 'Hola' ? 'Usuario' : 'Usuário';
+  const displayName = profile?.first_name 
+    ? `${profile.first_name} ${profile.last_name || ''}`.trim() 
+    : profile?.full_name || profile?.email || (t["dashboard.hello"] === 'Hola' ? 'Usuario' : 'Usuário');
   const roleLabel = profile?.role === 'admin'
     ? t["dashboard.role.admin"]
-    : t["dashboard.role.member"];
+    : (isMember 
+        ? (profile?.membership_type?.includes('pleno') 
+            ? (lang === 'es' ? 'Miembro Pleno' : 'Membro Pleno')
+            : t["dashboard.role.member"])
+        : (lang === 'es' ? 'Aspirante / Usuario Registrado' : 'Aspirante / Usuário Registrado'));
 
   // Formatear fecha de vencimiento
   const expiryDisplay = profile?.membership_expiry
@@ -44,8 +50,22 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
       day: '2-digit', month: 'short', year: 'numeric'
     });
 
-  // Formatear nombre de tipo de acreditación para mostrar
-  const formatTypeName = (name: string) => name.replace(/_/g, ' ');
+  // Mapeo de slugs técnicos a nombres legibles
+  const TRAMITE_NAMES: Record<string, Record<'es' | 'pt', string>> = {
+    'solicitud_membresia': { es: 'Solicitud de Membresía', pt: 'Solicitação de Membresia' },
+    'CCA': { es: 'Acreditación CCA', pt: 'Acreditação CCA' },
+    'Eventos_Conferencia': { es: 'Evento — Conferencia', pt: 'Evento — Conferência' },
+    'Eventos_Workshop': { es: 'Evento — Workshop', pt: 'Evento — Workshop' },
+    'Eventos_Congreso': { es: 'Evento — Congreso', pt: 'Evento — Congresso' },
+    'Emision_CCA': { es: 'Emisión de CCA', pt: 'Emissão de CCA' },
+    'Renovacion_CCA': { es: 'Renovación de CCA', pt: 'Renovação de CCA' },
+    'EMDR_Psicoterapeuta': { es: 'EMDR Psicoterapeuta', pt: 'EMDR Psicoterapeuta' },
+    'EMDR_Supervisor': { es: 'EMDR Supervisor', pt: 'EMDR Supervisor' },
+    'Equivalencia_EMDR': { es: 'Equivalencia EMDR', pt: 'Equivalência EMDR' },
+    'Psicotrauma_Individual': { es: 'Psicotrauma Individual', pt: 'Psicotrauma Individual' },
+    'Psicotrauma_Programa': { es: 'Psicotrauma Programa', pt: 'Psicotrauma Programa' },
+  };
+  const formatTypeName = (name: string) => TRAMITE_NAMES[name]?.[lang] || name.replace(/_/g, ' ');
 
   return (
     <div className="pt-20 min-h-screen bg-accent/10 dark:bg-background-dark">
@@ -65,6 +85,14 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
               <h1 className="text-3xl font-display font-medium tracking-tight mb-1">
                 {t["dashboard.hello"]}, {displayName}
               </h1>
+              {profile?.member_number && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="bg-white/20 text-white px-3 py-1 rounded-full text-[11px] font-bold border border-white/30 flex items-center gap-1.5 shadow-sm uppercase">
+                    <span className="material-icons-round text-[14px]">badge</span>
+                    MATRÍCULA: {profile.member_number}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-3 flex-wrap mt-1">
                 <span className="bg-white/15 text-xs px-3 py-1 rounded-full font-medium tracking-wide uppercase backdrop-blur-sm">
                   {roleLabel}
@@ -194,7 +222,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                             </span>
                             {app.status === 'rejected' && (app as any).admin_notes && (
                               <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-2 rounded-md border border-red-100 dark:border-red-900/30">
-                                <span className="font-bold block mb-1">Nota del Revisor:</span>
+                                <span className="font-bold block mb-1">{lang === 'es' ? 'Nota del Revisor:' : 'Nota do Revisor:'}</span>
                                 {(app as any).admin_notes}
                               </div>
                             )}
@@ -203,7 +231,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                             {formatDate(app.created_at)}
                           </td>
                           <td className="py-4 px-3">
-                            <ApplicationStatusBadge status={app.status} lang={lang} />
+                            <ApplicationStatusBadge status={app.status} />
                           </td>
                         </tr>
                       ))}
@@ -245,6 +273,12 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                 <span className="text-text-muted dark:text-gray-400">{t["dashboard.status_label"]}</span>
                 <MembershipBadge isMember={isMember} lang={lang} />
               </div>
+              {isMember && profile?.member_number && (
+                <div className="flex justify-between text-sm py-2 bg-primary/5 dark:bg-primary/10 px-3 rounded-lg border border-primary/20">
+                  <span className="text-primary font-bold">{lang === 'es' ? 'Matrícula' : 'Matrícula'}</span>
+                  <span className="font-mono font-bold text-primary">{profile.member_number}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm py-2">
                 <span className="text-text-muted dark:text-gray-400">{t["dashboard.expiry"]}</span>
                 <span className="font-bold text-text-main dark:text-white">{expiryDisplay}</span>

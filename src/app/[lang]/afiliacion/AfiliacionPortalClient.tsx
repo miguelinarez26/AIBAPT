@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { AIBAPT_TRAMITES, EscenarioEvento } from "@/config/aibapt-config";
 import { UniversalStepper } from "@/components/acreditaciones/UniversalStepper";
@@ -23,6 +24,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 
 export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) {
   const { session } = useAuth();
+  const router = useRouter();
   const config = AIBAPT_TRAMITES["solicitud_membresia"];
 
   const [selectedEscenario, setSelectedEscenario] = useState<string>("");
@@ -44,6 +46,19 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
         (sp: { id: string }) => sp.id === selectedEscenario
       ));
 
+  // --- Handler del botón "Continuar" ---
+  // Si el usuario NO está logueado → redirect a registro con returnTo
+  // Si está logueado → mostrar Stepper
+  const handleContinue = () => {
+    if (!session) {
+      // Guardar escenario en la URL para preservar la selección tras login
+      const redirectPath = `/${lang}/afiliacion`;
+      router.push(`/${lang}/registro?redirectTo=${encodeURIComponent(redirectPath)}`);
+      return;
+    }
+    setShowStepper(true);
+  };
+
   // --- Vista del Stepper (documentos) ---
   if (showStepper) {
     return (
@@ -59,21 +74,18 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
     );
   }
 
-  // --- Vista del Selector de Categorías ---
+  // --- Vista del Selector de Categorías (PÚBLICA) ---
   return (
     <div className="bg-gray-50 dark:bg-background-dark pb-16">
-      {/* Divisor visual entre el contenido informativo y el portal */}
-      <div className="border-t-4 border-primary/20 dark:border-primary/10" />
-
       {/* Breadcrumb + Título del Portal */}
       <div className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 pt-3 pb-1 flex items-center gap-2 text-sm text-text-muted dark:text-gray-500">
           <Link
-            href={`/${lang}/dashboard`}
+            href={`/${lang}`}
             className="hover:text-primary transition-colors flex items-center gap-1"
           >
             <ArrowLeft className="w-4 h-4" />
-            {lang === "es" ? "Dashboard" : "Painel"}
+            {lang === "es" ? "Inicio" : "Início"}
           </Link>
           <ChevronRight className="w-3 h-3" />
           <span className="font-bold text-text-main dark:text-white">
@@ -85,11 +97,11 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
             <Star className="w-4 h-4" />
             {lang === "es" ? "PORTAL DE AFILIACIÓN" : "PORTAL DE AFILIAÇÃO"}
           </div>
-          <h2 className="text-3xl md:text-4xl font-black text-text-main dark:text-white mb-3">
+          <h1 className="text-3xl md:text-4xl font-black text-text-main dark:text-white mb-3">
             {lang === "es"
               ? "Solicitud de Membresía AIBAPT"
               : "Solicitação de Membresia AIBAPT"}
-          </h2>
+          </h1>
           <p className="text-text-muted dark:text-gray-400 max-w-2xl mx-auto text-lg">
             {lang === "es"
               ? "Selecciona tu categoría, descarga las plantillas y sube tus documentos directamente desde aquí."
@@ -111,9 +123,11 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
               <div
                 key={esc.id}
                 onClick={() => {
+                  // Para categorías con sub-perfiles (ej. Pleno), preseleccionar el primero
                   if (esc.subProfiles && esc.subProfiles.length > 0) {
                     if (!isSelected) setSelectedEscenario(esc.subProfiles[0].id);
                   } else {
+                    // Para Institucional y Bienhechor, selección directa
                     setSelectedEscenario(esc.id);
                   }
                 }}
@@ -168,7 +182,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                     </p>
                   )}
 
-                  {/* Indicador selección simple */}
+                  {/* Indicador selección simple (Institucional) */}
                   {isSelected && !esc.subProfiles && !esc.isContactForm && (
                     <div className="mt-auto pt-4 flex items-center justify-center gap-2 text-primary text-sm font-bold">
                       <CheckCircle className="w-5 h-5" />
@@ -239,21 +253,6 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                                 {sp.examples[lang]}
                               </p>
                             )}
-
-                            {/* Requisitos al seleccionar */}
-                            {spSelected && (
-                              <ul className="mt-3 space-y-1 ml-6">
-                                {sp.requirements[lang].map((req: string, i: number) => (
-                                  <li
-                                    key={i}
-                                    className="flex items-start gap-1.5 text-xs text-text-muted dark:text-gray-400"
-                                  >
-                                    <CheckCircle className="w-3 h-3 text-primary shrink-0 mt-0.5" />
-                                    {req}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
                           </label>
                         );
                       })}
@@ -265,23 +264,31 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
           })}
         </div>
 
-        {/* Botón de acción */}
+        {/* Botón de acción — Gate de autenticación aquí */}
         <div className="flex justify-center mt-10">
           <button
-            onClick={() => setShowStepper(true)}
+            onClick={handleContinue}
             disabled={!isSelectionValid}
             className="bg-primary text-white px-12 py-4 rounded-full font-black text-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
           >
-            {lang === "es"
-              ? "Iniciar Proceso de Afiliación →"
-              : "Iniciar Processo de Afiliação →"}
+            {!session
+              ? (lang === "es"
+                ? "Crear Cuenta y Continuar →"
+                : "Criar Conta e Continuar →")
+              : (lang === "es"
+                ? "Iniciar Proceso de Afiliación →"
+                : "Iniciar Processo de Afiliação →")}
           </button>
         </div>
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4 max-w-lg mx-auto">
-          {lang === "es"
-            ? "Al continuar, podrás descargar las plantillas necesarias y subir tus documentos para revisión de la Secretaría."
-            : "Ao continuar, você poderá baixar os modelos necessários e enviar seus documentos para revisão da Secretaria."}
+          {!session
+            ? (lang === "es"
+              ? "Al continuar, se te pedirá crear una cuenta para subir tus documentos de forma segura."
+              : "Ao continuar, será solicitado que crie uma conta para enviar seus documentos de forma segura.")
+            : (lang === "es"
+              ? "Al continuar, podrás descargar las plantillas necesarias y subir tus documentos para revisión de la Secretaría."
+              : "Ao continuar, você poderá baixar os modelos necessários e enviar seus documentos para revisão da Secretaria.")}
         </p>
       </div>
     </div>

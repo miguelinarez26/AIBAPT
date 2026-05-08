@@ -25,31 +25,43 @@ export interface Database {
         Row: {
           id: string
           full_name: string | null
+          first_name: string
+          last_name: string
           email: string | null
           is_member: boolean
-          membership_type: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'certificado' | 'supervisor' | 'ninguno' | null
+          membership_type: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'simpatizante' | 'bienhechor' | 'certificado' | 'supervisor' | 'ninguno' | null
           membership_expiry: string | null
+          member_number: string | null
           role: UserRole
+          language_preference: SupportedLanguage
           created_at: string
         }
         Insert: {
           id: string
           full_name?: string | null
+          first_name?: string
+          last_name?: string
           email?: string | null
           is_member?: boolean
-          membership_type?: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'certificado' | 'supervisor' | 'ninguno' | null
+          membership_type?: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'simpatizante' | 'bienhechor' | 'certificado' | 'supervisor' | 'ninguno' | null
           membership_expiry?: string | null
+          member_number?: string | null
           role?: UserRole
+          language_preference?: SupportedLanguage
           created_at?: string
         }
         Update: {
           id?: string
           full_name?: string | null
+          first_name?: string
+          last_name?: string
           email?: string | null
           is_member?: boolean
-          membership_type?: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'certificado' | 'supervisor' | 'ninguno' | null
+          membership_type?: 'institucional' | 'pleno_salud_mental' | 'pleno_agente_social' | 'simpatizante' | 'bienhechor' | 'certificado' | 'supervisor' | 'ninguno' | null
           membership_expiry?: string | null
+          member_number?: string | null
           role?: UserRole
+          language_preference?: SupportedLanguage
           created_at?: string
         }
       }

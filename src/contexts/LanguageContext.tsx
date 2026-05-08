@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { translations, LangKeys } from "@/i18n/translations";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -21,13 +21,40 @@ interface LanguageProviderProps {
     initialLang?: Language;
 }
 
-export const LanguageProvider = ({ children, initialLang = "es" }: LanguageProviderProps) => {
-    const [lang, setLangState] = useState<Language>(initialLang);
+export const LanguageProvider = ({ children, initialLang }: LanguageProviderProps) => {
     const pathname = usePathname();
     const router = useRouter();
     const { session } = useAuth();
 
-    // Cambiar idioma: actualiza cookie, estado, DB y navega al prefijo correcto
+    // Determinar el idioma inicial: prop > URL > cookie > defecto
+    const resolveInitialLang = (): Language => {
+        if (initialLang) return initialLang;
+        // Detectar desde la URL actual
+        const segments = pathname.split('/');
+        if (segments.length >= 2 && (segments[1] === 'es' || segments[1] === 'pt')) {
+            return segments[1] as Language;
+        }
+        // Fallback a cookie si existe
+        if (typeof document !== 'undefined') {
+            const match = document.cookie.match(/aibapt-lang=(es|pt)/);
+            if (match) return match[1] as Language;
+        }
+        return 'es';
+    };
+
+    const [lang, setLangState] = useState<Language>(resolveInitialLang);
+
+    // Sincronizar lang con la URL cuando el pathname cambia (navegación directa o setLang)
+    useEffect(() => {
+        const segments = pathname.split('/');
+        if (segments.length >= 2 && (segments[1] === 'es' || segments[1] === 'pt')) {
+            const urlLang = segments[1] as Language;
+            if (urlLang !== lang) {
+                setLangState(urlLang);
+            }
+        }
+    }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const changeLanguage = useCallback(async (newLang: Language) => {
         setLangState(newLang);
 

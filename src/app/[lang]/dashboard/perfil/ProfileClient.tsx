@@ -18,7 +18,8 @@ interface ProfileClientProps {
 export default function ProfileClient({ profile, lang }: ProfileClientProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [firstName, setFirstName] = useState(profile?.first_name || '');
+  const [lastName, setLastName] = useState(profile?.last_name || '');
   const [langPref, setLangPref] = useState<'es' | 'pt'>(profile?.language_preference as 'es' | 'pt' || 'es');
   const router = useRouter();
   const pathname = usePathname();
@@ -44,7 +45,11 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
     // Forzar cast del cliente para evitar conflicto de inferencia genérica
     const { error } = await (supabase as any)
       .from('profiles')
-      .update({ full_name: fullName })
+      .update({ 
+        first_name: firstName, 
+        last_name: lastName,
+        full_name: `${firstName} ${lastName}` 
+      })
       .eq('id', profile.id);
 
     setIsSaving(false);
@@ -129,10 +134,10 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
             <div className="bg-white dark:bg-surface-dark border border-accent/50 dark:border-gray-800 rounded-2xl p-5">
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-2xl font-display font-bold text-primary">
-                  {(profile?.full_name || profile?.email || '?').charAt(0).toUpperCase()}
+                  {(profile?.first_name || profile?.email || '?').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-bold text-text-main dark:text-white text-sm">{profile?.full_name || profile?.email}</p>
+                  <p className="font-bold text-text-main dark:text-white text-sm">{profile?.first_name} {profile?.last_name || profile?.email}</p>
                   <p className="text-xs text-text-muted dark:text-gray-400">{profile?.email}</p>
                 </div>
                 <MembershipBadge isMember={isMember} lang={lang} />
@@ -147,7 +152,15 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted dark:text-gray-400">{t["profile.role"]}</span>
-                  <span className="font-bold text-text-main dark:text-white text-xs capitalize">{profile?.role || 'member'}</span>
+                  <span className="font-bold text-text-main dark:text-white text-xs capitalize">
+                    {profile?.role === 'admin' 
+                      ? t["dashboard.role.admin"] 
+                      : (isMember 
+                          ? (profile?.membership_type?.includes('pleno') 
+                              ? (lang === 'es' ? 'Miembro Pleno' : 'Membro Pleno')
+                              : t["dashboard.role.member"])
+                          : (lang === 'es' ? 'Aspirante' : 'Aspirante'))}
+                  </span>
                 </div>
               </div>
             </div>
@@ -182,26 +195,38 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-text-main dark:text-white">
-                      {t["profile.fullname"]}
+                      {lang === 'es' ? 'Nombres' : 'Nomes'}
                     </label>
                     <input
                       type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                       className="w-full bg-gray-50 dark:bg-surface-light border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-text-main dark:text-white focus:ring-2 focus:ring-primary/50 outline-none transition-shadow"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-text-main dark:text-white">
-                      {t["profile.email"]}
+                      {lang === 'es' ? 'Apellidos' : 'Sobrenomes'}
                     </label>
                     <input
-                      type="email"
-                      readOnly
-                      value={profile?.email || ''}
-                      className="w-full bg-gray-100 dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-text-muted cursor-not-allowed outline-none"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full bg-gray-50 dark:bg-surface-light border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-text-main dark:text-white focus:ring-2 focus:ring-primary/50 outline-none transition-shadow"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-text-main dark:text-white">
+                    {t["profile.email"]}
+                  </label>
+                  <input
+                    type="email"
+                    readOnly
+                    value={profile?.email || ''}
+                    className="w-full bg-gray-100 dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-text-muted cursor-not-allowed outline-none"
+                  />
                 </div>
 
                 {/* Preferencia de Idioma */}

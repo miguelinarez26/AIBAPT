@@ -20,6 +20,15 @@ interface UniversalStepperProps {
 export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: UniversalStepperProps) {
   const params = useParams();
   const lang = (params?.lang as "es" | "pt") || "es";
+
+  // Si es membresía con escenario pre-seleccionado, detectar si es bienhechor (contacto)
+  // para saltar directamente al formulario de contacto (step 2)
+  const isMembresiaPreselected = tramiteId === 'solicitud_membresia' && !!initialEscenario;
+  const config_temp = AIBAPT_TRAMITES[tramiteId];
+  const initialIsContactForm = isMembresiaPreselected && Array.isArray(config_temp?.monto)
+    ? config_temp.monto.find((e: EscenarioEvento) => e.id === initialEscenario || initialEscenario.startsWith(e.id + '_'))?.isContactForm === true
+    : false;
+
   const [step, setStep] = useState(1);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,14 +79,13 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
       // Paso 1: Usar la sesión ya existente de AuthProvider
       const currentUser = session.user;
-      console.log('[UniversalStepper] ✅ Usando sesión de AuthProvider para usuario:', currentUser.id);
 
       // Paso 2: Fetch perfil para verificar membresía
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
-        .maybeSingle();
+        .maybeSingle() as { data: Profile | null; error: any };
 
       if (profileError) {
         console.error('[UniversalStepper] ❌ Error obteniendo perfil:', profileError.message);
@@ -95,7 +103,6 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           );
         }
       } else {
-        console.log('[UniversalStepper] ✅ Perfil cargado. is_member:', profile?.is_member);
         setUserProfile(profile);
       }
 
@@ -105,14 +112,13 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           .from('accreditation_types')
           .select('*')
           .eq('name', config.accreditationTypeKey)
-          .maybeSingle();
+          .maybeSingle() as { data: AccreditationType | null; error: any };
 
         if (accTypeError) {
           console.error('[UniversalStepper] ❌ Error obteniendo tipo de acreditación:', accTypeError.message);
           console.error('[UniversalStepper] Código:', accTypeError.code, '| Key buscada:', config.accreditationTypeKey);
           // No es crítico — el stepper puede funcionar sin precio dinámico
         } else {
-          console.log('[UniversalStepper] ✅ Tipo de acreditación cargado:', accType?.name, '| fee_member:', accType?.fee_member, '| fee_non_member:', accType?.fee_non_member);
           setAccreditationType(accType);
         }
       }
@@ -159,13 +165,16 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
     setSubmitError(null);
 
     try {
+      const isBienhechorOrSimpatizante = selectedEscenario === 'bienhechor' || selectedEscenario === 'simpatizante';
       const response = await fetch('/api/admin/notify-admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          applicationId: 'contacto_bienhechor',
-          userName: userProfile?.full_name || session.user.email,
-          accreditationName: 'Solicitud de Miembro Bienhechor',
+          applicationId: isBienhechorOrSimpatizante ? `contacto_${selectedEscenario}` : 'contacto_general',
+          userName: userProfile?.first_name ? `${userProfile.first_name} ${userProfile.last_name || ''}`.trim() : (userProfile?.full_name || session.user.email),
+          accreditationName: isBienhechorOrSimpatizante 
+            ? 'Solicitud de miembro bienhechor o simpatizante' 
+            : 'Contacto General',
           message: contactMessage,
           email: session.user.email
         }),
@@ -239,36 +248,68 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
     const archivosConLabels: Record<string, string> = {};
 
     try {
-      // Paso 1: Determinar monto final
+      // Paso 1: Determinar monto final — soporta sub-perfiles (ej. pleno_salud_mental → pleno.monto)
       let montoFinal = config.monto;
       if (Array.isArray(config.monto)) {
-        montoFinal = config.monto.find((e: EscenarioEvento) => e.id === data.escenario)?.monto || 0;
+        const directMatch = config.monto.find((e: EscenarioEvento) => e.id === data.escenario);
+        const parentMatch = config.monto.find((e: EscenarioEvento) => 
+          e.subProfiles?.some(sp => sp.id === data.escenario)
+        );
+        montoFinal = directMatch?.monto ?? parentMatch?.monto ?? 0;
       }
 
       if (!accreditationType?.id) {
-        throw new Error("No se pudo determinar el tipo de trámite (falta type_id).");
+        console.error('[UniversalStepper] ❌ type_id faltante. accreditationType:', accreditationType, '| accreditationTypeKey:', config.accreditationTypeKey);
+        throw new Error(
+          lang === 'es' 
+            ? `No se pudo vincular tu solicitud al catálogo de trámites. El tipo "${config.accreditationTypeKey || tramiteId}" no fue encontrado en la base de datos. Contacta soporte.`
+            : `Não foi possível vincular sua solicitação ao catálogo de trâmites. O tipo "${config.accreditationTypeKey || tramiteId}" não foi encontrado no banco de dados. Contate o suporte.`
+        );
       }
 
-      // Paso 2: Guardar solicitud en BD como 'uploading'
-      console.log('[UniversalStepper] Guardando solicitud inicial (uploading):', { type_id: accreditationType.id, user: session.user.id });
+      // Paso 2: Crear solicitud en BD como 'pending'
+      console.log('[UniversalStepper] Creando solicitud:', { type_id: accreditationType.id, user: session.user.id });
       
+      // Construir metadata enriquecida para administración
+      const escenarioId = data.escenario || selectedEscenario;
+      const enrichedMetadata: Record<string, any> = {
+        escenario: escenarioId,
+        monto_pagado: montoFinal,
+        idioma_solicitud: lang,
+      };
+
+      // Solo incluir modalidad_online en trámites que la usan (CCA, eventos), NO en membresía
+      if (config.hasModalitySelection) {
+        enrichedMetadata.modalidad_online = isOnline;
+      }
+
+      // Metadata extra para membresías: guardar nombre legible para el Admin
+      if (tramiteId === 'solicitud_membresia') {
+        // Resolver nombre humano de la categoría
+        const categoryLabels: Record<string, Record<'es' | 'pt', string>> = {
+          'pleno_salud_mental': { es: 'Miembro Pleno — Profesional de Salud Mental', pt: 'Membro Pleno — Profissional de Saúde Mental' },
+          'pleno_agente_social': { es: 'Miembro Pleno — Agente de Intervención Social', pt: 'Membro Pleno — Agente de Intervenção Social' },
+          'pleno': { es: 'Miembro Pleno', pt: 'Membro Pleno' },
+          'institucional': { es: 'Miembro Institucional', pt: 'Membro Institucional' },
+          'bienhechor': { es: 'Miembro Bienhechor', pt: 'Membro Benfeitor' },
+        };
+        const readableLabel = categoryLabels[escenarioId]?.[lang] || escenarioId.replace(/_/g, ' ');
+        enrichedMetadata.categoria_membresia = readableLabel;
+        enrichedMetadata.tramite_tipo = 'membresia';
+      }
+
       const { data: applicationData, error: dbError } = await supabase.from('applications').insert({
         user_id: session.user.id,
         type_id: accreditationType.id,
         status: 'uploading',
-        metadata: {
-          escenario: data.escenario,
-          monto_pagado: montoFinal,
-          modalidad_online: isOnline,
-        }
-      }).select('id').single();
+        metadata: enrichedMetadata
+      } as any).select('id').single();
 
       if (dbError) {
         throw new Error(`Error al crear la solicitud inicial: ${dbError.message}`);
       }
 
-      applicationId = applicationData.id;
-      console.log('[UniversalStepper] ✅ Solicitud creada con ID:', applicationId);
+      applicationId = (applicationData as any).id;
 
       // Función helper para subir archivos con el ID de la solicitud y timeout
       const uploadFile = async (file: File, prefix: string, appId: string) => {
@@ -277,19 +318,19 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         const fileExt = file.name.split('.').pop()?.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'bin';
         const fileName = `${safePrefix}_${Date.now()}.${fileExt}`;
         
-        // Nueva ruta: incluye el ID de la solicitud para agrupar archivos, con subcarpeta especial para membresías
-        const folderName = tramiteId === 'solicitud_membresia' ? 'membresias' : tramiteId;
+        // Ruta jerárquica: private-certifications/[user_id]/membresia/[application_id]/archivo.pdf
+        const folderName = tramiteId === 'solicitud_membresia' ? 'membresia' : tramiteId;
         const filePath = `${session.user.id}/${folderName}/${appId}/${fileName}`;
-        
-        console.log(`[UniversalStepper] Subiendo ${fileName} a private-certifications...`);
         
         const uploadPromise = supabase.storage
           .from('private-certifications')
           .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
-        // Timeout de 10 segundos
+        // Timeout de 60 segundos para archivos grandes o conexiones lentas
         const timeoutPromise = new Promise<{ error: Error }>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout: La subida de archivo tardó demasiado.')), 10000)
+          setTimeout(() => reject(new Error(lang === 'es' 
+            ? 'Tu conexión es lenta o el archivo es grande. Intentando subir de nuevo (tiempo extendido)...' 
+            : 'Sua conexão está lenta ou o arquivo é grande. Tentando subir novamente (tempo estendido)...')), 60000)
         );
 
         const { error: uploadError } = await Promise.race([uploadPromise, timeoutPromise]) as any;
@@ -301,18 +342,19 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       };
 
       // Paso 3: Subir todos los archivos al Storage
-      console.log('[UniversalStepper] Iniciando subida de archivos...');
       for (const field of config.fields) {
         if (field.name === "cuestionario_evaluacion" && !isOnline) continue;
         
         const fileList = data[field.name];
         if (fileList && fileList.length > 0 && fileList[0] && fileList[0].size > 0) {
           try {
-            const path = await uploadFile(fileList[0], field.name, applicationId);
+            const path = await uploadFile(fileList[0], field.name, applicationId!);
             archivosSubidos[field.name] = path;
-            archivosConLabels[field.label] = path;
+            const fieldLabel = typeof field.label === 'string' ? field.label : field.label[lang];
+            archivosConLabels[fieldLabel] = path;
           } catch (uploadErr) {
-            throw new Error(`Error al subir "${field.label}": ${uploadErr instanceof Error ? uploadErr.message : 'Error desconocido'}`);
+            const errLabel = typeof field.label === 'string' ? field.label : field.label[lang];
+            throw new Error(`Error al subir "${errLabel}": ${uploadErr instanceof Error ? uploadErr.message : 'Error desconocido'}`);
           }
         }
       }
@@ -326,23 +368,21 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           is_private: true
         }));
 
-        const { error: docsError } = await supabase.from('documents').insert(documentsToInsert);
+        const { error: docsError } = await supabase.from('documents').insert(documentsToInsert as any);
         if (docsError) {
           throw new Error(`Error vinculando documentos: ${docsError.message}`);
         }
       }
 
-      // Paso 5: Actualizar estado de la solicitud a 'pending'
-      const { error: updateError } = await supabase
+      // Paso 5: Cambiar estado a 'pending' solo tras éxito total
+      const { error: finalStatusError } = await supabase
         .from('applications')
         .update({ status: 'pending' })
         .eq('id', applicationId);
 
-      if (updateError) {
-        throw new Error(`Error actualizando estado final: ${updateError.message}`);
+      if (finalStatusError) {
+        throw new Error(`Error al confirmar la solicitud: ${finalStatusError.message}`);
       }
-
-      console.log('[UniversalStepper] ✅ Proceso completado exitosamente.');
 
       // Paso 6: Notificar al admin
       try {
@@ -368,7 +408,6 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
       // Rollback: Si falló después de crear la solicitud, intentamos limpiar
       if (applicationId) {
-        console.log('[UniversalStepper] Iniciando rollback por error...');
         
         // 1. Borrar archivos huérfanos
         if (Object.keys(archivosSubidos).length > 0) {
@@ -378,7 +417,6 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         
         // 2. Borrar la solicitud fallida (los documentos se borrarán en cascada si hay foreign key)
         await supabase.from('applications').delete().eq('id', applicationId);
-        console.log('[UniversalStepper] ✅ Rollback completado.');
       }
     } finally {
       setIsSubmitting(false);
@@ -392,7 +430,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
     return (
       <div className="bg-white dark:bg-surface-dark rounded-3xl p-10 text-center shadow-lg border border-accent/20">
         <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin mb-4" />
-        <p className="text-text-muted">Verificando membresía...</p>
+        <p className="text-text-muted">{lang === 'es' ? 'Verificando membresía...' : 'Verificando membresia...'}</p>
       </div>
     );
   }
@@ -404,7 +442,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
           <ShieldAlert className="w-10 h-10 text-red-500" />
         </div>
-        <h2 className="text-2xl font-bold text-text-main dark:text-white mb-3">Error de Verificación</h2>
+        <h2 className="text-2xl font-bold text-text-main dark:text-white mb-3">{lang === 'es' ? 'Error de Verificación' : 'Erro de Verificação'}</h2>
         <p className="text-text-muted dark:text-gray-400 text-sm mb-6 max-w-md mx-auto">
           {membershipError}
         </p>
@@ -413,13 +451,13 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
             onClick={onBack}
             className="px-6 py-3 text-text-muted border border-accent rounded-xl hover:bg-accent/10 transition-colors font-medium"
           >
-            <ArrowLeft className="w-4 h-4 inline mr-2" />Volver
+            <ArrowLeft className="w-4 h-4 inline mr-2" />{lang === 'es' ? 'Volver' : 'Voltar'}
           </button>
           <button
             onClick={loadMembershipData}
             className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary/90 transition-opacity flex items-center justify-center gap-2"
           >
-            <Loader2 className="w-4 h-4" />Reintentar
+            <Loader2 className="w-4 h-4" />{lang === 'es' ? 'Reintentar' : 'Tentar novamente'}
           </button>
         </div>
       </div>
@@ -433,12 +471,16 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         <div className="w-20 h-20 bg-[var(--color-aibapt-gray)]/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <ShieldAlert className="w-10 h-10 text-[var(--color-aibapt-gray)]" />
         </div>
-        <h2 className="text-2xl font-bold text-text-main dark:text-white mb-3">Membresía Requerida</h2>
+        <h2 className="text-2xl font-bold text-text-main dark:text-white mb-3">{lang === 'es' ? 'Membresía Requerida' : 'Membresia Requerida'}</h2>
         <p className="text-text-muted dark:text-gray-400 text-base mb-2 max-w-md mx-auto">
-          Este trámite (<strong>{config.title}</strong>) es exclusivo para socios activos de AIBAPT.
+          {lang === 'es'
+            ? <>{`Este trámite (`}<strong>{typeof config.title === 'string' ? config.title : config.title[lang]}</strong>{`) es exclusivo para socios activos de AIBAPT.`}</>
+            : <>{`Este trâmite (`}<strong>{typeof config.title === 'string' ? config.title : config.title[lang]}</strong>{`) é exclusivo para sócios ativos da AIBAPT.`}</>}
         </p>
         <p className="text-text-muted dark:text-gray-400 text-sm mb-8 max-w-md mx-auto">
-          Activa o renueva tu membresía para acceder a las certificaciones EMDR y tarifas preferenciales.
+          {lang === 'es'
+            ? 'Activa o renueva tu membresía para acceder a las certificaciones EMDR y tarifas preferenciales.'
+            : 'Ative ou renove sua membresia para acessar as certificações EMDR e tarifas preferenciais.'}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
@@ -462,16 +504,25 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
     return (
       <div className="bg-white dark:bg-surface-dark border border-green-200 dark:border-green-900 rounded-3xl p-10 text-center shadow-lg">
         <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-        <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">¡Solicitud Enviada!</h2>
-        <p className="text-text-muted dark:text-gray-400 text-lg mb-8">
-          Hemos recibido tus documentos correctamente. Recibirás respuesta en los próximos 15 días hábiles.
+        <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">
+          {lang === 'es' ? '¡Solicitud Enviada con Éxito!' : 'Solicitação Enviada com Sucesso!'}
+        </h2>
+        <p className="text-text-muted dark:text-gray-400 text-lg mb-4">
+          {lang === 'es'
+            ? 'Hemos recibido tus documentos correctamente.'
+            : 'Recebemos seus documentos corretamente.'}
         </p>
-        <button
-          onClick={onBack}
-          className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors"
+        <p className="text-text-muted dark:text-gray-400 text-sm mb-8">
+          {lang === 'es'
+            ? 'Recibirás una respuesta en los próximos 15 días hábiles. Puedes seguir el estado de tu trámite desde tu panel personal.'
+            : 'Você receberá uma resposta nos próximos 15 dias úteis. Pode acompanhar o estado do seu trâmite no seu painel pessoal.'}
+        </p>
+        <a
+          href={`/${lang}/dashboard`}
+          className="inline-block bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20"
         >
-          Volver a Acreditaciones
-        </button>
+          {lang === 'es' ? 'Ir a Mi Panel →' : 'Ir ao Meu Painel →'}
+        </a>
       </div>
     );
   }
@@ -482,20 +533,20 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         onClick={onBack}
         className="absolute top-6 left-6 flex items-center text-sm font-medium text-text-muted hover:text-primary transition-colors"
       >
-        <ArrowLeft className="w-4 h-4 mr-1" /> Volver
+        <ArrowLeft className="w-4 h-4 mr-1" /> {lang === 'es' ? 'Volver' : 'Voltar'}
       </button>
 
       <h2 className="text-3xl font-bold text-text-main dark:text-white mb-2 text-center mt-8 md:mt-0">{config.title[lang]}</h2>
       <p className="text-center text-text-muted dark:text-gray-400 mb-8">{config.description[lang]}</p>
 
-      {/* Progress Bar */}
+      {/* Progress Bar (2 Pasos) */}
       <div className="flex items-center justify-center mb-10">
-        {[1, 2, 3].map((num) => (
+        {[1, 2].map((num) => (
           <div key={num} className="flex items-center">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${step >= num ? 'bg-primary text-white shadow-md' : 'bg-gray-200 dark:bg-gray-800 text-gray-500'}`}>
               {num}
             </div>
-            {num < 3 && (
+            {num < 2 && (
               <div className={`w-16 md:w-32 h-1 mx-2 transition-colors ${step > num ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-800'}`} />
             )}
           </div>
@@ -503,141 +554,47 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       </div>
 
       <div className="min-h-[300px]">
-        {/* PASO 1: INFO */}
+        {/* PASO 1: REQUISITOS Y PLANTILLAS (O FORMULARIO DE CONTACTO) */}
         {step === 1 && (
-          <div className="space-y-6 animate-fade-in-up">
-            <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-2xl p-6">
-              <h3 className="text-xl font-bold text-primary flex items-center mb-4">
-                <Info className="w-6 h-6 mr-2" /> A. Leer (Requisitos)
-              </h3>
-              <ul className="space-y-3 text-text-main dark:text-gray-300">
-                {config.instrucciones_leer[lang].map((item, idx) => (
-                  <li key={idx} className="flex items-start">
-                    <CheckCircle className="w-5 h-5 text-accent mr-3 shrink-0 mt-0.5" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            {/* COMPARATIVA EVENTOS / SELECCIÓN */}
-            {Array.isArray(config.monto) && (
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                <h4 className="font-bold text-text-main dark:text-white mb-4">
-                  {lang === 'es' ? 'Selecciona tu Categoría' : 'Selecione sua Categoria'}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {config.monto.map((esc: EscenarioEvento) => {
-                    const isSelected = selectedEscenario === esc.id || selectedEscenario.startsWith(esc.id + '_');
-                    return (
-                      <div 
-                        key={esc.id} 
-                        onClick={() => {
-                          if (esc.subProfiles && esc.subProfiles.length > 0) {
-                            if (!isSelected) setSelectedEscenario(esc.subProfiles[0].id);
-                          } else {
-                            setSelectedEscenario(esc.id);
-                          }
-                        }}
-                        className={`cursor-pointer transition-all duration-300 p-5 rounded-2xl border-2 text-center flex flex-col justify-between h-full ${
-                          isSelected 
-                            ? 'bg-primary/5 border-primary shadow-lg scale-[1.02]' 
-                            : 'bg-white dark:bg-surface-dark border-gray-100 dark:border-gray-700 hover:border-primary/50'
-                        }`}
-                      >
-                        <div>
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4 ${isSelected ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
-                            {isSelected ? <CheckCircle className="w-6 h-6" /> : <div className="w-3 h-3 rounded-full border-2 border-current" />}
-                          </div>
-                          <div className={`font-bold text-lg mb-1 ${isSelected ? 'text-primary' : 'text-text-main dark:text-white'}`}>
-                            {typeof esc.label === 'string' ? esc.label : esc.label[lang]}
-                          </div>
-                          <div className="text-2xl font-black text-accent mb-3">{esc.monto} €</div>
-                          <p className="text-sm text-text-muted dark:text-gray-400 line-clamp-3">
-                            {typeof esc.description === 'string' ? esc.description : esc.description[lang]}
-                          </p>
-                        </div>
-                        
-                        {esc.subProfiles && isSelected && (
-                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-left animate-fade-in-up">
-                            <div className="font-bold text-sm mb-3 text-text-main dark:text-white">
-                              {lang === 'es' ? 'Elige tu Perfil:' : 'Escolha seu Perfil:'}
-                            </div>
-                            <div className="space-y-3">
-                              {esc.subProfiles.map(sp => (
-                                <label key={sp.id} className="flex items-start cursor-pointer group">
-                                  <input 
-                                    type="radio" 
-                                    name={`subprofile-${esc.id}`} 
-                                    value={sp.id} 
-                                    checked={selectedEscenario === sp.id}
-                                    onChange={() => setSelectedEscenario(sp.id)}
-                                    className="mt-1 form-radio text-primary focus:ring-primary h-4 w-4 shrink-0"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                  <span className="ml-2 text-sm">
-                                    <span className="font-medium block text-text-main dark:text-white">
-                                      {typeof sp.label === 'string' ? sp.label : sp.label[lang]}
-                                    </span>
-                                    {sp.examples && (
-                                      <span className="text-xs text-gray-400 dark:text-gray-500 italic block mt-0.5">
-                                        {sp.examples[lang]}
-                                      </span>
-                                    )}
-                                    {selectedEscenario === sp.id && sp.requirements && (
-                                      <ul className="mt-2 text-xs text-text-muted dark:text-gray-400 list-disc list-inside space-y-1">
-                                        {sp.requirements[lang].map((req: string, i: number) => (
-                                          <li key={i}>{req}</li>
-                                        ))}
-                                      </ul>
-                                    )}
-                                  </span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
+          <div className="space-y-8 animate-fade-in-up">
+            {/* Resumen de categoría preseleccionada */}
+            {isMembresiaPreselected && selectedEscenario && (() => {
+              const parentEsc = (config.monto as EscenarioEvento[]).find(
+                (e: EscenarioEvento) => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_')
+              );
+              const subProfile = parentEsc?.subProfiles?.find(sp => sp.id === selectedEscenario);
+              if (!parentEsc) return null;
+
+              return (
+                <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-2xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
+                        {lang === 'es' ? 'Categoría Seleccionada' : 'Categoria Selecionada'}
+                      </p>
+                      <p className="text-lg font-black text-text-main dark:text-white">
+                        {typeof parentEsc.label === 'string' ? parentEsc.label : parentEsc.label[lang]}
+                        {subProfile && (
+                          <span className="text-sm font-medium text-text-muted dark:text-gray-400 ml-2">
+                            — {typeof subProfile.label === 'string' ? subProfile.label : subProfile.label[lang]}
+                          </span>
                         )}
-                      </div>
-                    );
-                  })}
+                      </p>
+                    </div>
+                    <div className="text-2xl font-black text-accent">
+                      {parentEsc.monto > 0 ? `${parentEsc.monto} €` : (lang === 'es' ? 'Voluntario' : 'Voluntário')}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
-            <div className="flex justify-end pt-4">
-              {!session ? (
-                <button 
-                  onClick={() => router.push(`/${lang}/registro?redirectTo=${encodeURIComponent(`/${lang}/afiliacion`)}`)} 
-                  className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!isSelectionValid}
-                >
-                  {lang === 'es' ? 'Registrarse para continuar' : 'Registrar-se para continuar'}
-                </button>
-              ) : (
-                <button 
-                  onClick={() => setStep(2)} 
-                  disabled={!isSelectionValid}
-                  className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isContactFormMode 
-                    ? (lang === 'es' ? 'Ir al Formulario de Contacto' : 'Ir para o Formulário de Contato')
-                    : (lang === 'es' ? 'Continuar a Plantillas' : 'Continuar para Modelos')}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* PASO 2: DESCARGAS O FORMULARIO DE CONTACTO */}
-        {step === 2 && (
-          <div className="space-y-6 animate-fade-in-up">
             {isContactFormMode ? (
-              // FORMULARIO DE CONTACTO (BIENHECHOR)
+              // VISTA BIENHECHOR (Formulario de Contacto Directo)
               <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
                 <h3 className="text-xl font-bold text-text-main dark:text-white flex items-center mb-6">
                   <FileText className="w-6 h-6 mr-2 text-primary" /> {lang === 'es' ? 'Formulario de Contacto' : 'Formulário de Contato'}
                 </h3>
-                
                 {contactSuccess ? (
                   <div className="text-center py-10">
                     <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -661,25 +618,17 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                         <input type="email" disabled value={session?.user?.email || ''} className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-none opacity-70" />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-bold text-text-muted mb-1">{lang === 'es' ? 'Asunto' : 'Assunto'}</label>
-                      <input type="text" disabled value={lang === 'es' ? 'Solicitud de miembro bienhechor o simpatizante' : 'Solicitação de membro benfeitor ou simpatizante'} className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-none opacity-70 font-medium" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-text-muted mb-1">{lang === 'es' ? 'Mensaje / Motivos *' : 'Mensagem / Motivos *'}</label>
-                      <textarea 
-                        required 
-                        rows={5} 
-                        value={contactMessage}
-                        onChange={(e) => setContactMessage(e.target.value)}
-                        placeholder={lang === 'es' ? 'Cuéntanos por qué deseas colaborar con AIBAPT...' : 'Conte-nos por que deseja colaborar com a AIBAPT...'}
-                        className="w-full p-3 rounded-xl bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:outline-none"
-                      ></textarea>
-                    </div>
-                    {submitError && <p className="text-red-500 text-sm font-bold">{submitError}</p>}
-                    
+                    <textarea 
+                      required 
+                      rows={5} 
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder={lang === 'es' ? 'Cuéntanos por qué deseas colaborar con AIBAPT...' : 'Conte-nos por que deseja colaborar com a AIBAPT...'}
+                      className="w-full p-3 rounded-xl bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:outline-none"
+                    ></textarea>
+                    {submitError && <p className="text-red-500 text-sm font-bold mb-2">{submitError}</p>}
                     <div className="flex justify-between pt-4">
-                      <button type="button" onClick={() => setStep(1)} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
+                      <button type="button" onClick={onBack} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
                       <button type="submit" disabled={isSendingContact || !contactMessage.trim()} className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors flex items-center disabled:opacity-50">
                         {isSendingContact ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
                         {lang === 'es' ? 'Enviar Solicitud' : 'Enviar Solicitação'}
@@ -689,37 +638,86 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                 )}
               </div>
             ) : (
-              // FLUJO NORMAL DE DESCARGAS
+              // VISTA NORMAL (Requisitos + Descargas)
               <>
-                <h3 className="text-xl font-bold text-text-main dark:text-white flex items-center mb-6">
-                  <FileDown className="w-6 h-6 mr-2 text-primary" /> {lang === 'es' ? 'B. Bajar (Plantillas)' : 'B. Baixar (Modelos)'}
-                </h3>
-                
-                {config.descargas.length === 0 ? (
-                  <p className="text-text-muted dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl text-center">
-                    {lang === 'es' ? 'No hay plantillas requeridas para este trámite. Puedes avanzar directamente a la carga de documentos.' : 'Não há modelos exigidos para este trâmite. Você pode avançar diretamente para o envio de documentos.'}
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {config.descargas
-                      .filter(doc => !doc.dependsOnEscenario || !selectedEscenario || doc.dependsOnEscenario.includes(selectedEscenario))
-                      .map((doc, idx) => {
-                        const docLabel = lang === 'pt' ? doc.label_pt : doc.label_es;
-                        const docUrl = lang === 'pt' ? doc.url_pt : doc.url_es;
+                <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-xl font-bold text-primary flex items-center mb-6">
+                    <Info className="w-6 h-6 mr-2" />
+                    {lang === 'es' ? 'A. Leer (Requisitos)' : 'A. Ler (Requisitos)'}
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {/* Requisitos específicos si hay sub-perfil */}
+                    {(() => {
+                      const parentEsc = (config.monto as EscenarioEvento[]).find(
+                        (e: EscenarioEvento) => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_')
+                      );
+                      const subProfile = parentEsc?.subProfiles?.find(sp => sp.id === selectedEscenario);
+                      if (subProfile?.requirements) {
                         return (
-                          <a key={idx} href={docUrl} download className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 hover:bg-primary/5 dark:hover:bg-primary/10 border border-gray-200 dark:border-gray-700 rounded-xl transition-colors group">
-                            <span className="font-medium text-text-main dark:text-gray-300">{docLabel}</span>
-                            <FileDown className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
-                          </a>
+                          <div className="bg-primary/5 p-4 rounded-xl mb-2">
+                            <ul className="space-y-2">
+                              {subProfile.requirements[lang].map((req: string, i: number) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-text-main dark:text-gray-300">
+                                  <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                                  <span className="font-medium">{req}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         );
-                      })}
+                      }
+                      return null;
+                    })()}
+
+                    <ul className="space-y-3 text-text-main dark:text-gray-300">
+                      {config.instrucciones_leer[lang].map((item, idx) => (
+                        <li key={idx} className="flex items-start">
+                          <CheckCircle className="w-5 h-5 text-accent mr-3 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                )}
-                
-                <div className="flex justify-between pt-8">
-                  <button onClick={() => setStep(1)} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
-                  <button onClick={() => setStep(3)} className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors">
-                    {lang === 'es' ? 'Continuar a Carga' : 'Continuar para Envio'}
+                </div>
+
+                <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-xl font-bold text-primary flex items-center mb-6">
+                    <FileDown className="w-6 h-6 mr-2" />
+                    {lang === 'es' ? 'B. Bajar (Plantillas)' : 'B. Baixar (Modelos)'}
+                  </h3>
+                  
+                  {config.descargas.length === 0 ? (
+                    <p className="text-text-muted dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl text-center">
+                      {lang === 'es' ? 'No hay plantillas requeridas.' : 'Não há modelos exigidos.'}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {config.descargas
+                        .filter(doc => !doc.dependsOnEscenario || !selectedEscenario || doc.dependsOnEscenario.includes(selectedEscenario))
+                        .map((doc, idx) => {
+                          const docLabel = lang === 'pt' ? doc.label_pt : doc.label_es;
+                          const docUrl = lang === 'pt' ? doc.url_pt : doc.url_es;
+                          return (
+                            <a key={idx} href={docUrl} download className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 hover:bg-primary/5 dark:hover:bg-primary/10 border border-gray-200 dark:border-gray-700 rounded-xl transition-colors group">
+                              <span className="font-medium text-text-main dark:text-gray-300">{docLabel}</span>
+                              <FileDown className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
+                            </a>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <button onClick={onBack} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors flex items-center">
+                    <ArrowLeft className="w-4 h-4 mr-1" /> {lang === 'es' ? 'Volver' : 'Voltar'}
+                  </button>
+                  <button 
+                    onClick={() => setStep(2)} 
+                    className="bg-primary text-white px-8 py-4 rounded-full font-black text-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:scale-[1.02]"
+                  >
+                    {lang === 'es' ? 'Ya tengo mis documentos, continuar a Carga →' : 'Já tengo meus documentos, continuar para Envio →'}
                   </button>
                 </div>
               </>
@@ -727,195 +725,68 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           </div>
         )}
 
-        {/* PASO 3: CARGA */}
-        {step === 3 && (
+        {/* PASO 2: CARGA DE DOCUMENTACIÓN */}
+        {step === 2 && (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fade-in-up">
             <h3 className="text-xl font-bold text-text-main dark:text-white flex items-center mb-6">
               <UploadCloud className="w-6 h-6 mr-2 text-primary" /> {lang === 'es' ? 'C. Subir (Documentos)' : 'C. Enviar (Documentos)'}
             </h3>
-            
-            {/* Lógica Condicional: Modalidad Online */}
-            {config.hasModalitySelection && (
-               <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl mb-6">
-                 <label className="flex items-center cursor-pointer">
-                   <input 
-                     type="checkbox" 
-                     className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary"
-                     checked={isOnline}
-                     onChange={(e) => setIsOnline(e.target.checked)}
-                   />
-                   <span className="ml-3 font-medium text-text-main dark:text-white">{lang === 'es' ? 'Este es un curso Modalidad Online' : 'Este é um curso Modalidade Online'}</span>
-                 </label>
-               </div>
-            )}
 
-            {/* Lógica Condicional: Selector de Escenario (Solo si no se eligió en el Paso 1 o para otros trámites) */}
-            {Array.isArray(config.monto) && !selectedEscenario && (
-              <div className="mb-8">
-                <label className="block text-lg font-bold text-text-main dark:text-white mb-4">
-                  {tramiteId === 'solicitud_membresia' 
-                    ? (lang === 'es' ? 'Selecciona tu Categoría de Socio *' : 'Selecione sua Categoria de Sócio *')
-                    : (lang === 'es' ? 'Selecciona el Escenario del Evento *' : 'Selecione o Cenário do Evento *')
-                  }
-                </label>
-                <Controller
-                  name="escenario"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {(config.monto as EscenarioEvento[]).map((esc: EscenarioEvento) => (
-                        <div 
-                          key={esc.id}
-                          onClick={() => {
-                            field.onChange(esc.id);
-                            setSelectedEscenario(esc.id);
-                          }}
-                          className={`cursor-pointer rounded-2xl p-5 border-2 transition-all duration-200 ${
-                            field.value === esc.id 
-                              ? 'border-primary bg-primary/5 shadow-md scale-[1.02]' 
-                              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-primary/50'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <span className={`font-bold text-lg ${field.value === esc.id ? 'text-primary' : 'text-text-main dark:text-white'}`}>
-                              {typeof esc.label === 'string' ? esc.label : esc.label[lang]}
-                            </span>
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${field.value === esc.id ? 'border-primary' : 'border-gray-300 dark:border-gray-600'}`}>
-                              {field.value === esc.id && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
-                            </div>
-                          </div>
-                          <div className="text-2xl font-black text-accent mb-2">{esc.monto} €</div>
-                          <p className="text-sm text-text-muted dark:text-gray-400">
-                            {typeof esc.description === 'string' ? esc.description : esc.description[lang]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                />
-                {errors.escenario && <p className="text-red-500 text-sm mt-2 font-bold">{errors.escenario.message as string}</p>}
-              </div>
-            )}
-
-            {/* Resumen de Selección (si ya se eligió) */}
-            {selectedEscenario && (
-              <div className="mb-8 p-4 bg-primary/5 rounded-2xl border border-primary/20 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
-                    {lang === 'es' ? 'Categoría Seleccionada' : 'Categoria Selecionada'}
-                  </p>
-                  <p className="text-lg font-black text-secondary dark:text-white">
-                    {(() => {
-                      const esc = (config.monto as EscenarioEvento[]).find(e => e.id === selectedEscenario);
-                      return typeof esc?.label === 'string' ? esc.label : esc?.label[lang];
-                    })()}
-                  </p>
-                </div>
-                <div className="text-right">
-                   <p className="text-2xl font-black text-accent">
-                    { (config.monto as EscenarioEvento[]).find(e => e.id === selectedEscenario)?.monto } €
-                   </p>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {config.fields.map((field) => {
-                const currentEscenario = watch('escenario');
-                // Condicional para "Cuestionario de Evaluación"
-                if (field.name === "cuestionario_evaluacion" && !isOnline) return null;
-                // Condicional según Escenario (Categoría de Membresía)
-                if (field.dependsOnEscenario && currentEscenario && !field.dependsOnEscenario.includes(currentEscenario)) return null;
-
-                return (
-                  <div key={field.name}>
-                    <label className="block text-sm font-semibold text-text-main dark:text-gray-300 mb-1">
-                      {typeof field.label === 'string' ? field.label : field.label[lang]} {!field.isOptional && "*"}
-                    </label>
-                    <span className="text-xs text-text-muted dark:text-gray-500 block mb-2">{lang === 'es' ? 'Formatos:' : 'Formatos:'} {field.typeLabel}. {lang === 'es' ? 'Max:' : 'Máx:'} 10MB</span>
-                    <Controller
-                      name={field.name}
-                      control={control}
-                      render={({ field: { onChange, ref, name } }) => {
-                        const files = watch(name) as FileList;
-                        const fileName = files && files.length > 0 ? files[0].name : null;
-
-                        return (
-                          <div className="relative">
-                            <label className="flex items-center cursor-pointer group w-full">
-                              <span className="py-2 px-4 rounded-full border-0 text-sm font-semibold bg-primary/10 text-primary group-hover:bg-primary/20 transition-all mr-4 shrink-0">
-                                {lang === 'es' ? 'Seleccionar archivo' : 'Escolher arquivo'}
-                              </span>
-                              <span className="text-sm text-text-muted dark:text-gray-400 truncate w-full pr-2 block">
-                                {fileName ? fileName : (lang === 'es' ? 'Sin archivos seleccionados' : 'Nenhum arquivo escolhido')}
-                              </span>
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {config.fields
+                  .filter(field => !field.dependsOnEscenario || !selectedEscenario || field.dependsOnEscenario.includes(selectedEscenario))
+                  .map((field) => {
+                    const error = errors[field.name];
+                    return (
+                      <div key={field.name} className="space-y-2">
+                        <label className="block text-sm font-bold text-text-main dark:text-white mb-2">
+                          {typeof field.label === 'string' ? field.label : field.label[lang]}
+                          {field.validator && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        
+                        <Controller
+                          name={field.name}
+                          control={control}
+                          render={({ field: { onChange, ref } }) => (
+                            <div className={`relative group transition-all ${error ? 'ring-2 ring-red-500 rounded-2xl' : ''}`}>
                               <input
                                 type="file"
-                                accept={
-                                  field.typeLabel.includes('PDF') && field.typeLabel.includes('Imagen') ? 'application/pdf,image/*' : 
-                                  field.typeLabel.includes('PDF') && field.typeLabel.includes('ZIP') ? 'application/pdf,application/zip' :
-                                  'application/pdf'
-                                }
-                                onChange={(e) => onChange(e.target.files)}
                                 ref={ref}
-                                name={name}
-                                className="hidden"
+                                onChange={(e) => onChange(e.target.files)}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                accept='.pdf,.doc,.docx,.jpg,.jpeg,.png'
                               />
-                            </label>
-                          </div>
-                        );
-                      }}
-                    />
-                    {field.description && <p className="text-xs text-accent mt-1">{field.description}</p>}
-                    {errors[field.name] && <p className="text-red-500 text-sm mt-1">{errors[field.name]?.message as string}</p>}
-                  </div>
-                );
-              })}
+                              <div className="flex items-center p-4 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-2xl group-hover:border-primary transition-colors">
+                                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                                  <UploadCloud className="w-5 h-5 text-primary group-hover:text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-text-main dark:text-gray-300 truncate">
+                                    {watch(field.name)?.[0]?.name || (lang === 'es' ? 'Seleccionar archivo...' : 'Selecionar arquivo...')}
+                                  </p>
+                                  <p className="text-xs text-text-muted">PDF, DOC, JPG (Máx 10MB)</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        />
+                        {error && <p className="text-red-500 text-xs font-bold mt-1">{error.message as string}</p>}
+                      </div>
+                    );
+                  })}
+              </div>
             </div>
 
-            {(() => {
-              const watchedFields = watch();
-              const filesToUpload = config.fields
-                .filter((f) => f.name !== "cuestionario_evaluacion" || isOnline)
-                .map((f) => {
-                  const files = watchedFields[f.name];
-                  if (files && files.length > 0 && files[0] && files[0].size > 0) {
-                    return { label: f.label, file: files[0] };
-                  }
-                  return null;
-                })
-                .filter(Boolean) as { label: string; file: File }[];
-
-              if (filesToUpload.length === 0) return null;
-
-              return (
-                <div className="mt-8 bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800 animate-fade-in">
-                  <h4 className="font-semibold text-green-800 dark:text-green-400 mb-2 flex items-center">
-                    <FileText className="w-4 h-4 mr-2" /> {lang === 'es' ? 'Archivos listos para subir:' : 'Arquivos prontos para enviar:'}
-                  </h4>
-                  <ul className="list-disc list-inside text-sm text-green-700 dark:text-green-300 space-y-1">
-                    {filesToUpload.map((item, i) => (
-                      <li key={i}>
-                        <span className="font-medium text-green-900 dark:text-green-200">{typeof item.label === 'string' ? item.label : item.label[lang]}</span>: {item.file.name}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })()}
-
             {submitError && (
-              <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start text-left">
-                <ShieldAlert className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold text-red-800 dark:text-red-400">{lang === 'es' ? 'Error al enviar la solicitud' : 'Erro ao enviar a solicitação'}</h4>
-                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">{submitError}</p>
-                </div>
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl flex items-start gap-3">
+                <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{submitError}</p>
               </div>
             )}
 
             <div className="flex justify-between pt-8 border-t border-gray-100 dark:border-gray-800 mt-8">
-              <button type="button" onClick={() => setStep(2)} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
+              <button type="button" onClick={() => setStep(1)} className="text-text-muted hover:text-primary font-medium px-6 py-3 transition-colors">{lang === 'es' ? 'Atrás' : 'Voltar'}</button>
               <button
                 type="submit"
                 disabled={isSubmitting || !session}
@@ -924,12 +795,10 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {lang === 'es' ? 'Procesando...' : 'Processando...'}
+                    {lang === 'es' ? 'Subiendo...' : 'Enviando...'}
                   </>
-                ) : session ? (
-                  lang === 'es' ? "Enviar Solicitud" : "Enviar Solicitação"
                 ) : (
-                  lang === 'es' ? "Inicia sesión para continuar" : "Faça login para continuar"
+                  lang === 'es' ? 'Enviar Solicitud Final' : 'Enviar Solicitação Final'
                 )}
               </button>
             </div>
@@ -939,3 +808,4 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
     </div>
   );
 }
+

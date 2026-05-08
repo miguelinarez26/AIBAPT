@@ -9,7 +9,8 @@ import { Loader2 } from "lucide-react";
 
 function RegistroContent() {
     const { lang } = useLanguage();
-    const [fullName, setFullName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,6 +27,11 @@ function RegistroContent() {
             return;
         }
 
+        if (!firstName.trim() || !lastName.trim()) {
+            setError(lang === 'es' ? 'Nombres y Apellidos son obligatorios' : 'Nome e Sobrenome são obrigatórios');
+            return;
+        }
+
         setLoading(true);
         setError("");
 
@@ -35,7 +41,10 @@ function RegistroContent() {
             password,
             options: {
                 data: {
-                    full_name: fullName,
+                    first_name: firstName.trim(),
+                    last_name: lastName.trim(),
+                    // Mantener full_name por retrocompatibilidad con el trigger
+                    full_name: `${firstName.trim()} ${lastName.trim()}`,
                 }
             }
         });
@@ -43,14 +52,19 @@ function RegistroContent() {
         if (authError) {
             setError(authError.message);
             setLoading(false);
+        } else if (!authData.user) {
+            setError(lang === 'es' ? 'No se pudo crear el usuario. Intenta de nuevo.' : 'Não foi possível criar o usuário. Tente novamente.');
+            setLoading(false);
         } else {
-            // Wait a small moment to ensure the profile trigger has executed
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Éxito en Auth, el trigger debería crear el perfil.
+            // Esperamos un momento para asegurar consistencia
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             const redirectTo = searchParams.get("redirectTo");
             const defaultRoute = `/${lang}/dashboard`;
             
             router.push(redirectTo || defaultRoute);
+            router.refresh();
         }
     };
 
@@ -108,19 +122,37 @@ function RegistroContent() {
                         )}
 
                         <form onSubmit={handleRegister} className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold uppercase tracking-wider text-text-muted dark:text-white/60" htmlFor="fullName">{lang === 'es' ? 'Nombre Completo' : 'Nome Completo'}</label>
-                                <div className="relative">
-                                    <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">person</span>
-                                    <input
-                                        id="fullName"
-                                        type="text"
-                                        required
-                                        value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                        className="w-full rounded-xl border border-accent/50 dark:border-gray-700 bg-white/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50 text-text-main dark:text-white transition-all"
-                                        placeholder={lang === 'es' ? 'Dr. Juan Pérez' : 'Dr. João Silva'}
-                                    />
+                            {/* Nombres y Apellidos */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-text-muted dark:text-white/60" htmlFor="firstName">{lang === 'es' ? 'Nombres' : 'Nomes'}</label>
+                                    <div className="relative">
+                                        <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">person</span>
+                                        <input
+                                            id="firstName"
+                                            type="text"
+                                            required
+                                            value={firstName}
+                                            onChange={(e) => setFirstName(e.target.value)}
+                                            className="w-full rounded-xl border border-accent/50 dark:border-gray-700 bg-white/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50 text-text-main dark:text-white transition-all"
+                                            placeholder={lang === 'es' ? 'Ej: Juan' : 'Ex: João'}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-text-muted dark:text-white/60" htmlFor="lastName">{lang === 'es' ? 'Apellidos' : 'Sobrenomes'}</label>
+                                    <div className="relative">
+                                        <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">person</span>
+                                        <input
+                                            id="lastName"
+                                            type="text"
+                                            required
+                                            value={lastName}
+                                            onChange={(e) => setLastName(e.target.value)}
+                                            className="w-full rounded-xl border border-accent/50 dark:border-gray-700 bg-white/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50 text-text-main dark:text-white transition-all"
+                                            placeholder={lang === 'es' ? 'Ej: Pérez' : 'Ex: Silva'}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
