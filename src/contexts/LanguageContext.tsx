@@ -61,7 +61,9 @@ export const LanguageProvider = ({ children, initialLang }: LanguageProviderProp
         // Guardar en cookie para que el middleware lo detecte en futuras visitas
         document.cookie = `aibapt-lang=${newLang};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 
-        // Sincronizar con la base de datos si hay un usuario autenticado
+        // Sincronizar con la base de datos ELIMINADO del Header
+        // El idioma oficial solo se cambia desde la página de Perfil.
+        /*
         if (session?.user) {
             const supabase = createBrowserSupabaseClient();
             const { error } = await supabase
@@ -73,6 +75,7 @@ export const LanguageProvider = ({ children, initialLang }: LanguageProviderProp
                 console.error("Error sincronizando idioma:", error);
             }
         }
+        */
 
         // Reemplazar el prefijo de idioma en la ruta actual
         // Ej: /es/formaciones → /pt/formaciones

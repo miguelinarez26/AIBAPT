@@ -38,6 +38,7 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
   const [isPublic, setIsPublic] = useState((profile as any)?.is_public ?? false);
   const [avatarUrl, setAvatarUrl] = useState((profile as any)?.avatar_url || '');
   const [cvUrl, setCvUrl] = useState((profile as any)?.cv_url || '');
+  const [languagePreference, setLanguagePreference] = useState(profile?.language_preference || lang);
 
   // Estados de Seguridad
   const [currentPassword, setCurrentPassword] = useState('');
@@ -90,10 +91,10 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
     // Añadir timestamp para evitar cache del navegador al mostrar la nueva imagen
     const finalUrl = `${publicUrl}?t=${Date.now()}`;
     
-    setAvatarUrl(finalUrl);
-    await (supabase as any).from('profiles').update({ avatar_url: finalUrl }).eq('id', profile.id);
+    setAvatarUrl(filePath); // Guardamos la RUTA RELATIVA en el estado
+    await (supabase as any).from('profiles').update({ avatar_url: filePath }).eq('id', profile.id);
     
-    // Sincronización Global: Forzar actualización de componentes que dependen del perfil
+    // Sincronización Global
     router.refresh();
     
     setIsSaving(false);
@@ -141,7 +142,8 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
         full_name: `${firstName} ${lastName}`,
         phone,
         bio,
-        is_public: isPublic
+        is_public: isPublic,
+        language_preference: languagePreference
       })
       .eq('id', profile.id);
 
@@ -285,7 +287,13 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                       <div className="relative group">
                         <div className="w-28 h-28 rounded-3xl overflow-hidden bg-primary/10 border-4 border-white dark:border-gray-800 shadow-lg relative">
                           {avatarUrl ? (
-                            <Image src={avatarUrl} alt="Avatar" width={112} height={112} className="object-cover w-full h-full" />
+                            <Image 
+                              src={avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${avatarUrl}${avatarUrl.includes('?') ? '' : `?t=${Date.now()}`}`} 
+                              alt="Avatar" 
+                              width={112} 
+                              height={112} 
+                              className="object-cover w-full h-full" 
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-4xl font-display font-bold text-primary">
                               {firstName.charAt(0).toUpperCase()}
@@ -337,7 +345,11 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.lang_pref"]}</label>
-                        <select value={lang} onChange={(e) => router.push(`/${e.target.value}/dashboard/perfil?tab=personal`)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none">
+                        <select 
+                          value={languagePreference} 
+                          onChange={(e) => setLanguagePreference(e.target.value as 'es' | 'pt')} 
+                          className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none"
+                        >
                           <option value="es">Español</option>
                           <option value="pt">Português</option>
                         </select>

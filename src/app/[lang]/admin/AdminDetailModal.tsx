@@ -40,25 +40,18 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
       }
       setAppData(application);
 
-      // 2. Fetch Documents and generate signed URLs
+      // 2. Fetch Documents (Sin pre-generar URLs para evitar delays y errores de sesión)
+      console.log("[Admin] Buscando documentos para APP_ID:", applicationId);
       const { data: docsData, error: docsError } = await supabase
         .from('documents')
         .select('*')
         .eq('application_id', applicationId);
 
       if (!docsError && docsData) {
-        const docsWithUrls = await Promise.all((docsData as any[]).map(async (doc: any) => {
-          const { data: urlData, error: urlError } = await supabase
-            .storage
-            .from('private-certifications')
-            .createSignedUrl(doc.file_path, 3600);
-            
-          return {
-            ...doc,
-            signedUrl: urlError ? null : urlData.signedUrl
-          };
-        }));
-        setDocuments(docsWithUrls);
+        console.log(`[Admin] Documentos encontrados: ${docsData.length}`);
+        setDocuments(docsData);
+      } else if (docsError) {
+        console.error("[Admin] Error al buscar documentos:", docsError);
       }
 
       setLoading(false);
@@ -105,6 +98,25 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
     } catch (err: any) {
       setError(err.message);
       setSubmitting(false);
+    }
+  };
+
+  const handleViewDocument = async (filePath: string) => {
+    console.log("[Admin] Generando URL firmada para:", filePath);
+    
+    try {
+      const { data, error } = await supabase
+        .storage
+        .from('private-certifications')
+        .createSignedUrl(filePath, 60); // 1 minuto de validez
+
+      if (error) throw error;
+      
+      console.log("[Admin] URL generada con éxito:", data.signedUrl);
+      window.open(data.signedUrl, '_blank');
+    } catch (err: any) {
+      console.error("[Admin] Error al generar URL:", err);
+      alert(lang === 'es' ? 'Archivo no encontrado en el servidor o error de acceso.' : 'Arquivo não encontrado no servidor ou erro de acesso.');
     }
   };
 
@@ -328,19 +340,13 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                         <p className="text-xs text-gray-500 truncate">{doc.file_path.split('/').pop()}</p>
                       </div>
                     </div>
-                    {doc.signedUrl ? (
-                      <a 
-                        href={doc.signedUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors shrink-0"
-                        title="Ver Documento"
-                      >
-                        <span className="material-icons-round">visibility</span>
-                      </a>
-                    ) : (
-                      <span className="text-xs text-red-500 px-2">Error de enlace</span>
-                    )}
+                    <button 
+                      onClick={() => handleViewDocument(doc.file_path)}
+                      className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors shrink-0"
+                      title="Ver Documento"
+                    >
+                      <span className="material-icons-round">visibility</span>
+                    </button>
                   </div>
                 ))}
               </div>

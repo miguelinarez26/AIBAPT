@@ -318,9 +318,9 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         const fileExt = file.name.split('.').pop()?.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'bin';
         const fileName = `${safePrefix}_${Date.now()}.${fileExt}`;
         
-        // Ruta jerárquica: private-certifications/[user_id]/membresia/[application_id]/archivo.pdf
+        // Ruta jerárquica: [tramite_id] / [user_id] / [application_id] / [nombre_archivo]
         const folderName = tramiteId === 'solicitud_membresia' ? 'membresia' : tramiteId;
-        const filePath = `${session.user.id}/${folderName}/${appId}/${fileName}`;
+        const filePath = `${folderName}/${session.user.id}/${appId}/${fileName}`;
         
         const uploadPromise = supabase.storage
           .from('private-certifications')
