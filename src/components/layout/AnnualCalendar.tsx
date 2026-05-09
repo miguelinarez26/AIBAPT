@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { FiCalendar, FiMapPin, FiUser, FiArrowRight } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const events = [
     { id: 1, month: "Marzo", day: "12", speaker: "Susana Diaz", country: "España", title: "Abusos Sexuales en la Infancia: Secuelas y recuperación con Brainspotting y otros recursos", link: "/registro/webinar-1" },
@@ -20,6 +21,7 @@ const events = [
 
 export const AnnualCalendar = () => {
     const router = useRouter();
+    const { lang } = useLanguage();
 
     return (
         <section className="py-20 bg-white dark:bg-background-dark relative overflow-hidden">
@@ -105,7 +107,7 @@ export const AnnualCalendar = () => {
                         variant="outline" 
                         size="lg" 
                         className="rounded-full w-full md:w-auto shadow-sm border-primary/20 hover:border-primary group"
-                        onClick={() => router.push("/formaciones?tab=all")}
+                        onClick={() => router.push(`/${lang}/formaciones?tab=all`)}
                     >
                         <span className="mr-2">Ver Programa Completo 2026</span>
                         <FiArrowRight className="text-secondary dark:text-white group-hover:translate-x-1 group-hover:text-primary transition-transform" />

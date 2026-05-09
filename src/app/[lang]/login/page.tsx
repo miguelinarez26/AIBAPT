@@ -120,7 +120,7 @@ function LoginContent() {
                             <div className="flex flex-col gap-2">
                                 <div className="flex justify-between items-center">
                                     <label className="text-xs font-bold uppercase tracking-wider text-text-muted dark:text-white/60" htmlFor="password">{t("portal.fields.password")}</label>
-                                    <Link href="#" className="text-xs font-bold text-primary hover:underline">{lang === 'es' ? '¿Olvidaste tu contraseña?' : 'Esqueceu sua senha?'}</Link>
+                                    <Link href={`/${lang}/reset-password`} className="text-xs font-bold text-primary hover:underline">{t("auth.forgot_password")}</Link>
                                 </div>
                                 <div className="relative">
                                     <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">lock</span>

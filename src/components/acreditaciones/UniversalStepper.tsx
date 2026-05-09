@@ -375,14 +375,23 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       }
 
       // Paso 5: Cambiar estado a 'pending' solo tras éxito total
-      const { error: finalStatusError } = await supabase
+      console.log(`[UniversalStepper] Intentando confirmar solicitud ${applicationId} a estado 'pending'...`);
+      const { data: updateData, error: finalStatusError } = await supabase
         .from('applications')
         .update({ status: 'pending' })
-        .eq('id', applicationId);
+        .eq('id', applicationId)
+        .select();
 
       if (finalStatusError) {
-        throw new Error(`Error al confirmar la solicitud: ${finalStatusError.message}`);
+        console.error('[UniversalStepper] ❌ Error en actualización final (RLS?):', finalStatusError);
+        throw new Error(
+          lang === 'es' 
+            ? 'Los archivos se subieron, pero hubo un error al confirmar la solicitud. Por favor, contacta a secretaría.' 
+            : 'Os arquivos foram enviados, mas houve um erro ao confirmar a solicitação. Por favor, entre em contato con a secretaria.'
+        );
       }
+      
+      console.log('[UniversalStepper] ✅ Solicitud confirmada exitosamente en la base de datos:', updateData);
 
       // Paso 6: Notificar al admin
       try {
@@ -399,6 +408,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         console.warn('[UniversalStepper] ⚠️ No se pudo notificar al admin (no crítico):', notifyErr);
       }
 
+      // Paso 7: Mostrar éxito al usuario (ÚLTIMO PASO ABSOLUTO)
       setSubmitSuccess(true);
       reset();
     } catch (error) {
@@ -755,7 +765,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                                 ref={ref}
                                 onChange={(e) => onChange(e.target.files)}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                accept='.pdf,.doc,.docx,.jpg,.jpeg,.png'
+                                accept='image/*,application/pdf,.doc,.docx'
                               />
                               <div className="flex items-center p-4 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-2xl group-hover:border-primary transition-colors">
                                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-4 group-hover:bg-primary group-hover:text-white transition-colors">
@@ -795,7 +805,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {lang === 'es' ? 'Subiendo...' : 'Enviando...'}
+                    {lang === 'es' ? 'Subiendo...' : 'Subindo...'}
                   </>
                 ) : (
                   lang === 'es' ? 'Enviar Solicitud Final' : 'Enviar Solicitação Final'

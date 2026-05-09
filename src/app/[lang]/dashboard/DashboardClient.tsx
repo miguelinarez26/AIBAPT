@@ -21,7 +21,10 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
   const handleSignOut = async () => {
     const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
-    router.push(`/${lang}/login`);
+    
+    // Forzar actualización total para limpiar middleware y estados de sesión
+    router.refresh();
+    window.location.href = `/${lang}/login`;
   };
 
   const t = translations[lang] as Record<string, string>;
@@ -35,7 +38,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
         ? (profile?.membership_type?.includes('pleno') 
             ? (lang === 'es' ? 'Miembro Pleno' : 'Membro Pleno')
             : t["dashboard.role.member"])
-        : (lang === 'es' ? 'Aspirante / Usuario Registrado' : 'Aspirante / Usuário Registrado'));
+        : (lang === 'es' ? 'Aspirante a Miembro' : 'Aspirante a Membro'));
 
   // Formatear fecha de vencimiento
   const expiryDisplay = profile?.membership_expiry
@@ -77,9 +80,17 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
 
         <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-start text-white relative z-10">
           <div className="flex items-center gap-6">
-            {/* Avatar con inicial */}
-            <div className="w-20 h-20 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-3xl font-display font-bold shadow-lg backdrop-blur-sm">
-              {displayName.charAt(0).toUpperCase()}
+            {/* Avatar sincronizado con la fuente de verdad (profiles.avatar_url) */}
+            <div className="w-20 h-20 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-3xl font-display font-bold shadow-lg backdrop-blur-sm overflow-hidden relative">
+              {profile?.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                displayName.charAt(0).toUpperCase()
+              )}
             </div>
             <div>
               <h1 className="text-3xl font-display font-medium tracking-tight mb-1">
@@ -273,12 +284,12 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                 <span className="text-text-muted dark:text-gray-400">{t["dashboard.status_label"]}</span>
                 <MembershipBadge isMember={isMember} lang={lang} />
               </div>
-              {isMember && profile?.member_number && (
-                <div className="flex justify-between text-sm py-2 bg-primary/5 dark:bg-primary/10 px-3 rounded-lg border border-primary/20">
-                  <span className="text-primary font-bold">{lang === 'es' ? 'Matrícula' : 'Matrícula'}</span>
-                  <span className="font-mono font-bold text-primary">{profile.member_number}</span>
-                </div>
-              )}
+              <div className="flex justify-between text-sm py-2 bg-primary/5 dark:bg-primary/10 px-3 rounded-lg border border-primary/20">
+                <span className="text-primary font-bold">{lang === 'es' ? 'Matrícula' : 'Matrícula'}</span>
+                <span className="font-mono font-bold text-primary">
+                  {isMember && profile?.member_number ? profile.member_number : 'N/A'}
+                </span>
+              </div>
               <div className="flex justify-between text-sm py-2">
                 <span className="text-text-muted dark:text-gray-400">{t["dashboard.expiry"]}</span>
                 <span className="font-bold text-text-main dark:text-white">{expiryDisplay}</span>
@@ -301,23 +312,25 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
               )}
             </div>
 
-            {/* Accesos Rápidos */}
+            {/* Mi Identidad (Navegación Unificada) */}
             <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl shadow-sm border border-accent/50 dark:border-gray-800 flex flex-col gap-2">
-              <h3 className="font-bold font-display text-secondary dark:text-white mb-2">
-                {t["dashboard.settings"]}
+              <h3 className="font-bold font-display text-secondary dark:text-white mb-2 flex items-center gap-2">
+                <span className="material-icons-round text-primary text-[20px]">fingerprint</span>
+                {lang === 'es' ? 'Identidad Profesional' : 'Identidade Profissional'}
               </h3>
+              
               <Link
-                href={`/${lang}/dashboard/perfil`}
+                href={`/${lang}/dashboard/perfil?tab=personal`}
                 className="flex items-center gap-3 p-3 text-sm text-text-main dark:text-gray-300 hover:bg-accent/20 dark:hover:bg-white/5 rounded-xl transition-colors font-medium border border-transparent hover:border-accent/50 dark:hover:border-gray-700 text-left"
               >
-                <span className="material-icons-round text-primary text-[20px]">person</span>
+                <span className="material-icons-round text-primary text-[18px]">manage_accounts</span>
                 {t["dashboard.personal_data"]}
               </Link>
               <Link
-                href={`/${lang}/dashboard/perfil`}
+                href={`/${lang}/dashboard/perfil?tab=profesional`}
                 className="flex items-center gap-3 p-3 text-sm text-text-main dark:text-gray-300 hover:bg-accent/20 dark:hover:bg-white/5 rounded-xl transition-colors font-medium border border-transparent hover:border-accent/50 dark:hover:border-gray-700 text-left"
               >
-                <span className="material-icons-round text-primary text-[20px]">contact_page</span>
+                <span className="material-icons-round text-primary text-[18px]">verified</span>
                 {t["dashboard.cv_directory"]}
               </Link>
 

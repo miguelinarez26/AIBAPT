@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FiArrowRight, FiCalendar, FiUser } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import flyer1 from "../../../public/images/webinar_flyer_1.png";
 import flyer2 from "../../../public/images/webinar_flyer_2.png";
@@ -13,6 +14,7 @@ import flyer3 from "../../../public/images/3.png";
 
 export const WebinarTimeline = () => {
     const router = useRouter();
+    const { lang } = useLanguage();
     const events = [
         {
             category: "Entrenamiento | Brasil",
@@ -112,7 +114,7 @@ export const WebinarTimeline = () => {
                                         variant="primary"
                                         size="sm"
                                         className="w-full rounded-xl group/btn"
-                                        onClick={() => router.push("/formaciones?tab=events")}
+                                        onClick={() => router.push(`/${lang}/formaciones?tab=events`)}
                                     >
                                         MÁS INFORMACIÓN
                                         <FiArrowRight className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
@@ -128,7 +130,7 @@ export const WebinarTimeline = () => {
                         variant="outline"
                         size="lg"
                         className="rounded-full shadow-lg group px-10"
-                        onClick={() => router.push("/formaciones?tab=events")}
+                        onClick={() => router.push(`/${lang}/formaciones?tab=events`)}
                     >
                         Ver Todos los Próximos Eventos
                         <FiArrowRight className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />

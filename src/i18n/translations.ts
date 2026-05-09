@@ -652,6 +652,26 @@ export const translations = {
         "profile.lang_pref": "Idioma de Preferencia",
         "profile.lang_desc": "Cambiar el idioma guardará automáticamente tu preferencia y actualizará la página.",
         
+        // Seguridad
+        "profile.security.title": "Gestión de Seguridad",
+        "profile.security.current_password": "Contraseña Actual",
+        "profile.security.new_password": "Nueva Contraseña",
+        "profile.security.confirm_password": "Confirmar Nueva Contraseña",
+        "profile.security.update_btn": "Actualizar Contraseña",
+        "profile.security.error.wrong_password": "La contraseña actual es incorrecta.",
+        "profile.security.error.mismatch": "Las nuevas contraseñas no coinciden.",
+        "profile.security.success": "Contraseña actualizada correctamente.",
+
+        // Password Reset
+        "auth.forgot_password": "¿Olvidaste tu contraseña?",
+        "auth.reset_title": "Recuperar Contraseña",
+        "auth.reset_desc": "Introduce tu email y te enviaremos un enlace para restablecer tu clave.",
+        "auth.reset_btn": "Enviar Enlace de Recuperación",
+        "auth.reset_success": "Se ha enviado un correo con las instrucciones.",
+        "auth.reset_new_title": "Nueva Contraseña",
+        "auth.reset_new_desc": "Elige una contraseña segura para tu cuenta.",
+        "auth.reset_new_btn": "Establecer Nueva Contraseña",
+        
         // Application Statuses
         "status.draft": "Borrador",
         "status.uploading": "Subiendo...",
@@ -664,6 +684,7 @@ export const translations = {
         "status.uploading_fallback": "Finalizando subida..."
     },
     pt: {
+        // ... (rest of PT section)
         // Header
         "nav.home": "Início",
         "nav.about": "Quem Somos",
@@ -1316,7 +1337,27 @@ export const translations = {
         "profile.updated": "Perfil Atualizado",
         "profile.save": "Salvar Alterações",
         "profile.lang_pref": "Idioma de Preferência",
-        "profile.lang_desc": "Mudar o idioma salvará automaticamente sua preferência e atualizará a página."
+        "profile.lang_desc": "Mudar o idioma salvará automaticamente sua preferência e atualizará a página.",
+        
+        // Segurança
+        "profile.security.title": "Gestão de Segurança",
+        "profile.security.current_password": "Senha Atual",
+        "profile.security.new_password": "Nova Senha",
+        "profile.security.confirm_password": "Confirmar Nova Senha",
+        "profile.security.update_btn": "Atualizar Senha",
+        "profile.security.error.wrong_password": "A senha atual está incorreta.",
+        "profile.security.error.mismatch": "As novas senhas não coincidem.",
+        "profile.security.success": "Senha atualizada com sucesso.",
+
+        // Password Reset
+        "auth.forgot_password": "Esqueceu sua senha?",
+        "auth.reset_title": "Recuperar Senha",
+        "auth.reset_desc": "Digite seu e-mail e enviaremos um link para redefinir sua senha.",
+        "auth.reset_btn": "Enviar Link de Recuperação",
+        "auth.reset_success": "Um e-mail foi enviado com as instruções.",
+        "auth.reset_new_title": "Nova Senha",
+        "auth.reset_new_desc": "Escolha uma senha segura para sua conta.",
+        "auth.reset_new_btn": "Definir Nova Senha"
     }
 };
 
