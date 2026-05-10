@@ -33,12 +33,12 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
     ? `${profile.first_name} ${profile.last_name || ''}`.trim() 
     : profile?.full_name || profile?.email || (t["dashboard.hello"] === 'Hola' ? 'Usuario' : 'Usuário');
   const roleLabel = profile?.role === 'admin'
-    ? t["dashboard.role.admin"]
+    ? t["dashboard.role.staff"]
     : (isMember 
         ? (profile?.membership_type?.includes('pleno') 
-            ? (lang === 'es' ? 'Miembro Pleno' : 'Membro Pleno')
+            ? t["dashboard.role.full_member"]
             : t["dashboard.role.member"])
-        : (lang === 'es' ? 'Aspirante a Miembro' : 'Aspirante a Membro'));
+        : t["dashboard.role.candidate"]);
 
   // Formatear fecha de vencimiento
   const expiryDisplay = profile?.membership_expiry
@@ -53,22 +53,22 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
       day: '2-digit', month: 'short', year: 'numeric'
     });
 
-  // Mapeo de slugs técnicos a nombres legibles
-  const TRAMITE_NAMES: Record<string, Record<'es' | 'pt', string>> = {
-    'solicitud_membresia': { es: 'Solicitud de Membresía', pt: 'Solicitação de Membresia' },
-    'CCA': { es: 'Acreditación CCA', pt: 'Acreditação CCA' },
-    'Eventos_Conferencia': { es: 'Evento — Conferencia', pt: 'Evento — Conferência' },
-    'Eventos_Workshop': { es: 'Evento — Workshop', pt: 'Evento — Workshop' },
-    'Eventos_Congreso': { es: 'Evento — Congreso', pt: 'Evento — Congresso' },
-    'Emision_CCA': { es: 'Emisión de CCA', pt: 'Emissão de CCA' },
-    'Renovacion_CCA': { es: 'Renovación de CCA', pt: 'Renovação de CCA' },
-    'EMDR_Psicoterapeuta': { es: 'EMDR Psicoterapeuta', pt: 'EMDR Psicoterapeuta' },
-    'EMDR_Supervisor': { es: 'EMDR Supervisor', pt: 'EMDR Supervisor' },
-    'Equivalencia_EMDR': { es: 'Equivalencia EMDR', pt: 'Equivalência EMDR' },
-    'Psicotrauma_Individual': { es: 'Psicotrauma Individual', pt: 'Psicotrauma Individual' },
-    'Psicotrauma_Programa': { es: 'Psicotrauma Programa', pt: 'Psicotrauma Programa' },
+  // Mapeo de slugs técnicos a nombres legibles vía i18n
+  const TRAMITE_NAMES: Record<string, string> = {
+    'solicitud_membresia': t["tramite.name.membresia"],
+    'CCA': t["tramite.name.cca"],
+    'Eventos_Conferencia': t["tramite.name.conferencia"],
+    'Eventos_Workshop': t["tramite.name.workshop"],
+    'Eventos_Congreso': t["tramite.name.congreso"],
+    'Emision_CCA': t["tramite.name.emision_cca"],
+    'Renovacion_CCA': t["tramite.name.renovacion_cca"],
+    'EMDR_Psicoterapeuta': t["tramite.name.emdr_psico"],
+    'EMDR_Supervisor': t["tramite.name.emdr_sup"],
+    'Equivalencia_EMDR': t["tramite.name.emdr_equiv"],
+    'Psicotrauma_Individual': t["tramite.name.trauma_ind"],
+    'Psicotrauma_Programa': t["tramite.name.trauma_prog"],
   };
-  const formatTypeName = (name: string) => TRAMITE_NAMES[name]?.[lang] || name.replace(/_/g, ' ');
+  const formatTypeName = (name: string) => TRAMITE_NAMES[name] || name.replace(/_/g, ' ');
 
   return (
     <div className="pt-20 min-h-screen bg-accent/10 dark:bg-background-dark">
@@ -102,7 +102,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                 <div className="flex items-center gap-2 mt-1">
                   <span className="bg-white/20 text-white px-3 py-1 rounded-full text-[11px] font-bold border border-white/30 flex items-center gap-1.5 shadow-sm uppercase">
                     <span className="material-icons-round text-[14px]">badge</span>
-                    MATRÍCULA: {profile.member_number}
+                    {t["dashboard.membership.id"]}: {profile.member_number}
                   </span>
                 </div>
               )}
@@ -124,73 +124,103 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
           {/* === Columna Izquierda (Contenido Principal) === */}
           <div className="lg:col-span-2 flex flex-col gap-8">
 
-            {/* Alerta para No Socios */}
-            {!isMember && (
-              (() => {
-                const pendingMembershipApp = applications.find(
-                  (app) => app.type_id === 'solicitud_membresia' && (app.status === 'pending' || app.status === 'under_review' || app.status === 'uploading')
-                );
-
-                if (pendingMembershipApp) {
-                  return (
-                    <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-blue-100 dark:border-blue-900/30">
-                      <div>
-                        <h3 className="font-bold font-display text-blue-700 dark:text-blue-400 text-lg flex items-center gap-2 mb-2">
-                          <span className="material-icons-round">info</span>
-                          {t["dashboard.membership_under_review"] || "Tu solicitud de membresía está en revisión"}
-                        </h3>
-                        <p className="text-sm text-blue-600/80 dark:text-blue-300/80 leading-relaxed">
-                          {t["dashboard.membership_under_review_desc"] || "Estamos verificando tus documentos. Te notificaremos pronto."}
-                        </p>
-                      </div>
+            {/* Banner de Modo Gestión para Admins */}
+            {profile?.role === 'admin' ? (
+              <div className="bg-slate-900 dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl text-white relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/30 transition-colors"></div>
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl">
+                      <span className="material-icons-round text-primary">admin_panel_settings</span>
                     </div>
+                    <div>
+                      <h2 className="text-2xl font-display font-bold tracking-tight">
+                        {/* @ts-ignore */}
+                        {t["dashboard.staff_mode"]}
+                      </h2>
+                      <p className="text-white/60 text-sm max-w-md mt-1">
+                        {/* @ts-ignore */}
+                        {t["dashboard.staff_mode_desc"]}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/${lang}/admin`}
+                    className="shrink-0 px-8 py-4 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                  >
+                    {/* @ts-ignore */}
+                    {t["dashboard.admin_panel"]}
+                    <span className="material-icons-round">arrow_forward</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              /* Alerta para No Socios (Solo para usuarios no-admin) */
+              !isMember && (
+                (() => {
+                  const pendingMembershipApp = applications.find(
+                    (app) => app.type_id === 'solicitud_membresia' && (app.status === 'pending' || app.status === 'under_review' || app.status === 'uploading')
                   );
-                }
 
-                if (applications.length === 0) {
+                  if (pendingMembershipApp) {
+                    return (
+                      <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-blue-100 dark:border-blue-900/30">
+                        <div>
+                          <h3 className="font-bold font-display text-blue-700 dark:text-blue-400 text-lg flex items-center gap-2 mb-2">
+                            <span className="material-icons-round">info</span>
+                            {t["dashboard.membership_under_review"] || "Tu solicitud de membresía está en revisión"}
+                          </h3>
+                          <p className="text-sm text-blue-600/80 dark:text-blue-300/80 leading-relaxed">
+                            {t["dashboard.membership_under_review_desc"] || "Estamos verificando tus documentos. Te notificaremos pronto."}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (applications.length === 0) {
+                    return (
+                      <div className="bg-white dark:bg-surface-dark border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50 dark:border-gray-800">
+                        <div>
+                          <h3 className="font-bold font-display text-aibapt-green text-lg flex items-center gap-2 mb-2">
+                            <span className="material-icons-round">waving_hand</span>
+                            {t["dashboard.welcome.aibapt"]}
+                          </h3>
+                          <p className="text-sm text-text-muted dark:text-gray-400 leading-relaxed">
+                            {t["dashboard.welcome.new_account"]}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/${lang}/afiliacion`}
+                          className="shrink-0 w-full md:w-auto px-6 py-3 bg-aibapt-green text-white font-bold rounded-xl shadow-md shadow-aibapt-green/20 hover:bg-aibapt-green/90 transition-colors text-center"
+                        >
+                          {t["dashboard.start_affiliation"] || "Comenzar Afiliación"}
+                        </Link>
+                      </div>
+                    );
+                  }
+
                   return (
-                    <div className="bg-white dark:bg-surface-dark border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50 dark:border-gray-800">
+                    <div className="bg-white border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50">
                       <div>
                         <h3 className="font-bold font-display text-aibapt-green text-lg flex items-center gap-2 mb-2">
-                          <span className="material-icons-round">waving_hand</span>
-                          {lang === 'es' ? '¡Bienvenido a AIBAPT!' : 'Bem-vindo à AIBAPT!'}
+                          <span className="material-icons-round">verified_user</span>
+                          {t["dashboard.inactive_membership"]}
                         </h3>
-                        <p className="text-sm text-text-muted dark:text-gray-400 leading-relaxed">
-                          {lang === 'es' 
-                            ? '¡Hola! Tu cuenta ha sido creada. Para disfrutar de los beneficios de AIBAPT, completa tu solicitud de membresía aquí.' 
-                            : 'Olá! Sua conta foi criada. Para aproveitar os benefícios da AIBAPT, preencha sua solicitação de membresia aqui.'}
+                        <p className="text-sm text-text-muted leading-relaxed">
+                          {t["dashboard.inactive_desc"]}
                         </p>
                       </div>
                       <Link
                         href={`/${lang}/afiliacion`}
                         className="shrink-0 w-full md:w-auto px-6 py-3 bg-aibapt-green text-white font-bold rounded-xl shadow-md shadow-aibapt-green/20 hover:bg-aibapt-green/90 transition-colors text-center"
                       >
-                        {t["dashboard.start_affiliation"] || "Comenzar Afiliación"}
+                        {t["dashboard.start_affiliation"] || "Quiero ser Socio"}
                       </Link>
                     </div>
                   );
-                }
-
-                return (
-                  <div className="bg-white border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50">
-                    <div>
-                      <h3 className="font-bold font-display text-aibapt-green text-lg flex items-center gap-2 mb-2">
-                        <span className="material-icons-round">verified_user</span>
-                        {t["dashboard.inactive_membership"]}
-                      </h3>
-                      <p className="text-sm text-text-muted leading-relaxed">
-                        {t["dashboard.inactive_desc"]}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/${lang}/afiliacion`}
-                      className="shrink-0 w-full md:w-auto px-6 py-3 bg-aibapt-green text-white font-bold rounded-xl shadow-md shadow-aibapt-green/20 hover:bg-aibapt-green/90 transition-colors text-center"
-                    >
-                      {t["dashboard.start_affiliation"] || "Quiero ser Socio"}
-                    </Link>
-                  </div>
-                );
-              })()
+                })()
+              )
             )}
 
             {/* Tabla de Trámites Recientes */}
@@ -235,7 +265,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                             </span>
                             {app.status === 'rejected' && (app as any).admin_notes && (
                               <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-2 rounded-md border border-red-100 dark:border-red-900/30">
-                                <span className="font-bold block mb-1">{lang === 'es' ? 'Nota del Revisor:' : 'Nota do Revisor:'}</span>
+                                <span className="font-bold block mb-1">{t["dashboard.note_reviewer"]}</span>
                                 {(app as any).admin_notes}
                               </div>
                             )}
@@ -287,7 +317,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                 <MembershipBadge isMember={isMember} lang={lang} />
               </div>
               <div className="flex justify-between text-sm py-2 bg-primary/5 dark:bg-primary/10 px-3 rounded-lg border border-primary/20">
-                <span className="text-primary font-bold">{lang === 'es' ? 'Matrícula' : 'Matrícula'}</span>
+                <span className="text-primary font-bold">{t["dashboard.membership.id"]}</span>
                 <span className="font-mono font-bold text-primary">
                   {isMember && profile?.member_number ? profile.member_number : 'N/A'}
                 </span>
@@ -318,7 +348,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
             <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl shadow-sm border border-accent/50 dark:border-gray-800 flex flex-col gap-2">
               <h3 className="font-bold font-display text-secondary dark:text-white mb-2 flex items-center gap-2">
                 <span className="material-icons-round text-primary text-[20px]">fingerprint</span>
-                {lang === 'es' ? 'Identidad Profesional' : 'Identidade Profissional'}
+                {t["dashboard.identity.professional"]}
               </h3>
               
               <Link

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { WEBINARS_DATA } from "@/data/webinars";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,31 +11,31 @@ import { UniversalStepper } from "@/components/acreditaciones/UniversalStepper";
 import { TramiteSelector } from "@/components/acreditaciones/TramiteSelector";
 
 export default function FormacionesClient({ initialCourses }: { initialCourses: any[] }) {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeTab, setActiveTab] = useState<"events" | "recordings" | "accredited" | "all">("events");
+    
+    // El estado activeTab se sincroniza EXCLUSIVAMENTE con la URL (?tab=)
+    const [activeTab, setActiveTab] = useState<"events" | "webinars" | "accredited" | "accreditation">("events");
     const [selectedTramiteId, setSelectedTramiteId] = useState<string | null>(null);
 
     useEffect(() => {
         const tab = searchParams.get("tab");
-        const tramite = searchParams.get("tramiteId");
-        
-        if (tab && ["events", "recordings", "accredited"].includes(tab)) {
+        if (tab && ["events", "webinars", "accredited", "accreditation"].includes(tab)) {
             setActiveTab(tab as any);
-        }
-        
-        if (tramite) {
-            setSelectedTramiteId(tramite);
         }
     }, [searchParams]);
 
-    // TABS DEFINITION
-    const tabs = [
-        { id: "events", label: "Próximos Eventos", icon: "event_available" },
-        { id: "recordings", label: "Videoteca", icon: "ondemand_video" },
-        { id: "accredited", label: "Acreditaciones", icon: "verified" },
-    ];
+    // Títulos dinámicos centralizados para SEO e i18n
+    const pageTitle = useMemo(() => {
+        const titles: Record<string, string> = {
+            events: lang === 'es' ? "Próximos Eventos y Formaciones" : "Próximos Eventos e Formações",
+            webinars: "Videoteca AIBAPT",
+            accredited: lang === 'es' ? "Directorio de Cursos Acreditados" : "Diretório de Cursos Acreditados",
+            accreditation: lang === 'es' ? "Acreditación de Cursos y Eventos" : "Acreditação de Cursos e Eventos"
+        };
+        return titles[activeTab] || titles.events;
+    }, [activeTab, lang]);
 
     // Mapear los cursos que vienen del Server Component (Supabase)
     const serverCourses = initialCourses.map(course => ({
@@ -50,81 +50,14 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
         price: course.price || "INSCRIPCIÓN"
     }));
 
-    // DATA FOR "WEBINARS" (Programa 2026) - Hardcoded Fallback
-    const webinarsData = [
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Marzo 12", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Esp - España", title: "Abusos Sexuales en la Infancia: Secuelas y recuperación con Brainspotting y otros recursos",
-            desc: "Abordaje profundo de las secuelas del abuso infantil mediante técnicas de Brainspotting para una recuperación integral del paciente.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Susana Díaz", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Abril 16", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Port - Brasil", title: "A Arte do Suporte em Psicoterapia: Presença, regulação e recursos clínicos avanzados",
-            desc: "Exploraremos a sintonía relacional e recursos neurorrelacionais para apoiar o processo de cura em psicoterapias de foco no trauma.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Daniel Gabarra", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Mayo 21", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Esp - Argentina", title: "Hipnosis y Brainspotting: Sinergia neurobiológica para el abordaje del TEPT y la integración del Trauma",
-            desc: "Integración de técnicas de hipnosis y brainspotting para potenciar la neuroplasticidad y la integración de memorias traumáticas.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Sebastián Segui", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Junio 18", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Port - Portugal", title: "¿Intervenção em Crise, Burnout e Stress, como consequencias ao Trauma?",
-            desc: "Análise profunda sobre o impacto do trauma no desenvolvimento de Burnout e stress crônico, e estratégias de intervenção em crise.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Renata Teles", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Julio 16", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Esp - Mexico", title: "Herramientas creativas y Brainspotting",
-            desc: "Uso de recursos creativos y expresivos en el marco del Brainspotting para facilitar el acceso a núcleos traumáticos subcorticales.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Norma Contreras", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Agosto 20", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Port - Brasil", title: "Novas Fronteiras na Clínica do Trauma",
-            desc: "Exploração de novos protocolos e abordagens integrativas para o tratamiento de traumas complexos na prática clínica actual.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Sandra Fiore", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Septiembre 17", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Esp - Chile", title: "Trauma, cuerpo y brainspotting",
-            desc: "Enfoque somático en el procesamiento del trauma mediante la técnica de Brainspotting, conectando mente y cuerpo en la sanación.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Juan Alexis", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Octubre 15", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Port - Brasil", title: "Do útero materno à relação terapêutica: A jornada da conexão",
-            desc: "Estudo sobre os vínculos primários e sua repercussão na aliança terapêutica e na resolução de traumas de apego precoce.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Angela Maranho", route: "/formaciones", price: "INSCRIPCIÓN"
-        },
-        {
-            img: "/images/webinar_placeholder_new.png",
-            badge: "Noviembre 19", badgeIcon: "calendar_today", badgeStyle: "text-primary",
-            category: "Esp - Mexico", title: "Integración de Memorias Traumáticas",
-            desc: "Técnicas avanzadas para la integración de memorias traumáticas fragmentadas en el flujo de la conciencia narrativa.",
-            instructorImg: "/images/secrvetaria.jpg", instructorName: "Parcuve Mex", route: "/formaciones", price: "INSCRIPCIÓN"
-        }
-    ];
-
-    // DATA FOR "PRÓXIMOS EVENTOS" (Entrenamientos/Cursos largos)
-    const eventsData = [
+    // DATA FOR "PRÓXIMOS EVENTOS"
+    const eventsData = useMemo(() => [
         {
             img: "/images/webinar_flyer_2.png",
             badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
             category: "Entrenamiento | Brasil",
             title: "Práctica Supervisada y Manejo Online",
-            desc: "Este é um curso vivencial com demonstrações ao vivo e práticas supervisionadas, contando com manejo do atendimento online com foco no corpo.",
+            desc: "Este é um curso vivencial com demonstrações ao vivo e práticas supervisionadas, contando com manejo do atendimento online con foco no corpo.",
             instructorImg: "/images/secrvetaria.jpg",
             instructorName: "Silvia Guz", route: "/formaciones",
             price: t("webinars.event1.btn" as any)
@@ -144,7 +77,7 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
             badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
             category: "Protocolos Corporais | Online",
             title: "Protocolos Corporais em Terapia EMDR - Online",
-            desc: "O curso inclui Teoria e Protocolos Corporais exclusivos desenvolvidos por Silvia Guz.",
+            desc: "O curso incluye Teoria e Protocolos Corporais exclusivos desenvolvidos por Silvia Guz.",
             instructorImg: "/images/secrvetaria.jpg",
             instructorName: "Silvia Guz", route: "/formaciones",
             price: t("webinars.event3.btn" as any)
@@ -153,15 +86,15 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
             img: "/images/4.jpeg",
             badge: t("edu.events.badge" as any), badgeIcon: "event", badgeStyle: "text-primary",
             category: "Formação EMDR | Brasil",
-            title: "Destravando o TDAH com EMDR e Autorregulação",
-            desc: "Uma formação teórico-vivencial com os psicólogos especialistas em EMDR: Beth Maio e Leo Garcia.",
+            title: "Destravando o TDAH con EMDR e Autorregulação",
+            desc: "Uma formación teórico-vivencial con os psicólogos especialistas en EMDR: Beth Maio e Leo Garcia.",
             instructorImg: "/images/secrvetaria.jpg",
             instructorName: "Beth Maio & Leo Garcia", route: "/formaciones",
             price: t("webinars.event4.btn" as any)
         }
-    ];
+    ], [t]);
 
-    // DATA FOR "GRABACIONES (VOD)" - MIGRATED TO INTERNAL ROUTES
+    // DATA FOR "VIDEOTECA" (webinars)
     const recordingsData = WEBINARS_DATA.map(w => ({
         img: w.img,
         badge: w.badge,
@@ -176,11 +109,11 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
         price: w.price
     }));
 
-    // DATA FOR "CURSOS ACREDITADOS"
+    // DATA FOR "DIRECTORIO" (accredited)
     const accreditedData = [
         { title: "Acompañar pérdidas y procesos de duelo", instructor: "Belén Romá y Santiago Jácome", hours: "04 horas", contact: "mailto:belenromaromero@gmail.com" },
-        { title: "Aleces: Introducción a la Comprensión y Curación del Trauma", instructor: "C. Cuenca, C. Melo y M. Salvador", hours: "28 horas", contact: "https://www.aleces.com", linkTitle: t("edu.btn.website" as any) },
-        { title: "Atención intensiva", instructor: "Esly Carvalho / TraumaClinic", hours: "02 horas", contact: "https://www.traumacliniclatinoamerica.com/courses/atencionintensiva", linkTitle: t("edu.btn.website" as any) },
+        { title: "Aleces: Introducción a la Comprensión y Curación del Trauma", instructor: "C. Cuenca, C. Melo y M. Salvador", hours: "28 horas", contact: "https://www.aleces.com" },
+        { title: "Atención intensiva", instructor: "Esly Carvalho / TraumaClinic", hours: "02 horas", contact: "https://www.traumacliniclatinoamerica.com/courses/atencionintensiva" },
         { title: "Capacitación para Supervisores Certificados en EMDR", instructor: "Elizabeth Maio e Silvia Guz", hours: "10 horas", contact: "mailto:helo.ludovice@gmail.com" },
         { title: "Dilemas y toma de decisiones en la Terapia EMDR", instructor: "Belén Romá y Santiago Jácome", hours: "02 horas", contact: "mailto:belenromaromero@gmail.com" },
         { title: "El arte de crear entretejidos terapéuticos", instructor: "Belén Romá y Santiago Jácome", hours: "06 horas", contact: "mailto:belenromaromero@gmail.com" },
@@ -190,157 +123,110 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
         { title: "Trauma Complejo, Disociación y EMDR", instructor: "Patricio Galleguillos", hours: "12 horas", contact: "mailto:contacto@atept.cl" },
     ];
 
-    const [selectedCourse, setSelectedCourse] = useState<any>(null);
-
-    // Select active data for list/grid view
     const currentData = useMemo(() => {
-        // Priorizamos los cursos del servidor, luego los de fallback (webinarsData + eventsData)
-        const combinedEvents = serverCourses.length > 0 ? [...serverCourses, ...eventsData] : [...webinarsData, ...eventsData];
-        if (activeTab === "events") return combinedEvents;
-        if (activeTab === "recordings") return recordingsData;
+        if (activeTab === "events") return [...serverCourses, ...eventsData];
+        if (activeTab === "webinars") return recordingsData;
         return [];
-    }, [activeTab, serverCourses, webinarsData, eventsData, recordingsData]);
+    }, [activeTab, serverCourses, eventsData, recordingsData]);
 
     const filteredData = useMemo(() => {
-        let result = currentData;
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            result = result.filter(
-                (c) =>
-                    c.title.toLowerCase().includes(term) ||
-                    c.desc.toLowerCase().includes(term) ||
-                    c.instructorName.toLowerCase().includes(term) ||
-                    c.category.toLowerCase().includes(term)
-            );
-        }
-        return result;
-    }, [searchTerm, currentData]);
-
-    const filteredAccredited = useMemo(() => {
-        if (!searchTerm) return accreditedData;
+        if (!searchTerm) return currentData;
         const term = searchTerm.toLowerCase();
-        return accreditedData.filter(a => a.title.toLowerCase().includes(term) || a.instructor.toLowerCase().includes(term));
-    }, [searchTerm, accreditedData]);
-
-    // Handle incoming ?id URL parametr
-    useEffect(() => {
-        const idStr = searchParams.get("id");
-        if (idStr !== null) {
-            const index = parseInt(idStr, 10);
-            if (!isNaN(index)) {
-                let sourceData: any[] = [];
-                const tab = searchParams.get("tab");
-                if (tab === "events") {
-                    const combinedEvents = serverCourses.length > 0 ? [...serverCourses, ...eventsData] : [...webinarsData, ...eventsData];
-                    sourceData = combinedEvents;
-                } else if (tab === "recordings") {
-                    sourceData = recordingsData;
-                }
-
-                if (index >= 0 && index < sourceData.length) {
-                    // Slight delay to ensure UI renders first
-                    setTimeout(() => setSelectedCourse(sourceData[index]), 100);
-                }
-            }
-        }
-    }, [searchParams, webinarsData, eventsData, recordingsData, activeTab, serverCourses]);
+        return currentData.filter(c => 
+            c.title.toLowerCase().includes(term) || 
+            c.instructorName.toLowerCase().includes(term)
+        );
+    }, [searchTerm, currentData]);
 
     return (
         <div className="pt-20 bg-cream dark:bg-bg-dark min-h-screen pb-20 relative overflow-hidden">
-            {/* Ambient Backgrounds */}
+            {/* Ambient Background */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[10%] right-[10%] w-[30%] h-[30%] bg-primary/10 dark:bg-primary/5 rounded-full blur-[100px] animate-pulse-slow"></div>
+                <div className="absolute top-[10%] right-[10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]"></div>
             </div>
 
-            <main className="flex-1 max-w-[1440px] mx-auto w-full px-4 sm:px-6 py-12">
-                {/* Header Area */}
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
-                    <div className="flex flex-col gap-4 max-w-xl">
-                        <nav className="flex items-center gap-2 text-sm text-text-muted dark:text-gray-400">
-                            <Link className="hover:text-primary transition-colors" href="/">{t("edu.nav.home" as any)}</Link>
-                            <span className="material-icons-round text-[16px]">chevron_right</span>
-                            <span
-                                className={`transition-colors cursor-pointer ${activeTab === 'events' ? "font-medium text-primary cursor-default" : "hover:text-primary"}`}
-                                onClick={() => setActiveTab('events')}
-                            >
-                                {t("edu.nav.edu" as any)}
-                            </span>
-                            {activeTab !== 'all' && (
-                                <>
-                                    <span className="material-icons-round text-[16px]">chevron_right</span>
-                                    <span className="font-medium text-primary">
-                                        {tabs.find(t => t.id === activeTab)?.label}
-                                    </span>
-                                </>
-                            )}
-                        </nav>
-                        <h2 className="text-3xl md:text-5xl font-extrabold font-display text-text-main dark:text-white leading-tight">
-                            {tabs.find(t => t.id === activeTab)?.label || t("edu.hub.title" as any)}
-                        </h2>
-                        <p className="text-text-muted dark:text-gray-300 text-lg">
-                            {t("edu.hub.desc" as any)}
-                        </p>
-                    </div>
+            <main className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 py-16">
+                {/* Header Dinámico (Breadcrumbs + H1) */}
+                <div className="mb-14 text-center md:text-left">
+                    <nav className="flex items-center justify-center md:justify-start gap-2 text-sm text-text-muted mb-6">
+                        <Link href={`/${lang}`} className="hover:text-primary transition-colors">{t("edu.nav.home" as any)}</Link>
+                        <span className="material-icons-round text-[16px]">chevron_right</span>
+                        <span className="text-primary font-bold">{pageTitle}</span>
+                    </nav>
+                    <h1 className="text-4xl md:text-6xl font-black text-text-main dark:text-white mb-4 tracking-tight">
+                        {pageTitle}
+                    </h1>
+                    <div className="h-1.5 w-24 bg-primary rounded-full mx-auto md:mx-0"></div>
                 </div>
+
+                {/* El componente de Tabs ha sido eliminado para simplificar la UX y evitar redundancia con el Header */}
 
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
+                        exit={{ opacity: 0, y: -15 }}
                         transition={{ duration: 0.3 }}
                     >
-                        {(activeTab === "events" || activeTab === "recordings") && (
-                            <div className="flex-1">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {filteredData.map((course, idx) => (
-                                        <article key={idx} className="group flex flex-col bg-white/90 dark:bg-surface-dark/90 backdrop-blur-sm rounded-2xl overflow-hidden border border-accent/20 dark:border-gray-800 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300">
-                                            <Link href={course.route}>
-                                                <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer">
-                                                    <Image fill alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={course.img} />
-                                                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-text-main dark:text-white flex items-center gap-1.5 shadow-sm">
-                                                        <span className={`material-icons-round ${course.badgeStyle} text-sm`}>{course.badgeIcon}</span>
-                                                        {course.badge}
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                            <div className="p-5 flex flex-col flex-1">
-                                                <div className="flex items-center gap-2 text-xs font-medium text-primary mb-2">
-                                                    <span className="text-secondary dark:text-gray-300">{course.category}</span>
-                                                </div>
-                                                <Link href={course.route}>
-                                                    <h3 className="text-lg font-bold text-text-main dark:text-white leading-snug mb-2 group-hover:text-primary transition-colors cursor-pointer">
-                                                        {course.title}
-                                                    </h3>
+                        {(activeTab === "events" || activeTab === "webinars") && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                                {filteredData.map((course, idx) => (
+                                    <article key={idx} className="group bg-white dark:bg-surface-dark rounded-3xl overflow-hidden border border-accent/10 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300">
+                                        <div className="relative h-56">
+                                            <Image fill src={course.img} alt={course.title} className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                                            <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                                                <span className="material-icons-round text-primary text-sm">{course.badgeIcon || 'star'}</span>
+                                                {course.badge}
+                                            </div>
+                                        </div>
+                                        <div className="p-6">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="px-2.5 py-1 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest rounded-lg">
+                                                    {course.category}
+                                                </span>
+                                            </div>
+                                            <h3 className="font-bold text-xl mb-3 line-clamp-2 text-text-main dark:text-white group-hover:text-primary transition-colors">{course.title}</h3>
+                                            <p className="text-sm text-text-muted dark:text-gray-400 mb-6 line-clamp-3 leading-relaxed">{course.desc}</p>
+                                            <div className="pt-5 border-t border-gray-100 dark:border-gray-800">
+                                                <Link href={course.route} className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-white text-center py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-primary/20">
+                                                    {lang === 'es' ? 'VER DETALLES' : 'VER DETALHES'}
+                                                    <span className="material-icons-round text-[18px]">arrow_forward</span>
                                                 </Link>
-                                                <p className="text-sm text-text-muted dark:text-gray-400 line-clamp-2 mb-4">
-                                                    {course.desc}
-                                                </p>
-                                                <div className="mt-auto pt-4 border-t border-accent/20 dark:border-gray-800 flex flex-col gap-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-accent/20 overflow-hidden relative">
-                                                            <Image fill alt="Instructor" className="w-full h-full object-cover" src={course.instructorImg} />
-                                                        </div>
-                                                        <span className="text-sm font-medium text-text-main dark:text-gray-300">{course.instructorName}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between mt-2 pt-1">
-                                                        <span className="text-lg font-bold text-text-main dark:text-white">{activeTab === "recordings" ? course.price : ""}</span>
-                                                        <Link href={course.route} className="bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 transition-all shadow-md">
-                                                            ADQUIRIR <span className="material-icons-round text-[18px]">shopping_cart</span>
-                                                        </Link>
-                                                    </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+
+                        {activeTab === "accredited" && (
+                            <div className="bg-white dark:bg-surface-dark rounded-[2.5rem] p-10 border border-accent/10 shadow-xl shadow-gray-200/50 dark:shadow-none">
+                                <div className="grid grid-cols-1 gap-6">
+                                    {accreditedData.map((item, i) => (
+                                        <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 hover:bg-primary/5 transition-colors border border-transparent hover:border-primary/20 group">
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-lg text-text-main dark:text-white group-hover:text-primary transition-colors">{item.title}</h4>
+                                                <div className="flex items-center gap-3 mt-1 text-sm text-text-muted">
+                                                    <span className="flex items-center gap-1"><span className="material-icons-round text-sm">person</span> {item.instructor}</span>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                                                    <span className="flex items-center gap-1"><span className="material-icons-round text-sm">schedule</span> {item.hours}</span>
                                                 </div>
                                             </div>
-                                        </article>
+                                            <div className="mt-4 md:mt-0">
+                                                <a href={item.contact} className="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-primary/20 text-primary font-bold text-sm rounded-xl hover:bg-primary hover:text-white transition-all">
+                                                    {lang === 'es' ? 'Solicitar Información' : 'Solicitar Informações'}
+                                                    <span className="material-icons-round text-sm">mail</span>
+                                                </a>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* Acreditaciones View */}
-                        {activeTab === "accredited" && (
-                            <div className="max-w-6xl mx-auto">
+                        {activeTab === "accreditation" && (
+                            <div className="max-w-4xl mx-auto py-4">
                                 {!selectedTramiteId ? (
                                     <TramiteSelector onSelect={(id) => setSelectedTramiteId(id)} searchTerm={searchTerm} />
                                 ) : (

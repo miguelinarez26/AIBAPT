@@ -79,7 +79,7 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      setErrorMsg(lang === 'es' ? 'Error subiendo imagen' : 'Erro ao carregar imagem');
+      setErrorMsg(t["profile.error.upload_img"]);
       setIsSaving(false);
       return;
     }
@@ -116,7 +116,7 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      setErrorMsg(lang === 'es' ? 'Error subiendo CV' : 'Erro ao carregar CV');
+      setErrorMsg(t["profile.error.upload_cv"]);
       setIsSaving(false);
       return;
     }
@@ -256,13 +256,13 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
               <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
                 <span className="material-icons-round text-8xl">verified</span>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 block mb-2">{lang === 'es' ? 'Matrícula Profesional' : 'Matrícula Profissional'}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 block mb-2">{t["profile.membership.title"]}</span>
               <div className="text-2xl font-black font-display tracking-tight leading-none mb-4">
-                {profile?.member_number || 'PENDIENTE'}
+                {profile?.member_number || t["profile.membership.pending"]}
               </div>
               <div className="flex items-center gap-2 text-[11px] font-bold bg-white/10 p-2 rounded-lg">
                 <span className="material-icons-round text-sm">lock</span>
-                {lang === 'es' ? 'Identificador Inmutable' : 'Identificador Imutável'}
+                {t["profile.membership.immutable"]}
               </div>
             </div>
           </div>
@@ -314,33 +314,33 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                         <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} accept="image/*" className="hidden" />
                       </div>
                       <div className="flex-1 text-center md:text-left">
-                        <h4 className="font-bold text-text-main dark:text-white mb-1">{lang === 'es' ? 'Foto de Perfil' : 'Foto de Perfil'}</h4>
+                        <h4 className="font-bold text-text-main dark:text-white mb-1">{t["profile.avatar.title"]}</h4>
                         <p className="text-xs text-text-muted dark:text-gray-400 mb-4">
-                          {lang === 'es' ? 'Sube una foto profesional para tu credencial y directorio.' : 'Envie uma foto profissional para sua credencial e diretório.'}
+                          {t["profile.avatar.desc"]}
                         </p>
                         <button 
                           onClick={() => fileInputRef.current?.click()}
                           className="text-xs font-bold text-primary border border-primary/30 px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors"
                         >
-                          {lang === 'es' ? 'Cambiar Imagen' : 'Alterar Imagem'}
+                          {t["profile.avatar.change"]}
                         </button>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{lang === 'es' ? 'Nombres' : 'Nomes'}</label>
+                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.fields.names"]}</label>
                         <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{lang === 'es' ? 'Apellidos' : 'Sobrenomes'}</label>
+                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.fields.lastnames"]}</label>
                         <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{lang === 'es' ? 'Teléfono' : 'Telefone'}</label>
+                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.fields.phone"]}</label>
                         <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+123456789" className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" />
                       </div>
                       <div className="space-y-2">
@@ -373,26 +373,26 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                   className="bg-white dark:bg-surface-dark border border-accent/30 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden"
                 >
                   <div className="p-8 space-y-6">
-                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="material-icons-round text-primary">contact_page</span>
                         <h3 className="text-xl font-bold font-display">{t["dashboard.cv_directory"]}</h3>
                       </div>
-                      
-                      <div className="flex items-center gap-3 bg-accent/5 px-4 py-2 rounded-xl border border-accent/10">
-                        <span className="text-xs font-bold uppercase text-text-muted tracking-widest">{lang === 'es' ? 'Público' : 'Público'}</span>
-                        <div 
-                          onClick={() => setIsPublic(!isPublic)}
-                          className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${isPublic ? 'bg-aibapt-green' : 'bg-gray-300'}`}
-                        >
-                          <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isPublic ? 'left-6' : 'left-1'}`} />
+
+                    {/* Información de Visibilidad (Obligatoria para Socios) */}
+                    {isMember && (
+                      <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-start gap-4">
+                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
+                          <span className="material-icons-round text-xl">visibility</span>
                         </div>
+                        <p className="text-xs text-text-muted dark:text-gray-400 leading-relaxed">
+                          {t["profile.public_notice"]}
+                        </p>
                       </div>
-                    </div>
+                    )}
 
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{lang === 'es' ? 'Biografía Profesional' : 'Biografia Profissional'}</label>
-                      <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none resize-none" placeholder={lang === 'es' ? 'Describe tu especialidad...' : 'Descreva sua especialidade...'} />
+                      <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.bio.label"]}</label>
+                      <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none resize-none" placeholder={t["profile.bio.placeholder"]} />
                     </div>
 
                     {/* CV Upload */}
@@ -403,11 +403,11 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                         </div>
                         <div>
                           <p className="text-sm font-bold">Curriculum Vitae (CV)</p>
-                          <p className="text-[11px] text-text-muted">{cvUrl ? (lang === 'es' ? 'Tu currículum profesional está cargado.' : 'Seu currículo profissional está carregado.') : (lang === 'es' ? 'Sube tu currículum para completar tu perfil.' : 'Envie seu currículo para completar seu perfil.')}</p>
+                          <p className="text-[11px] text-text-muted">{cvUrl ? t["profile.cv.status.loaded"] : t["profile.cv.status.empty"]}</p>
                         </div>
                       </div>
                       <button onClick={() => cvInputRef.current?.click()} className="w-full md:w-auto bg-white dark:bg-white/10 text-primary font-bold px-6 py-2 rounded-xl text-xs border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm">
-                        {cvUrl ? (lang === 'es' ? 'ACTUALIZAR CV' : 'ATUALIZAR CV') : (lang === 'es' ? 'SUBIR CV' : 'ENVIAR CV')}
+                        {cvUrl ? t["profile.cv.btn.update"] : t["profile.cv.btn.upload"]}
                       </button>
                       <input type="file" ref={cvInputRef} onChange={handleCVUpload} accept=".pdf,.doc,.docx" className="hidden" />
                     </div>
@@ -467,7 +467,7 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                   className="mt-4 p-4 bg-aibapt-green text-white rounded-2xl flex items-center gap-2 font-bold shadow-lg"
                 >
                   <span className="material-icons-round">check_circle</span>
-                  {activeTab === 'security' ? t["profile.security.success"] : (lang === 'es' ? 'Cambios guardados con éxito.' : 'Alterações salvas com sucesso.')}
+                  {activeTab === 'security' ? t["profile.security.success"] : t["profile.success.saved"]}
                 </motion.div>
               )}
               {errorMsg && (

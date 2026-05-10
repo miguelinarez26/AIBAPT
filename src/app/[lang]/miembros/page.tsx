@@ -31,6 +31,7 @@ export default async function MembersDirectoryPage({
     .select('*')
     .eq('is_member', true)
     .eq('is_public', true)
+    .not('member_number', 'is', null)
     .order('last_name', { ascending: true });
 
   if (error) {

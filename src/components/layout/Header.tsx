@@ -17,7 +17,7 @@ export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const pathname = usePathname();
     const { lang, setLang, t } = useLanguage();
-    const { session } = useAuth();
+    const { session, profile } = useAuth();
 
     const handleSignOut = async () => {
         const supabase = createBrowserSupabaseClient();
@@ -76,7 +76,7 @@ export const Header = () => {
                             </button>
                             <div className="absolute top-full left-0 mt-6 w-64 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-300 py-2">
                                 <Link href={`/${lang}/formaciones?tab=events`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.events" as any)}</Link>
-                                <Link href={`/${lang}/formaciones?tab=recordings`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.recordings" as any)}</Link>
+                                <Link href={`/${lang}/formaciones?tab=webinars`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.recordings" as any)}</Link>
                                 <Link href={`/${lang}/formaciones?tab=accredited`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.accredited" as any)}</Link>
                                 <Link href={`/${lang}/formaciones?tab=accreditation`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("nav.development.accreditation" as any)}</Link>
                             </div>
@@ -112,7 +112,7 @@ export const Header = () => {
                         </div>
                         {session ? (
                             <div className="relative group">
-                                <Link href={`/${lang}/dashboard`} className={buttonVariants({ variant: "primary", size: "sm" })}>
+                                <Link href={profile?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className={buttonVariants({ variant: "primary", size: "sm" })}>
                                     <span className="material-icons-round text-lg">account_circle</span>
                                     {t("nav.portal")}
                                 </Link>
@@ -167,7 +167,7 @@ export const Header = () => {
                             {/* @ts-ignore */}
                             <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.development" as any)}</span>
                             <Link href={`/${lang}/formaciones?tab=events`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.events" as any)}</Link>
-                            <Link href={`/${lang}/formaciones?tab=recordings`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.recordings" as any)}</Link>
+                            <Link href={`/${lang}/formaciones?tab=webinars`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.recordings" as any)}</Link>
                             <Link href={`/${lang}/formaciones?tab=accredited`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.accredited" as any)}</Link>
                             <Link href={`/${lang}/formaciones?tab=accreditation`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.accreditation" as any)}</Link>
                         </div>

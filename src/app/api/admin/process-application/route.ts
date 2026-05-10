@@ -92,6 +92,7 @@ export async function POST(request: Request) {
         .from('profiles')
         .update({
           is_member: true,
+          is_public: true,
           membership_type: memType,
           membership_expiry: expirationDate.toISOString(),
           member_number: memberNumber

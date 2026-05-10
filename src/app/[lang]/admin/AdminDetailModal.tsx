@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ApplicationStatusBadge } from '@/components/dashboard/ApplicationStatusBadge';
+import { useLanguage } from '@/contexts/LanguageContext';
+import type { Document } from '@/types/database';
 
 interface AdminDetailModalProps {
   applicationId: string;
@@ -12,10 +14,11 @@ interface AdminDetailModalProps {
 }
 
 export default function AdminDetailModal({ applicationId, lang, onClose, onUpdate }: AdminDetailModalProps) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [appData, setAppData] = useState<any>(null);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +29,6 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
     async function loadDetail() {
       setLoading(true);
       
-      // 1. Fetch App details
       const { data: application, error: appError } = await supabase
         .from('applications')
         .select('*, profiles(first_name, last_name, full_name, email, member_number, language_preference), accreditation_types(id, name)')
@@ -40,7 +42,6 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
       }
       setAppData(application);
 
-      // 2. Fetch Documents (Sin pre-generar URLs para evitar delays y errores de sesión)
       console.log("[Admin] Buscando documentos para APP_ID:", applicationId);
       const { data: docsData, error: docsError } = await supabase
         .from('documents')
@@ -48,12 +49,8 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
         .eq('application_id', applicationId);
 
       if (!docsError && docsData) {
-        console.log(`[Admin] Documentos encontrados: ${docsData.length}`);
-        setDocuments(docsData);
-      } else if (docsError) {
-        console.error("[Admin] Error al buscar documentos:", docsError);
+        setDocuments(docsData as Document[]);
       }
-
       setLoading(false);
     }
 
@@ -62,7 +59,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
 
   const handleProcess = async (newStatus: 'approved' | 'rejected') => {
     if (newStatus === 'rejected' && !adminNotes.trim()) {
-      setError('El motivo del rechazo es obligatorio.');
+      setError(t["admin.modal.error.notes"]);
       return;
     }
 
@@ -102,21 +99,16 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
   };
 
   const handleViewDocument = async (filePath: string) => {
-    console.log("[Admin] Generando URL firmada para:", filePath);
-    
     try {
       const { data, error } = await supabase
         .storage
         .from('private-certifications')
-        .createSignedUrl(filePath, 60); // 1 minuto de validez
+        .createSignedUrl(filePath, 60);
 
       if (error) throw error;
-      
-      console.log("[Admin] URL generada con éxito:", data.signedUrl);
       window.open(data.signedUrl, '_blank');
     } catch (err: any) {
-      console.error("[Admin] Error al generar URL:", err);
-      alert(lang === 'es' ? 'Archivo no encontrado en el servidor o error de acceso.' : 'Arquivo não encontrado no servidor ou erro de acesso.');
+      alert(t["admin.modal.error.file"]);
     }
   };
 
@@ -125,7 +117,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl flex flex-col items-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Cargando auditoría...</p>
+          <p className="text-gray-600 dark:text-gray-300">{t["admin.modal.loading"]}</p>
         </div>
       </div>
     );
@@ -136,26 +128,22 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
   const metadata = appData.metadata as Record<string, any> || {};
   const isMembresia = appData.accreditation_types?.name?.includes('membresia');
 
-  // Mapeo de slugs técnicos a nombres legibles
   const TRAMITE_NAMES: Record<string, string> = {
-    'solicitud_membresia': 'Solicitud de Membresía',
-    'CCA': 'Acreditación CCA',
-    'Eventos_Conferencia': 'Evento — Conferencia',
-    'Eventos_Workshop': 'Evento — Workshop',
-    'Eventos_Congreso': 'Evento — Congreso',
-    'Emision_CCA': 'Emisión de CCA',
-    'Renovacion_CCA': 'Renovación de CCA',
-    'EMDR_Psicoterapeuta': 'EMDR Psicoterapeuta',
-    'EMDR_Supervisor': 'EMDR Supervisor',
-    'Equivalencia_EMDR': 'Equivalencia EMDR',
-    'Psicotrauma_Individual': 'Psicotrauma Individual',
-    'Psicotrauma_Programa': 'Psicotrauma Programa',
-    'Equivalencia_Basica_Alumno': 'Equivalencia Básica (Alumno)',
-    'Equivalencia_Basica_Formador': 'Equivalencia Básica (Formador)',
+    'solicitud_membresia': t["tramite.name.membresia"],
+    'CCA': t["tramite.name.cca"],
+    'Eventos_Conferencia': t["tramite.name.conferencia"],
+    'Eventos_Workshop': t["tramite.name.workshop"],
+    'Eventos_Congreso': t["tramite.name.congreso"],
+    'Emision_CCA': t["tramite.name.emision_cca"],
+    'Renovacion_CCA': t["tramite.name.renovacion_cca"],
+    'EMDR_Psicoterapeuta': t["tramite.name.emdr_psico"],
+    'EMDR_Supervisor': t["tramite.name.emdr_sup"],
+    'Equivalencia_EMDR': t["tramite.name.emdr_equiv"],
+    'Psicotrauma_Individual': t["tramite.name.trauma_ind"],
+    'Psicotrauma_Programa': t["tramite.name.trauma_prog"],
   };
-  const humanTramiteName = TRAMITE_NAMES[appData.accreditation_types?.name || ''] || appData.accreditation_types?.name?.replace(/_/g, ' ') || 'Desconocido';
+  const humanTramiteName = TRAMITE_NAMES[appData.accreditation_types?.name || ''] || appData.accreditation_types?.name?.replace(/_/g, ' ') || t["status.unknown"];
 
-  // Mapeo de document_type (slug) a etiquetas legibles para el visor
   const DOC_TYPE_LABELS: Record<string, string> = {
     'hoja_inscripcion': 'Hoja de Inscripción',
     'solicitud_ingreso': 'Solicitud de Ingreso',
@@ -189,7 +177,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <span className="material-icons-round text-primary">policy</span>
-              Auditoría de Solicitud
+              {t["admin.modal.title"]}
             </h2>
             <p className="text-sm text-gray-500 mt-1">ID: {appData.id}</p>
           </div>
@@ -201,15 +189,14 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
           
-          {/* Info Blocks */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="material-icons-round text-[18px]">person</span> Datos del Solicitante
+                <span className="material-icons-round text-[18px]">person</span> {t["admin.modal.applicant_data"]}
               </h3>
               <div className="space-y-3 text-sm">
                 <p>
-                  <span className="text-gray-500">Nombre:</span>{" "}
+                  <span className="text-gray-500">{t["profile.fields.names"]}:</span>{" "}
                   <strong className="text-gray-900 dark:text-white">
                     {appData.profiles?.first_name ? `${appData.profiles.first_name} ${appData.profiles.last_name}`.trim() : appData.profiles?.full_name || 'N/A'}
                   </strong>
@@ -220,7 +207,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                 </p>
                 {appData.profiles?.member_number && (
                   <p>
-                    <span className="text-gray-500">Matrícula:</span>{" "}
+                    <span className="text-gray-500">{t["dashboard.membership.id"]}:</span>{" "}
                     <strong className="text-primary font-black uppercase tracking-wider">{appData.profiles.member_number}</strong>
                   </p>
                 )}
@@ -233,12 +220,12 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
 
             <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30">
               <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="material-icons-round text-[18px]">info</span> Información del Trámite
+                <span className="material-icons-round text-[18px]">info</span> {t["admin.modal.application_info"]}
               </h3>
               <div className="space-y-3 text-sm">
-                <p><span className="text-gray-500">Trámite:</span> <strong className="text-gray-900 dark:text-white">{humanTramiteName}</strong></p>
-                <p><span className="text-gray-500">Estado Actual:</span> <ApplicationStatusBadge status={appData.status} /></p>
-                <p><span className="text-gray-500">Fecha de envío:</span> <strong className="text-gray-900 dark:text-white">{new Date(appData.created_at).toLocaleString()}</strong></p>
+                <p><span className="text-gray-500">{t["admin.table.application"]}:</span> <strong className="text-gray-900 dark:text-white">{humanTramiteName}</strong></p>
+                <p><span className="text-gray-500">{t["admin.table.status"]}:</span> <ApplicationStatusBadge status={appData.status} /></p>
+                <p><span className="text-gray-500">{t["admin.table.date"]}:</span> <strong className="text-gray-900 dark:text-white">{new Date(appData.created_at).toLocaleString()}</strong></p>
               </div>
             </div>
           </div>
@@ -246,33 +233,27 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
           {/* Metadata */}
           {Object.keys(metadata).length > 0 && (
             <div>
-              <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3">Datos Adicionales (Formulario)</h3>
+              <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3">{t["admin.modal.extra_data"]}</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <ul className="space-y-2 text-sm">
                   {Object.entries(metadata)
-                    .filter(([key]) => {
-                      // Ocultar modalidad_online en membresías (no aplica, no es un evento)
-                      if (key === 'modalidad_online' && isMembresia) return false;
-                      return true;
-                    })
+                    .filter(([key]) => !(key === 'modalidad_online' && isMembresia))
                     .map(([key, value]) => {
                     let displayValue = String(value);
                     
-                    // Lógica de formateo según el tipo de dato y clave
+                    // Lógica de valores humanizados
                     if (typeof value === 'boolean') {
                       if (key === 'modalidad_online') {
-                        displayValue = value ? 'Online' : (lang === 'es' ? 'Presencial' : 'Presencial');
+                        displayValue = value ? t("field.label.online") : t("field.label.presencial");
                       } else {
-                        if (lang === 'es') displayValue = value ? 'Sí' : 'No';
-                        else displayValue = value ? 'Sim' : 'Não';
+                        displayValue = value ? t("field.label.si") : t("field.label.no");
                       }
-                    } else if (key === 'monto_pagado' || key === 'monto') {
+                    } else if (key === 'monto_pagado' || key === 'monto' || key === 'inversion') {
                       displayValue = new Intl.NumberFormat(lang === 'es' ? 'es-ES' : 'pt-BR', {
                         style: 'currency',
                         currency: 'EUR'
                       }).format(Number(value));
                     } else if (key === 'escenario' || key === 'categoria_membresia') {
-                      // Mapeo legible de escenarios y categorías de membresía
                       const categoryMap: Record<string, string> = {
                         'pleno_salud_mental': lang === 'es' ? 'Miembro Pleno — Profesional de Salud Mental' : 'Membro Pleno — Profissional de Saúde Mental',
                         'pleno_agente_social': lang === 'es' ? 'Miembro Pleno — Agente de Intervención Social' : 'Membro Pleno — Agente de Intervenção Social',
@@ -290,28 +271,27 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                       displayValue = value === 'membresia' ? (lang === 'es' ? 'Solicitud de Membresía' : 'Solicitação de Membresia') : String(value);
                     }
 
-                    // Formatear etiqueta legible
-                    let displayKey = key.replace(/_/g, ' ');
+                    // Lógica de etiquetas humanizadas (Keys)
                     const keyLabelMap: Record<string, string> = {
                       'escenario': appData.accreditation_types?.name?.includes('membresia') 
                         ? (lang === 'es' ? 'Categoría de Socio' : 'Categoria de Sócio')
                         : (lang === 'es' ? 'Escenario' : 'Cenário'),
                       'categoria_membresia': lang === 'es' ? 'Categoría de Membresía' : 'Categoria de Membresia',
-                      'monto_pagado': lang === 'es' ? 'Monto Pagado' : 'Valor Pago',
-                      'modalidad_online': lang === 'es' ? 'Modalidad' : 'Modalidade',
+                      'monto_pagado': t("field.label.monto_pagado"),
+                      'monto': t("field.label.monto_pagado"),
+                      'inversion': t("field.label.inversion"),
+                      'modalidad_online': t("field.label.modalidad"),
                       'idioma_solicitud': lang === 'es' ? 'Idioma de Solicitud' : 'Idioma da Solicitação',
                       'tramite_tipo': lang === 'es' ? 'Tipo de Trámite' : 'Tipo de Trâmite',
+                      'fecha_pago': t("field.label.fecha_pago"),
+                      'referencia': t("field.label.referencia"),
                     };
-                    displayKey = keyLabelMap[key] || displayKey;
+                    const displayKey = keyLabelMap[key] || key.replace(/_/g, ' ');
 
                     return (
-                      <li key={key} className="flex flex-col sm:flex-row sm:gap-4 border-b border-gray-200 dark:border-gray-800 pb-2 last:border-0 last:pb-0">
-                        <span className="text-gray-500 dark:text-gray-400 capitalize w-1/3">
-                          {displayKey}
-                        </span>
-                        <span className="text-gray-900 dark:text-white font-medium">
-                          {displayValue}
-                        </span>
+                      <li key={key} className="flex flex-col sm:flex-row sm:gap-4 border-b border-gray-200 dark:border-gray-800 py-3 last:border-0 last:pb-0">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-text-muted w-full sm:w-1/3">{displayKey}</span>
+                        <span className="text-sm text-secondary dark:text-white font-bold">{displayValue}</span>
                       </li>
                     );
                   })}
@@ -323,10 +303,10 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
           {/* Documents */}
           <div>
             <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="material-icons-round text-gray-400">folder_open</span> Documentos Adjuntos
+              <span className="material-icons-round text-gray-400">folder_open</span> {t["admin.modal.attached_docs"]}
             </h3>
             {documents.length === 0 ? (
-              <p className="text-sm text-gray-500 italic bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">No se encontraron documentos.</p>
+              <p className="text-sm text-gray-500 italic bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">{t["admin.table.empty"]}</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {documents.map(doc => (
@@ -343,7 +323,6 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                     <button 
                       onClick={() => handleViewDocument(doc.file_path)}
                       className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors shrink-0"
-                      title="Ver Documento"
                     >
                       <span className="material-icons-round">visibility</span>
                     </button>
@@ -356,65 +335,42 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
           {/* Decision Area */}
           {(appData.status === 'pending' || appData.status === 'under_review') && (
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-md font-bold text-gray-900 dark:text-white mb-4">Resolución de Auditoría</h3>
+              <h3 className="text-md font-bold text-gray-900 dark:text-white mb-4">{t["admin.modal.resolution"]}</h3>
               
               {!action ? (
                 <div className="flex gap-4">
-                  <button 
-                    onClick={() => setAction('approve')}
-                    className="flex-1 bg-aibapt-green hover:bg-aibapt-green/90 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <span className="material-icons-round">check_circle</span> Aprobar Solicitud
+                  <button onClick={() => setAction('approve')} className="flex-1 bg-aibapt-green hover:bg-aibapt-green/90 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+                    <span className="material-icons-round">check_circle</span> {t["admin.modal.approve_btn"]}
                   </button>
-                  <button 
-                    onClick={() => setAction('reject')}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <span className="material-icons-round">cancel</span> Rechazar Solicitud
+                  <button onClick={() => setAction('reject')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+                    <span className="material-icons-round">cancel</span> {t["admin.modal.reject_btn"]}
                   </button>
                 </div>
               ) : (
-                <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 animate-fade-in-up">
+                <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {action === 'approve' ? 'Notas de Aprobación (Opcional)' : 'Motivo del Rechazo (Obligatorio)'}
+                      {action === 'approve' ? t["admin.modal.notes_approve"] : t["admin.modal.notes_reject"]}
                     </label>
                     <textarea
                       value={adminNotes}
                       onChange={(e) => setAdminNotes(e.target.value)}
-                      className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white outline-none"
                       rows={3}
-                      placeholder={action === 'approve' ? 'Notas internas (ej. ID de certificado generado)...' : 'Explique qué documentos faltan o por qué se rechaza el trámite...'}
                     ></textarea>
                   </div>
 
-                  {error && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm flex items-center gap-2">
-                      <span className="material-icons-round text-[18px]">error</span> {error}
-                    </div>
-                  )}
+                  {error && <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm">{error}</div>}
 
                   <div className="flex gap-3 justify-end">
-                    <button 
-                      disabled={submitting}
-                      onClick={() => setAction(null)}
-                      className="px-4 py-2 text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
-                    >
-                      Cancelar
-                    </button>
+                    <button onClick={() => setAction(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium">Cancelar</button>
                     <button 
                       disabled={submitting}
                       onClick={() => handleProcess(action === 'approve' ? 'approved' : 'rejected')}
-                      className={`px-6 py-2 text-white rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                        action === 'approve' ? 'bg-aibapt-green hover:bg-aibapt-green/90' : 'bg-red-600 hover:bg-red-700'
-                      }`}
+                      className={`px-6 py-2 text-white rounded-lg font-medium flex items-center gap-2 ${action === 'approve' ? 'bg-aibapt-green' : 'bg-red-600'}`}
                     >
-                      {submitting ? (
-                        <span className="material-icons-round animate-spin">refresh</span>
-                      ) : (
-                        <span className="material-icons-round">gavel</span>
-                      )}
-                      Confirmar {action === 'approve' ? 'Aprobación' : 'Rechazo'}
+                      {submitting ? <span className="material-icons-round animate-spin">refresh</span> : <span className="material-icons-round">gavel</span>}
+                      {t["admin.modal.confirm"]} {action === 'approve' ? t["admin.filter.approved"] : t["admin.filter.rejected"]}
                     </button>
                   </div>
                 </div>

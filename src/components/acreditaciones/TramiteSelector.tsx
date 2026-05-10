@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AIBAPT_TRAMITES, EscenarioEvento } from "@/config/aibapt-config";
+import { AIBAPT_TRAMITES, LocalizedText } from "@/config/aibapt-config";
 import { useParams } from "next/navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TramiteSelectorProps {
   onSelect: (id: string) => void;
@@ -10,20 +11,28 @@ interface TramiteSelectorProps {
 }
 
 export function TramiteSelector({ onSelect, searchTerm = "" }: TramiteSelectorProps) {
+  const { t } = useLanguage();
   const params = useParams();
   const lang = (params?.lang as 'es' | 'pt') || 'es';
 
+  // Helper de traducción defensivo
+  const getTranslation = (obj: LocalizedText | string | undefined): string => {
+    if (!obj) return "";
+    if (typeof obj === "string") return obj;
+    return obj[lang] || "";
+  };
+
   // Filter tramites based on search term
-  const tramitesArray = Object.values(AIBAPT_TRAMITES).filter(t => 
+  const tramitesArray = Object.values(AIBAPT_TRAMITES).filter(tr => 
     !searchTerm || 
-    t.title[lang].toLowerCase().includes(searchTerm.toLowerCase()) || 
-    t.description[lang].toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.categoria[lang].toLowerCase().includes(searchTerm.toLowerCase())
+    getTranslation(tr.title).toLowerCase().includes(searchTerm.toLowerCase()) || 
+    getTranslation(tr.description).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getTranslation(tr.categoria).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Group filtered tramites by category
   const groupedTramites = tramitesArray.reduce((acc, tramite) => {
-    const cat = tramite.categoria[lang];
+    const cat = getTranslation(tramite.categoria);
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(tramite);
     return acc;
@@ -62,10 +71,10 @@ export function TramiteSelector({ onSelect, searchTerm = "" }: TramiteSelectorPr
               >
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-primary mb-1 group-hover:text-primary-dark transition-colors">
-                    {tramite.title[lang]}
+                    {getTranslation(tramite.title)}
                   </h3>
                   <p className="text-sm text-text-muted dark:text-gray-400">
-                    {tramite.description[lang]}
+                    {getTranslation(tramite.description)}
                   </p>
                 </div>
                 
@@ -75,11 +84,9 @@ export function TramiteSelector({ onSelect, searchTerm = "" }: TramiteSelectorPr
                       {lang === 'es' ? 'Costo' : 'Custo'}
                     </span>
                     <span className="text-sm text-accent font-bold">
-                      {Array.isArray(tramite.monto) 
+                      {tramite.monto.length > 1
                         ? (lang === 'es' ? 'Variable según caso' : 'Variável conforme caso')
-                        : typeof tramite.monto === 'number' 
-                          ? `${tramite.monto} €` 
-                          : tramite.monto}
+                        : `${tramite.monto[0].monto} €`}
                     </span>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-primary/5 group-hover:bg-primary/10 flex items-center justify-center text-primary transition-colors">

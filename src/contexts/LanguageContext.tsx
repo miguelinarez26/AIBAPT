@@ -2,9 +2,8 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { translations, LangKeys } from "@/i18n/translations";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 type Language = "es" | "pt";
 
@@ -24,6 +23,7 @@ interface LanguageProviderProps {
 export const LanguageProvider = ({ children, initialLang }: LanguageProviderProps) => {
     const pathname = usePathname();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { session } = useAuth();
 
     // Determinar el idioma inicial: prop > URL > cookie > defecto
@@ -44,7 +44,7 @@ export const LanguageProvider = ({ children, initialLang }: LanguageProviderProp
 
     const [lang, setLangState] = useState<Language>(resolveInitialLang);
 
-    // Sincronizar lang con la URL cuando el pathname cambia (navegación directa o setLang)
+    // Sincronizar lang con la URL cuando el pathname cambia
     useEffect(() => {
         const segments = pathname.split('/');
         if (segments.length >= 2 && (segments[1] === 'es' || segments[1] === 'pt')) {
@@ -58,34 +58,24 @@ export const LanguageProvider = ({ children, initialLang }: LanguageProviderProp
     const changeLanguage = useCallback(async (newLang: Language) => {
         setLangState(newLang);
 
-        // Guardar en cookie para que el middleware lo detecte en futuras visitas
+        // Guardar en cookie
         document.cookie = `aibapt-lang=${newLang};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 
-        // Sincronizar con la base de datos ELIMINADO del Header
-        // El idioma oficial solo se cambia desde la página de Perfil.
-        /*
-        if (session?.user) {
-            const supabase = createBrowserSupabaseClient();
-            const { error } = await supabase
-                .from('profiles')
-                .update({ language_preference: newLang })
-                .eq('id', session.user.id);
-                
-            if (error) {
-                console.error("Error sincronizando idioma:", error);
-            }
-        }
-        */
-
         // Reemplazar el prefijo de idioma en la ruta actual
-        // Ej: /es/formaciones → /pt/formaciones
         const segments = pathname.split('/');
         if (segments.length >= 2 && (segments[1] === 'es' || segments[1] === 'pt')) {
             segments[1] = newLang;
         }
-        const newPath = segments.join('/') || `/${newLang}`;
+        
+        const basePath = segments.join('/') || `/${newLang}`;
+        
+        // PERSISTENCIA DE QUERY PARAMS
+        // Capturamos los parámetros actuales y los volvemos a inyectar
+        const currentParams = searchParams.toString();
+        const newPath = currentParams ? `${basePath}?${currentParams}` : basePath;
+        
         router.push(newPath);
-    }, [pathname, router, session]);
+    }, [pathname, router, searchParams]);
 
     const t = (key: LangKeys): string => {
         const val = translations[lang][key];

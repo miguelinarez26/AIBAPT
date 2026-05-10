@@ -17,11 +17,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round|Material+Icons" rel="stylesheet" />
       </head>
       <body className="font-sans antialiased min-h-screen flex flex-col overflow-x-hidden">
-        <AuthProvider>
-          <LanguageProvider>
-            {children}
-          </LanguageProvider>
-        </AuthProvider>
+        {children}
       </body>
     </html>
   );

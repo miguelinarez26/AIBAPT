@@ -37,17 +37,17 @@ const STATUS_CONFIG: Record<string, {
   approved: {
     translationKey: 'status.approved',
     icon: 'check_circle',
-    className: 'bg-aibapt-green/10 text-aibapt-green border-aibapt-green/20',
+    className: 'bg-green-50 text-primary border-green-100 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20',
   },
   rejected: {
     translationKey: 'status.rejected',
     icon: 'cancel',
-    className: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
+    className: 'bg-red-50 text-accent border-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
   },
   cancelled: {
     translationKey: 'status.cancelled',
     icon: 'block',
-    className: 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800/50 dark:text-gray-500 dark:border-gray-700/50',
+    className: 'bg-gray-50 text-gray-400 border-gray-100 dark:bg-gray-800/50 dark:text-gray-500 dark:border-gray-700/50',
   },
 };
 

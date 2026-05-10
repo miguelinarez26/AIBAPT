@@ -31,8 +31,11 @@ export async function generateMetadata({
   };
 }
 
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/components/providers/AuthProvider";
+
 // Layout para rutas internacionalizadas (/es/*, /pt/*)
-// Hereda providers del root layout — solo añade Header/Footer y metadata SEO.
+// Inyecta los proveedores de contexto necesarios para la UI y el idioma.
 export default async function LangLayout({
   children,
   params,
@@ -40,13 +43,17 @@ export default async function LangLayout({
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {
+  const { lang } = await params;
+
   return (
-    <>
-      <Header />
-      <main className="flex-grow">
-        {children}
-      </main>
-      <Footer />
-    </>
+    <AuthProvider>
+      <LanguageProvider initialLang={lang as SupportedLanguage}>
+        <Header />
+        <main className="flex-grow">
+          {children}
+        </main>
+        <Footer />
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
