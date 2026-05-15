@@ -14,7 +14,7 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
     const { t, lang } = useLanguage();
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
-    
+
     // El estado activeTab se sincroniza EXCLUSIVAMENTE con la URL (?tab=)
     const [activeTab, setActiveTab] = useState<"events" | "webinars" | "accredited" | "accreditation">("events");
     const [selectedTramiteId, setSelectedTramiteId] = useState<string | null>(null);
@@ -132,8 +132,8 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
     const filteredData = useMemo(() => {
         if (!searchTerm) return currentData;
         const term = searchTerm.toLowerCase();
-        return currentData.filter(c => 
-            c.title.toLowerCase().includes(term) || 
+        return currentData.filter(c =>
+            c.title.toLowerCase().includes(term) ||
             c.instructorName.toLowerCase().includes(term)
         );
     }, [searchTerm, currentData]);
@@ -146,13 +146,8 @@ export default function FormacionesClient({ initialCourses }: { initialCourses: 
             </div>
 
             <main className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 py-16">
-                {/* Header Dinámico (Breadcrumbs + H1) */}
+                {/* Header Dinámico (H1) */}
                 <div className="mb-14 text-center md:text-left">
-                    <nav className="flex items-center justify-center md:justify-start gap-2 text-sm text-text-muted mb-6">
-                        <Link href={`/${lang}`} className="hover:text-primary transition-colors">{t("edu.nav.home" as any)}</Link>
-                        <span className="material-icons-round text-[16px]">chevron_right</span>
-                        <span className="text-primary font-bold">{pageTitle}</span>
-                    </nav>
                     <h1 className="text-4xl md:text-6xl font-black text-text-main dark:text-white mb-4 tracking-tight">
                         {pageTitle}
                     </h1>

@@ -21,7 +21,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
   const handleSignOut = async () => {
     const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
-    
+
     // Forzar actualización total para limpiar middleware y estados de sesión
     router.refresh();
     window.location.href = `/${lang}/login`;
@@ -29,22 +29,22 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
 
   const t = translations[lang] as Record<string, string>;
   const isMember = profile?.is_member ?? false;
-  const displayName = profile?.first_name 
-    ? `${profile.first_name} ${profile.last_name || ''}`.trim() 
+  const displayName = profile?.first_name
+    ? `${profile.first_name} ${profile.last_name || ''}`.trim()
     : profile?.full_name || profile?.email || (t["dashboard.hello"] === 'Hola' ? 'Usuario' : 'Usuário');
   const roleLabel = profile?.role === 'admin'
     ? t["dashboard.role.staff"]
-    : (isMember 
-        ? (profile?.membership_type?.includes('pleno') 
-            ? t["dashboard.role.full_member"]
-            : t["dashboard.role.member"])
-        : t["dashboard.role.candidate"]);
+    : (isMember
+      ? (profile?.membership_type?.includes('pleno')
+        ? t["dashboard.role.full_member"]
+        : t["dashboard.role.member"])
+      : t["dashboard.role.candidate"]);
 
   // Formatear fecha de vencimiento
   const expiryDisplay = profile?.membership_expiry
     ? new Date(profile.membership_expiry).toLocaleDateString(lang === 'es' ? 'es-ES' : 'pt-BR', {
-        day: 'numeric', month: 'long', year: 'numeric'
-      })
+      day: 'numeric', month: 'long', year: 'numeric'
+    })
     : t["dashboard.no_expiry"];
 
   // Formatear fecha de solicitud
@@ -83,11 +83,11 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
             {/* Avatar sincronizado con la fuente de verdad (profiles.avatar_url) */}
             <div className="w-20 h-20 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-3xl font-display font-bold shadow-lg backdrop-blur-sm overflow-hidden relative">
               {profile?.avatar_url ? (
-                <img 
-                  src={profile.avatar_url.startsWith('http') 
-                    ? profile.avatar_url 
-                    : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${profile.avatar_url}`} 
-                  alt="Avatar" 
+                <img
+                  src={profile.avatar_url.startsWith('http')
+                    ? profile.avatar_url
+                    : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${profile.avatar_url}`}
+                  alt="Avatar"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -350,7 +350,7 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                 <span className="material-icons-round text-primary text-[20px]">fingerprint</span>
                 {t["dashboard.identity.professional"]}
               </h3>
-              
+
               <Link
                 href={`/${lang}/dashboard/perfil?tab=personal`}
                 className="flex items-center gap-3 p-3 text-sm text-text-main dark:text-gray-300 hover:bg-accent/20 dark:hover:bg-white/5 rounded-xl transition-colors font-medium border border-transparent hover:border-accent/50 dark:hover:border-gray-700 text-left"

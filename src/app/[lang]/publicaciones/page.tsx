@@ -28,17 +28,6 @@ function PublicacionesContent() {
                 <div className="layout-content-container max-w-[1280px] w-full flex flex-col lg:flex-row gap-12">
                     <div className="flex-1 flex flex-col gap-10">
                         <div className="flex flex-col gap-2">
-                            <nav className="flex items-center gap-2 text-sm text-text-muted mb-2">
-                                <Link href="/" className="hover:text-primary transition-colors">Inicio</Link>
-                                <span className="material-icons-round text-sm">chevron_right</span>
-                                <Link href="/publicaciones" className="hover:text-primary transition-colors">Publicaciones</Link>
-                                {activeCat && (
-                                    <>
-                                        <span className="material-icons-round text-sm">chevron_right</span>
-                                        <span className="text-primary font-bold">{categoryLabels[activeCat] || activeCat}</span>
-                                    </>
-                                )}
-                            </nav>
                             <h1 className="text-secondary dark:text-white text-4xl md:text-5xl font-black leading-tight tracking-[-0.033em] font-display">
                                 {activeCat ? categoryLabels[activeCat] : t("news.title")}
                             </h1>

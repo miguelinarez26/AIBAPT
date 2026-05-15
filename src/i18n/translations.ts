@@ -274,7 +274,7 @@ export const translations = {
         "member.btn.recomendacion": "Carta de Recomendación",
         "member.inst.title": "Afiliación Institucional",
         "member.inst.desc": "Para universidades, clínicas o centros de formación que deseen acreditarse bajo nuestros estándares.",
-        
+
         "members.title": "Directorio Público de Miembros",
         "members.desc": "Consulta el listado oficial de miembros activos de la Asociación Iberoamericana de Psicotrauma.",
         "members.search": "Buscar miembro por nombre o ID...",
@@ -652,7 +652,7 @@ export const translations = {
         "dashboard.personal_data": "Datos Personales",
         "dashboard.cv_directory": "Currículum y Directorio",
         "dashboard.logout": "Cerrar Sesión",
-        
+
         "profile.back": "Volver al Dashboard",
         "profile.title": "Configuración de Perfil",
         "profile.desc": "Administra tu información de contacto y datos de membresía.",
@@ -750,7 +750,7 @@ export const translations = {
         "field.label.no": "No",
         "field.label.fecha_pago": "Fecha de Pago",
         "field.label.referencia": "Referencia / ID Transacción",
-        
+
         // Seguridad
         "profile.security.title": "Gestión de Seguridad",
         "profile.security.current_password": "Contraseña Actual",
@@ -770,7 +770,7 @@ export const translations = {
         "auth.reset_new_title": "Nueva Contraseña",
         "auth.reset_new_desc": "Elige una contraseña segura para tu cuenta.",
         "auth.reset_new_btn": "Establecer Nueva Contraseña",
-        
+
         // Application Statuses
         "status.uploading_fallback": "Finalizando subida...",
 
@@ -817,7 +817,7 @@ export const translations = {
         "tramite.emdr.field.cert_ext": "Certificación vigente de otras asociaciones",
         "tramite.emdr.sup_certificado": "Supervisor Certificado",
         "tramite.emdr.sup_senior": "Supervisor Sénior",
-        
+
         "tramite.emdr.instr.1": "Selecciona tu nivel objetivo para ver los requisitos específicos del Manual 2026.",
         "tramite.emdr.instr.2": "Los niveles Sénior, Máster y Supervisores requieren portafolio de créditos CCA.",
         "tramite.emdr.instr.3": "Asegúrate de que los archivos PDF no excedan los 10MB.",
@@ -1611,7 +1611,7 @@ export const translations = {
         "dashboard.personal_data": "Dados Pessoais",
         "dashboard.cv_directory": "Currículo e Diretório",
         "dashboard.logout": "Sair",
-        
+
         "profile.back": "Voltar ao Dashboard",
         "profile.title": "Configuração de Perfil",
         "profile.desc": "Administre suas informações de contato e dados de assinatura.",
@@ -1627,7 +1627,7 @@ export const translations = {
         "profile.save": "Salvar Alterações",
         "profile.lang_pref": "Idioma de Preferência",
         "profile.lang_desc": "Mudar o idioma salvará automaticamente sua preferência e atualizará a página.",
-        
+
         // Segurança
         "profile.security.title": "Gestão de Segurança",
         "profile.security.current_password": "Senha Atual",
@@ -1664,7 +1664,7 @@ export const translations = {
         "tramite.name.trauma_prog.desc": "Dirigido a institutos ou universidades.",
         "tramite.equivalencia_basica.title": "Reconhecimento de Formação Básica",
         "tramite.equivalencia_basica.desc": "Processo de equivalência para formação básica externa.",
-        
+
         "tramite.emdr.psico_basico": "Psicoterapeuta Básico",
         "tramite.emdr.psico_certificado": "Psicoterapeuta Certificado",
         "tramite.emdr.psico_senior": "Psicoterapeuta Sénior",

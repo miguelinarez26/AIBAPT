@@ -66,11 +66,7 @@ export default function CertificacionesPage() {
         <div className="pt-20">
             <main className="flex-1 max-w-[1024px] mx-auto w-full px-6 py-12">
                 <div className="flex flex-col gap-4 max-w-3xl mb-12">
-                    <nav className="flex items-center gap-2 text-sm text-text-muted">
-                        <Link className="hover:text-primary transition-colors" href="/">{t("nav.home" as LangKeys)}</Link>
-                        <span className="material-icons-round text-[16px]">chevron_right</span>
-                        <span className="font-medium text-primary">{t("cert.nav.cert" as LangKeys)}</span>
-                    </nav>
+
                     <h1 className="text-4xl md:text-5xl font-black font-display text-secondary">
                         {t("cert.title" as LangKeys)}
                     </h1>

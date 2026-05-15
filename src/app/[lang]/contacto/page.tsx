@@ -9,11 +9,7 @@ export default function ContactoPage() {
         <div className="pt-20">
             <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 py-12">
                 <div className="flex flex-col gap-4 max-w-3xl mb-12 text-center mx-auto">
-                    <nav className="flex items-center justify-center gap-2 text-sm text-text-muted mb-4">
-                        <Link className="hover:text-primary transition-colors" href="/">{lang === 'es' ? 'Inicio' : 'Início'}</Link>
-                        <span className="material-icons-round text-[16px]">chevron_right</span>
-                        <span className="font-medium text-primary">{t("contact.nav.contact")}</span>
-                    </nav>
+
                     <h1 className="text-4xl md:text-5xl font-black font-display text-secondary">
                         {t("contact.title")}
                     </h1>
