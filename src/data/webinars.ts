@@ -1,11 +1,17 @@
+import { StaticImageData } from "next/image";
+
+import tdahImg from "../../public/images/destravando-o-tdah-com-emdr-e-autorregula.jpeg";
+import secretariaImg from "../../public/images/secrvetaria.jpg";
+import placeholderImg from "../../public/images/webinar_placeholder_new.png";
+
 export interface Webinar {
   slug: string;
   title: string;
   instructorName: string;
-  instructorImg: string;
+  instructorImg: string | StaticImageData;
   instructorBio: string;
   price: string;
-  img: string;
+  img: string | StaticImageData;
   desc: string;
   descLong: string;
   duration: string;
@@ -339,10 +345,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-marzo",
     title: "Abusos Sexuales en la Infancia: Secuelas y recuperación con Brainspotting",
     instructorName: "Susana Díaz",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Especialista en trauma infantil y recuperación con Brainspotting.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Abordaje profundo de las secuelas del abuso infantil mediante técnicas de Brainspotting.",
     descLong: "Abordaje profundo de las secuelas del abuso infantil mediante técnicas de Brainspotting para una recuperación integral del paciente.",
     duration: "12 Marzo 2026",
@@ -358,10 +364,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-abril",
     title: "A Arte do Suporte em Psicoterapia: Presença, regulação e recursos",
     instructorName: "Daniel Gabarra",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Experto en psicoterapias de foco en el trauma y regulación emocional.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Exploraremos a sintonía relacional e recursos neurorrelacionais para apoiar o processo de cura.",
     descLong: "Exploraremos a sintonía relacional e recursos neurorrelacionais para apoiar o processo de cura em psicoterapias de foco no trauma.",
     duration: "16 Abril 2026",
@@ -377,10 +383,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-mayo",
     title: "Hipnosis y Brainspotting: Sinergia neurobiológica para el abordaje del TEPT",
     instructorName: "Sebastián Segui",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Psicoterapeuta especializado en neurobiología e integración de memorias.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Integración de técnicas de hipnosis y brainspotting para potenciar la neuroplasticidad.",
     descLong: "Integración de técnicas de hipnosis and brainspotting para potenciar la neuroplasticidad and la integración de memorias traumáticas.",
     duration: "21 Mayo 2026",
@@ -396,10 +402,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-junio",
     title: "¿Intervenção em Crise, Burnout e Stress, como consequencias ao Trauma?",
     instructorName: "Renata Teles",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Especialista en estrés postraumático y salud mental laboral.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Análise profunda sobre o impacto do trauma no desenvolvimento de Burnout.",
     descLong: "Análise profunda sobre o impacto do trauma no desenvolvimento de Burnout e stress crônico, e estratégias de intervenção em crise.",
     duration: "18 Junio 2026",
@@ -415,10 +421,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-julio",
     title: "Herramientas creativas y Brainspotting",
     instructorName: "Norma Contreras",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Terapeuta experta en recursos creativos aplicados al trauma.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Uso de recursos creativos y expresivos para facilitar el acceso a núcleos traumáticos.",
     descLong: "Uso de recursos creativos y expresivos en el marco del Brainspotting para facilitar el acceso a núcleos traumáticos subcorticales.",
     duration: "16 Julio 2026",
@@ -434,10 +440,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-agosto",
     title: "Novas Fronteiras na Clínica do Trauma",
     instructorName: "Sandra Fiore",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Investigadora en protocolos integrativos y tratamiento de traumas complejos.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Exploração de novos protocolos e abordagens integrativas na prática clínica.",
     descLong: "Exploração de novos protocolos e abordagens integrativas para o tratamiento de traumas complexos na prática clínica actual.",
     duration: "20 Agosto 2026",
@@ -453,10 +459,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-septiembre",
     title: "Trauma, cuerpo y brainspotting",
     instructorName: "Juan Alexis",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Psicólogo clínico enfocado en el procesamiento somático del trauma.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Enfoque somático en el procesamiento del trauma mediante la técnica de Brainspotting.",
     descLong: "Enfoque somático en el procesamiento del trauma mediante la técnica de Brainspotting, conectando mente y cuerpo en la sanación.",
     duration: "17 Septiembre 2026",
@@ -472,10 +478,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-octubre",
     title: "Do útero materno à relação terapêutica: A jornada da conexão",
     instructorName: "Angela Maranho",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Experta en vínculos primarios y traumas de apego precoce.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Estudo sobre os vínculos primários e sua repercussão na aliança terapêutica.",
     descLong: "Estudo sobre os vínculos primários e sua repercussão na aliança terapêutica e na resolução de traumas de apego precoce.",
     duration: "15 Octubre 2026",
@@ -491,10 +497,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "trauma-webinar-2026-noviembre",
     title: "Integración de Memorias Traumáticas",
     instructorName: "Parcuve Mex",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Centro especializado en trauma y disociación en México.",
     price: "Inscripción Abierta",
-    img: "/images/webinar_placeholder_new.png",
+    img: placeholderImg,
     desc: "Técnicas avanzadas para la integración de memorias traumáticas fragmentadas.",
     descLong: "Técnicas avanzadas para la integración de memorias traumáticas fragmentadas en el flujo de la conciencia narrativa.",
     duration: "19 Noviembre 2026",
@@ -510,10 +516,10 @@ instructorImg: "https://s3.amazonaws.com/contents.newzenler.com/38373/courses/15
     slug: "destravando-tdah-emdr",
     title: "Destravando o TDAH com EMDR e Autorregulação",
     instructorName: "Beth Maio & Leo Garcia",
-    instructorImg: "/images/secrvetaria.jpg",
+    instructorImg: secretariaImg,
     instructorBio: "Especialistas en neurodesarrollo y trauma aplicado al TDAH.",
     price: "Inscripción Abierta",
-    img: "/images/4.jpeg",
+    img: tdahImg,
     desc: "Uma formação teórico-vivencial com foco no TDAH e autorregulação.",
     descLong: "Uma formação teórico-vivencial com os psicólogos especialistas em EMDR: Beth Maio e Leo Garcia.",
     duration: "Fecha a confirmar",
