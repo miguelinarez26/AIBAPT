@@ -1,0 +1,46 @@
+import Image from "next/image";
+
+export default function AibaptTraumaInfo() {
+  return (
+    <section className="w-full py-24 bg-[#F4F1EB] px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="max-w-[1280px] mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+        {/* Left Side: Image */}
+        <div className="w-full lg:w-1/2 relative">
+           <div className="relative w-full aspect-[4/5] md:aspect-square lg:aspect-[4/5] rounded-t-full rounded-br-full overflow-hidden shadow-2xl">
+              <div 
+                className="absolute inset-0 bg-cover bg-center" 
+                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=2600&auto=format&fit=crop')" }} 
+              />
+           </div>
+           {/* Floating Badge */}
+           <div className="absolute -bottom-8 -right-4 sm:-right-8 bg-white p-6 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-[280px] z-10">
+              <div className="w-12 h-12 bg-[#0F75A1] rounded-full flex items-center justify-center mb-4">
+                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+              </div>
+              <h4 className="text-[#0F75A1] font-bold text-lg mb-2">Existe tratamiento efectivo</h4>
+              <p className="text-[#666666] text-sm leading-relaxed">A través de enfoques integradores es posible restaurar el bienestar integral.</p>
+           </div>
+        </div>
+
+        {/* Right Side: Text */}
+        <div className="w-full lg:w-1/2 mt-10 lg:mt-0">
+          <p className="text-[#C89B7B] text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">Comprendiendo la Raíz</p>
+          <h2 className="text-4xl md:text-[56px] font-serif text-[#261C4F] leading-[1.1] mb-8">
+            ¿Qué es el <span className="italic font-light text-[#0F75A1]">Trauma</span> Psicológico o Emocional?
+          </h2>
+          <p className="text-[#555555] text-lg leading-relaxed mb-10">
+            El trauma psicológico es el resultado de un evento o serie de eventos abrumadores que exceden nuestra capacidad de afrontamiento. No se trata simplemente del evento en sí, sino de la <strong className="text-[#333333]">respuesta de nuestro sistema nervioso</strong> que queda atrapada en un estado de alerta constante o disociación.
+          </p>
+          
+          <div className="bg-white p-8 md:p-10 rounded-2xl border-l-4 border-[#C89B7B] shadow-sm relative">
+             <div className="absolute -top-10 -left-6 text-[#F4F1EB] text-[120px] font-serif leading-none select-none">"</div>
+             <p className="text-xl md:text-2xl font-serif italic text-[#261C4F] leading-relaxed relative z-10">
+                "El trauma no es lo que te sucede; el trauma es lo que sucede dentro de ti como resultado de lo que te sucede."
+             </p>
+             <p className="mt-6 text-[#C89B7B] font-semibold tracking-wider uppercase text-sm">— Dr. Gabor Maté</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
