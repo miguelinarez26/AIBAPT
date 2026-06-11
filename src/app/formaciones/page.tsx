@@ -48,7 +48,7 @@ function FormacionesContent() {
         { id: "accreditation", label: "Acredita tu curso o evento", icon: "history_edu" },
     ];
     // DATA FOR "WEBINARS" (Programa 2026)
-    const webinarsData = [
+    const webinarsData = useMemo(() => [
         {
             img: logoAibapt,
             badge: "Marzo 12", badgeIcon: "calendar_today", badgeStyle: "text-primary",
@@ -119,10 +119,10 @@ function FormacionesContent() {
             desc: "Reunión anual de miembros de la Asociación Iberoamericana de Psicotrauma.",
             instructorImg: logoAibapt, instructorName: "AIBAPT", route: "/formaciones", price: "Inscripción", isOfficial: true, duration: "Participación Socios"
         }
-    ];
+    ], []);
 
     // DATA FOR "PRÓXIMOS EVENTOS" (Entrenamientos/Cursos largos)
-    const eventsData = [
+    const eventsData = useMemo(() => [
         {
             img: imgEMDR,
             badge: "Online", badgeIcon: "event", badgeStyle: "text-primary",
@@ -163,10 +163,10 @@ function FormacionesContent() {
             instructorName: "TraumaClinic", route: "https://congreso.traumacliniclatinoamerica.com",
             price: "Ir a la inscripción", isOfficial: false, duration: ""
         }
-    ];
+    ], []);
 
     // DATA FOR "GRABACIONES (VOD)" - MIGRATED TO INTERNAL ROUTES
-    const recordingsData = WEBINARS_DATA
+    const recordingsData = useMemo(() => WEBINARS_DATA
         .filter(w => w?.badge === "VOD / Grabación")
         .map(w => ({
             img: w?.img || placeholderImg,
@@ -182,7 +182,7 @@ function FormacionesContent() {
             price: w?.price || "Consultar",
             isOfficial: w?.isOfficial !== undefined ? w.isOfficial : true,
             duration: w?.duration || "1 Crédito AIBAPT"
-        }));
+        })), []);
 
     // DATA FOR "CURSOS ACREDITADOS"
     const accreditedData = [
