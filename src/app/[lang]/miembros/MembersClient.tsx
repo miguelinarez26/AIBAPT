@@ -69,13 +69,13 @@ export default function MembersClient({ initialMembers, lang }: MembersClientPro
   };
 
   const handleViewCV = async () => {
-    if (!selectedMember?.cv_url) return;
+    if (!(selectedMember as any)?.cv_url) return;
     setLoadingCV(true);
     try {
       const supabase = createBrowserSupabaseClient();
       const { data, error } = await supabase.storage
         .from('public-assets')
-        .createSignedUrl(selectedMember.cv_url, 300);
+        .createSignedUrl((selectedMember as any).cv_url, 300);
       
       if (error) throw error;
       window.open(data.signedUrl, '_blank');
@@ -154,9 +154,9 @@ export default function MembersClient({ initialMembers, lang }: MembersClientPro
                       {/* Foto */}
                       <td className="px-6 py-4">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-accent/20 shrink-0 relative">
-                          {member.avatar_url ? (
+                          {(member as any).avatar_url ? (
                             <Image
-                              src={getAvatarUrl(member.avatar_url)!}
+                              src={getAvatarUrl((member as any).avatar_url)!}
                               alt={`${member.first_name} ${member.last_name}`}
                               fill
                               className="object-cover"
@@ -261,9 +261,9 @@ export default function MembersClient({ initialMembers, lang }: MembersClientPro
                 {/* Header Profile */}
                 <div className="flex flex-col items-center text-center space-y-4 pt-8">
                   <div className="w-32 h-32 rounded-full overflow-hidden bg-primary/10 border-4 border-accent/10 relative">
-                    {selectedMember.avatar_url ? (
+                    {(selectedMember as any).avatar_url ? (
                       <Image 
-                        src={getAvatarUrl(selectedMember.avatar_url)!} 
+                        src={getAvatarUrl((selectedMember as any).avatar_url)!} 
                         alt={selectedMember.first_name} 
                         fill 
                         className="object-cover"
@@ -305,11 +305,11 @@ export default function MembersClient({ initialMembers, lang }: MembersClientPro
                       </div>
                     ) : (
                       <p className="text-sm text-text-main dark:text-gray-300 leading-relaxed font-medium">
-                        {selectedMember.bio || t["members.profile.info_updating"]}
+                        {(selectedMember as any).bio || t["members.profile.info_updating"]}
                       </p>
                     )}
                   </section>
-
+ 
                   {/* Category */}
                   <section>
                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-4">
@@ -321,10 +321,10 @@ export default function MembersClient({ initialMembers, lang }: MembersClientPro
                       {getMembershipLabel(selectedMember.membership_type)}
                     </div>
                   </section>
-
+ 
                   {/* CV Action */}
                   <section className="pt-4">
-                    {selectedMember.cv_url ? (
+                    {(selectedMember as any).cv_url ? (
                       <button 
                         onClick={handleViewCV}
                         disabled={loadingCV}

@@ -32,8 +32,7 @@ export default function UserManagementClient({ initialUsers, lang }: UserManagem
         const supabase = createBrowserSupabaseClient();
         
         try {
-            const { error } = await supabase
-                .from('profiles')
+            const { error } = await (supabase.from('profiles') as any)
                 .update({ role: newRole })
                 .eq('id', userId);
 

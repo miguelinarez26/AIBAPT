@@ -40,7 +40,11 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   const { session } = useAuth();
   
   // States
-  const [selectedEscenario, setSelectedEscenario] = useState<string>(initialEscenario);
+  const [selectedEscenario, setSelectedEscenario] = useState<string>(() => {
+    if (initialEscenario) return initialEscenario;
+    if (config && config.monto.length === 1) return config.monto[0].id;
+    return "";
+  });
   const [isOnline, setIsOnline] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -63,7 +67,12 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   }, [searchParams, initialEscenario]);
 
   const loadMembershipData = async () => {
+    console.log("🔍 [UniversalStepper] Iniciando carga de datos de membresía...");
+    console.log("🔍 [UniversalStepper] session.user.id:", session?.user?.id);
+    console.log("🔍 [UniversalStepper] config.id (tramiteId):", config?.id);
+
     if (!session?.user || !config) {
+      console.warn("⚠️ [UniversalStepper] No hay sesión de usuario o configuración válida.");
       setIsLoadingProfile(false);
       return;
     }
@@ -73,13 +82,18 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       const supabase = createBrowserSupabaseClient();
       
       // Carga de perfil resiliente
+      console.log("🔍 [UniversalStepper] Consultando perfil en Supabase...");
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("❌ [UniversalStepper] Error consultando tabla profiles:", profileError);
+        throw profileError;
+      }
+      console.log("🔍 [UniversalStepper] Perfil obtenido:", profile);
 
       // Si no hay perfil, creamos un mock seguro con valores por defecto
       const safeProfile = (profile || {
@@ -89,21 +103,33 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         role: 'guest',
         first_name: '',
         last_name: ''
-      }) as Profile;
+      }) as unknown as Profile;
 
       setUserProfile(safeProfile);
 
       // Carga de precios dinámicos
-      if (config.accreditationTypeKey) {
-        const { data: accType } = await supabase
+      const typeKey = config.accreditationTypeKey || config.id;
+      console.log("🔍 [UniversalStepper] Consultando typeKey en accreditation_types:", typeKey);
+      if (typeKey) {
+        const { data: accType, error: accTypeError } = await supabase
           .from('accreditation_types')
           .select('*')
-          .eq('name', config.accreditationTypeKey)
+          .eq('name', typeKey)
           .maybeSingle();
         
-        if (accType) setAccreditationType(accType as AccreditationType);
+        if (accTypeError) {
+          console.error("❌ [UniversalStepper] Error consultando accreditation_types:", accTypeError);
+        }
+        console.log("🔍 [UniversalStepper] Tipo de acreditación obtenido:", accType);
+        
+        if (accType) {
+          setAccreditationType(accType as AccreditationType);
+        } else {
+          console.warn(`⚠️ [UniversalStepper] No se encontró ningún registro con name = '${typeKey}' en accreditation_types.`);
+        }
       }
     } catch (err: any) {
+      console.error("❌ [UniversalStepper] Excepción atrapada en loadMembershipData:", err);
       setMembershipError(err.message || "Error cargando datos de perfil");
     } finally {
       setIsLoadingProfile(false);
@@ -147,7 +173,11 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   }, [selectedEscenario, setValue]);
 
   const onSubmit = async (data: any) => {
-    if (!session?.user || !config || !accreditationType) return;
+    if (!session?.user || !config) return;
+    if (!accreditationType) {
+      setSubmitError(lang === "es" ? "Error: Tipo de trámite no cargado en la base de datos." : "Erro: Tipo de trâmite não carregado no banco de dados.");
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -161,13 +191,19 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       const parentMatch = config.monto.find(e => e.subProfiles?.some(sp => sp.id === data.escenario));
       const finalPrice = directMatch?.monto ?? parentMatch?.monto ?? 0;
 
+      // Resolver categoría EMDR para metadata enriquecida
+      const categoriaEmdr = config.accreditationTypeKey?.startsWith('EMDR') ? config.accreditationTypeKey : null;
+
       // Crear Solicitud
-      const { data: appData, error: appError } = await supabase.from('applications').insert({
+      const { data: appData, error: appError } = await (supabase.from('applications') as any).insert({
         user_id: session.user.id,
         type_id: accreditationType.id,
         status: 'uploading',
         metadata: {
           escenario: data.escenario,
+          nivel_solicitado: tramiteId,
+          categoria_emdr: categoriaEmdr,
+          precio_aplicado: finalPrice,
           monto_pagado: finalPrice,
           idioma: lang,
           modalidad_online: isOnline
@@ -197,22 +233,36 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       // Vincular documentos
       const docs = Object.entries(uploadedFiles).map(([type, path]) => ({
         application_id: applicationId,
+        user_id: session.user.id,
         file_path: path,
         document_type: type,
         is_private: true
       }));
 
       if (docs.length > 0) {
-        const { error: docsError } = await supabase.from('documents').insert(docs);
+        const { error: docsError } = await (supabase.from('documents') as any).insert(docs);
         if (docsError) throw docsError;
       }
 
       // Finalizar
-      await supabase.from('applications').update({ status: 'pending' }).eq('id', applicationId);
+      await (supabase.from('applications') as any).update({ status: 'pending' }).eq('id', applicationId);
       setSubmitSuccess(true);
     } catch (err: any) {
       setSubmitError(err.message || "Error procesando solicitud");
-      if (applicationId) await supabase.from('applications').delete().eq('id', applicationId);
+      
+      // Rollback: Eliminar archivos subidos del Storage
+      const filePathsToClean = Object.values(uploadedFiles);
+      if (filePathsToClean.length > 0) {
+        try {
+          await supabase.storage
+              .from('private-certifications')
+              .remove(filePathsToClean);
+        } catch (storageCleanupError) {
+          console.error("Error al limpiar archivos del storage durante rollback:", storageCleanupError);
+        }
+      }
+
+      if (applicationId) await (supabase.from('applications') as any).delete().eq('id', applicationId);
     } finally {
       setIsSubmitting(false);
     }
@@ -225,6 +275,37 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       <div className="bg-white dark:bg-surface-dark rounded-3xl p-10 text-center shadow-lg border border-accent/20">
         <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin mb-4" />
         <p className="text-text-muted">Cargando motor de trámites...</p>
+      </div>
+    );
+  }
+
+  // Restricción de Membresía
+  if (config.requiresMembership && !userProfile?.is_member) {
+    return (
+      <div className="bg-white dark:bg-surface-dark border border-amber-200 dark:border-amber-900 rounded-3xl p-10 text-center shadow-lg max-w-2xl mx-auto my-8">
+        <ShieldAlert className="w-20 h-20 text-amber-500 mx-auto mb-6" />
+        <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">
+          {lang === "es" ? "Membresía Requerida" : "Membresia Requerida"}
+        </h2>
+        <p className="text-text-muted mb-8 text-lg">
+          {lang === "es"
+            ? "Este trámite está restringido únicamente a miembros activos de AIBAPT. Por favor, solicita tu membresía primero."
+            : "Este trâmite é restrito apenas a membros ativos da AIBAPT. Por favor, solicite sua membresia primeiro."}
+        </p>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={onBack}
+            className="border border-gray-300 dark:border-gray-700 text-text-main dark:text-white px-8 py-3 rounded-full font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            {lang === "es" ? "Volver" : "Voltar"}
+          </button>
+          <button
+            onClick={() => window.location.href = `/${lang}/dashboard?tramite=solicitud_membresia`}
+            className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors"
+          >
+            {lang === "es" ? "Solicitar Membresía" : "Solicitar Membresia"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -248,7 +329,21 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
       <div className="text-center mt-8 md:mt-0 mb-10">
         <h2 className="text-3xl font-bold text-text-main dark:text-white mb-2">{getTranslation(config.title)}</h2>
-        <p className="text-text-muted dark:text-gray-400">{getTranslation(config.description)}</p>
+        <p className="text-text-muted dark:text-gray-400 mb-4">{getTranslation(config.description)}</p>
+        {/* Badge de inversión — cambia según si el trámite es gratuito o de pago */}
+        {config.monto.length === 1 && (
+          config.monto[0].monto === 0 ? (
+            <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm font-black border border-emerald-200 dark:border-emerald-800 shadow-sm">
+              <CheckCircle className="w-4 h-4" />
+              {lang === 'es' ? 'Trámite Gratuito — Exento de Pago' : 'Trâmite Gratuito — Isento de Pagamento'}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/8 text-primary text-sm font-black border border-primary/20 shadow-sm">
+              {lang === 'es' ? `Inversión: ${config.monto[0].monto} €` : `Investimento: ${config.monto[0].monto} €`}
+              <span className="text-primary/60 font-medium">· PayPal: financiero@aibapt.org</span>
+            </span>
+          )
+        )}
       </div>
 
       {/* Progress Bar */}
@@ -265,25 +360,74 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
       {step === 1 && (
         <div className="space-y-10 animate-fade-in-up">
-          {/* Selección de Escenario */}
-          <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
-            <h3 className="text-xl font-bold text-primary flex items-center mb-6">
-              <ShieldAlert className="w-6 h-6 mr-2" /> Selección de Nivel
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {config.monto.map((esc) => (
-                <button
-                  key={esc.id}
-                  onClick={() => setSelectedEscenario(esc.id)}
-                  className={`p-5 rounded-2xl border-2 text-left transition-all ${selectedEscenario === esc.id ? 'border-primary bg-primary/5 shadow-md scale-[1.02]' : 'border-gray-50 dark:border-gray-800 hover:border-primary/20'}`}
-                >
-                  <p className="font-bold text-text-main dark:text-white text-lg">{getTranslation(esc.label)}</p>
-                  <p className="text-xs text-text-muted mt-1 leading-relaxed">{getTranslation(esc.description)}</p>
-                  <p className="text-primary font-black mt-3">{esc.monto} €</p>
-                </button>
-              ))}
+          {/* Selección de Escenario o Detalles del Trámite */}
+          {initialEscenario ? (
+            <div className="bg-cream/40 dark:bg-bg-dark/40 border border-accent/15 rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div>
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-1">Nivel Seleccionado</span>
+                <h4 className="font-bold text-text-main dark:text-white text-xl">
+                  {getTranslation(
+                    config.monto.find(e => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_'))?.label || 
+                    config.monto[0].label
+                  )}
+                </h4>
+                <p className="text-sm text-text-muted mt-1 max-w-xl leading-relaxed">
+                  {getTranslation(
+                    config.monto.find(e => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_'))?.description || 
+                    config.monto[0].description
+                  )}
+                </p>
+              </div>
+              <div className="sm:text-right shrink-0 bg-white dark:bg-surface-dark px-6 py-4 rounded-2xl border border-accent/10 shadow-sm flex flex-col items-start sm:items-end">
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-0.5">Inversión</span>
+                <span className="text-2xl font-black text-primary">
+                  {config.monto.find(e => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_'))?.monto || 
+                   config.monto[0].monto} €
+                </span>
+              </div>
             </div>
-          </div>
+          ) : config.monto.length > 1 ? (
+            <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-primary flex items-center mb-6">
+                <ShieldAlert className="w-6 h-6 mr-2" /> Selección de Nivel
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {config.monto.map((esc) => {
+                  const isSelected = selectedEscenario === esc.id || 
+                    (esc.subProfiles && esc.subProfiles.some((sp: any) => sp.id === selectedEscenario)) || 
+                    selectedEscenario.startsWith(esc.id + '_');
+                  return (
+                    <button
+                      key={esc.id}
+                      type="button"
+                      onClick={() => setSelectedEscenario(esc.id)}
+                      className={`p-5 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 ease-out hover:shadow-lg ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5 shadow-md scale-[1.02]' 
+                          : 'border-gray-50 dark:border-gray-800 hover:border-primary/20'
+                      }`}
+                    >
+                      <p className="font-bold text-text-main dark:text-white text-lg">{getTranslation(esc.label)}</p>
+                      <p className="text-xs text-text-muted mt-1 leading-relaxed">{getTranslation(esc.description)}</p>
+                      <p className="text-primary font-black mt-3">{esc.monto} €</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-cream/40 dark:bg-bg-dark/40 border border-accent/15 rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div>
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-1">Detalles del Trámite</span>
+                <h4 className="font-bold text-text-main dark:text-white text-xl">{getTranslation(config.monto[0].label)}</h4>
+                <p className="text-sm text-text-muted mt-1 max-w-xl leading-relaxed">{getTranslation(config.monto[0].description)}</p>
+              </div>
+              <div className="sm:text-right shrink-0 bg-white dark:bg-surface-dark px-6 py-4 rounded-2xl border border-accent/10 shadow-sm flex flex-col items-start sm:items-end">
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-0.5">Inversión</span>
+                <span className="text-2xl font-black text-primary">{config.monto[0].monto} €</span>
+              </div>
+            </div>
+          )}
 
           {/* Requisitos Dinámicos */}
           <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
@@ -321,13 +465,71 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
             </ul>
           </div>
 
+          {/* Plantillas de Descarga */}
+          {config.descargas && config.descargas.length > 0 && (
+            <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-primary flex items-center mb-6">
+                <FileDown className="w-6 h-6 mr-2" /> {lang === "es" ? "Plantillas de Descarga" : "Modelos de Download"}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {config.descargas
+                  .filter(desc => !desc.dependsOnEscenario || desc.dependsOnEscenario.includes(selectedEscenario))
+                  .map((desc, idx) => (
+                    <a
+                      key={idx}
+                      href={lang === "es" ? desc.url_es : desc.url_pt}
+                      download
+                      className="p-4 rounded-xl border border-gray-200 hover:border-primary/50 flex items-center justify-between hover:bg-primary/5 transition-all group"
+                    >
+                      <div className="flex items-center">
+                        <FileText className="w-6 h-6 text-primary/70 mr-3" />
+                        <span className="font-bold text-sm text-text-main dark:text-white">
+                          {lang === "es" ? desc.label_es : desc.label_pt}
+                        </span>
+                      </div>
+                      <FileDown className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
+                    </a>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Caja PayPal — solo visible cuando hay coste y el trámite lo requiere */}
+          {config.monto.length === 1 && config.monto[0].monto > 0 && (
+            <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="w-10 h-10 shrink-0 rounded-xl bg-[#009cde]/10 flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-6 h-6 fill-[#003087]" xmlns="http://www.w3.org/2000/svg"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19a.75.75 0 0 0-.741.636l-.979 6.37zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a1.637 1.637 0 0 0-1.617 1.387l-1.039 6.787-.155 1.01h3.18a.563.563 0 0 0 .556-.65l.047-.303.878-5.567.057-.306a.562.562 0 0 1 .555-.477h.35c2.263 0 4.034-.919 4.551-3.578.217-1.114.105-2.044-.47-2.7a2.232 2.232 0 0 0-.917-.517z"/></svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-blue-900 dark:text-blue-200">
+                  {lang === 'es' ? 'Pago previo requerido vía PayPal' : 'Pagamento prévio requerido via PayPal'}
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
+                  {lang === 'es'
+                    ? `Transfiere ${config.monto[0].monto} € a financiero@aibapt.org antes de subir tus documentos. Adjunta el comprobante en el Paso 2.`
+                    : `Transfira ${config.monto[0].monto} € para financiero@aibapt.org antes de enviar seus documentos. Anexe o comprovante no Passo 2.`}
+                </p>
+              </div>
+              <a
+                href={`https://www.paypal.com/paypalme/aibapt`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 px-4 py-2 rounded-xl bg-[#009cde] hover:bg-[#0070ba] text-white text-xs font-black transition-colors shadow-sm"
+              >
+                {lang === 'es' ? 'Pagar ahora' : 'Pagar agora'} ↗
+              </a>
+            </div>
+          )}
+
           <div className="flex justify-between pt-6 border-t border-gray-50 dark:border-gray-800">
-            <button onClick={onBack} className="text-text-muted font-medium px-6 py-3">Cancelar</button>
-            <button 
-              onClick={() => selectedEscenario ? setStep(2) : alert("Selecciona un nivel")}
+            <button onClick={onBack} className="text-text-muted font-medium px-6 py-3">
+              {lang === 'es' ? 'Cancelar' : 'Cancelar'}
+            </button>
+            <button
+              onClick={() => selectedEscenario ? setStep(2) : alert(lang === 'es' ? 'Selecciona un nivel' : 'Selecione um nível')}
               className="bg-primary text-white px-10 py-4 rounded-full font-black text-lg shadow-lg hover:scale-[1.02] transition-all"
             >
-              Continuar a Carga →
+              {lang === 'es' ? 'Continuar a Carga →' : 'Continuar para Upload →'}
             </button>
           </div>
         </div>
@@ -344,20 +546,20 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
               {config.fields
                 .filter(field => !field.dependsOnEscenario || field.dependsOnEscenario.includes(selectedEscenario))
                 .map((field) => (
-                  <div key={field.name} className="space-y-2">
-                    <label className="block text-sm font-bold text-text-main dark:text-white">
+                  <div key={field.name} className="flex flex-col gap-2">
+                    <label className="block text-sm font-bold text-text-main dark:text-white min-h-[2.75rem] leading-tight flex items-start">
                       {getTranslation(field.label)}
                     </label>
                     <Controller
                       name={field.name}
                       control={control}
-                      render={({ field: { onChange, ref } }) => (
+                      render={({ field: { onChange, value, ref } }) => (
                         <div className={`relative group transition-all p-5 bg-white dark:bg-surface-dark border-2 border-dashed rounded-2xl hover:border-primary ${errors[field.name] ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'}`}>
                           <input type="file" ref={ref} onChange={(e) => onChange(e.target.files)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                           <div className="flex items-center">
                             <UploadCloud className="w-8 h-8 text-primary/40 mr-4" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold truncate">{watch(field.name)?.[0]?.name || "Seleccionar archivo"}</p>
+                              <p className="text-sm font-bold truncate">{value?.[0]?.name || "Seleccionar archivo"}</p>
                               <p className="text-xs text-text-muted">{field.typeLabel} (Máx 10MB)</p>
                             </div>
                           </div>

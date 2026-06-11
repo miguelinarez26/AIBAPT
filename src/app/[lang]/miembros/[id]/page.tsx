@@ -26,10 +26,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         .single();
 
     if (!member) return { title: "Miembro no encontrado - AIBAPT" };
+    const m = member as any;
 
     return {
-        title: `${member.first_name} ${member.last_name} - Directorio AIBAPT`,
-        description: `Perfil profesional de ${member.first_name} ${member.last_name} en la Asociación Iberoamericana de Psicotrauma.`
+        title: `${m.first_name} ${m.last_name} - Directorio AIBAPT`,
+        description: `Perfil profesional de ${m.first_name} ${m.last_name} en la Asociación Iberoamericana de Psicotrauma.`
     };
 }
 
@@ -81,6 +82,6 @@ export default async function MemberProfilePage({ params }: Props) {
     }
 
     return (
-        <MemberProfileClient member={member} />
+        <MemberProfileClient member={member as any} />
     );
 }

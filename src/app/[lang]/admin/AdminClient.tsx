@@ -55,23 +55,74 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
 
   const loadApplications = async () => {
     setLoading(true);
-    // JOIN con profiles y accreditation_types
-    const { data, error } = await supabase
+    console.log("🔍 [AdminClient] Cargando solicitudes desde Supabase...");
+    
+    // 1. Obtener aplicaciones
+    const { data: appsData, error: appsError } = await supabase
       .from('applications')
-      .select(`
-        id,
-        created_at,
-        status,
-        user_id,
-        profiles ( first_name, last_name, full_name, email, member_number ),
-        accreditation_types ( name )
-      `)
+      .select('id, created_at, status, user_id, type_id')
       .neq('status', 'uploading')
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      setApplications(data as unknown as ApplicationRow[]);
+    if (appsError) {
+      console.error("❌ [AdminClient] Error cargando aplicaciones:", appsError.message);
+      console.error("❌ [AdminClient] Código:", appsError.code);
+      console.error("❌ [AdminClient] Detalles:", appsError.details);
+      console.error("❌ [AdminClient] Hint:", appsError.hint);
+      setLoading(false);
+      return;
     }
+
+    const appsList = (appsData || []) as any[];
+
+    if (appsList.length === 0) {
+      setApplications([]);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Obtener perfiles de los usuarios involucrados
+    const userIds = Array.from(new Set(appsList.map(app => app.user_id)));
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, full_name, email, member_number')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.warn("⚠️ [AdminClient] Error cargando perfiles vinculados:", profilesError.message);
+    }
+
+    const profilesList = (profilesData || []) as any[];
+
+    // 3. Obtener tipos de acreditación involucrados
+    const typeIds = Array.from(new Set(appsList.map(app => app.type_id)));
+    const { data: typesData, error: typesError } = await supabase
+      .from('accreditation_types')
+      .select('id, name')
+      .in('id', typeIds);
+
+    if (typesError) {
+      console.warn("⚠️ [AdminClient] Error cargando tipos de acreditación vinculados:", typesError.message);
+    }
+
+    const typesList = (typesData || []) as any[];
+
+    // Mapas para unión rápida en memoria
+    const profilesMap = new Map(profilesList.map(p => [p.id, p]));
+    const typesMap = new Map(typesList.map(t => [t.id, t]));
+
+    // Combinar en estructura esperada por el componente
+    const combined: ApplicationRow[] = appsList.map(app => ({
+      id: app.id,
+      created_at: app.created_at,
+      status: app.status as ApplicationStatus,
+      user_id: app.user_id,
+      profiles: profilesMap.get(app.user_id) || null,
+      accreditation_types: typesMap.get(app.type_id) || null
+    }));
+
+    console.log("🔍 [AdminClient] Solicitudes combinadas en memoria:", combined);
+    setApplications(combined);
     setLoading(false);
   };
 

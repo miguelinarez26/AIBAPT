@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { AIBAPT_TRAMITES, EscenarioEvento, LocalizedText } from "@/config/aibapt-config";
@@ -26,6 +26,11 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
   const { session } = useAuth();
   const router = useRouter();
   const config = AIBAPT_TRAMITES["solicitud_membresia"];
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Helper de traducción defensivo
   const getTranslation = (obj: LocalizedText | string | undefined): string => {
@@ -255,7 +260,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
             disabled={!isSelectionValid}
             className="bg-primary text-white px-12 py-4 rounded-full font-black text-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
           >
-            {!session
+            {!(mounted && session)
               ? (lang === "es"
                 ? "Crear Cuenta y Continuar →"
                 : "Criar Conta e Continuar →")
@@ -266,7 +271,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
         </div>
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4 max-w-lg mx-auto">
-          {!session
+          {!(mounted && session)
             ? (lang === "es"
               ? "Al continuar, se te pedirá crear una cuenta para subir tus documentos de forma segura."
               : "Ao continuar, será solicitado que crie uma conta para enviar seus documentos de forma segura.")

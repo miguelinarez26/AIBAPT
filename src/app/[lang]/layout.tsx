@@ -33,6 +33,7 @@ export async function generateMetadata({
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { Suspense } from "react";
 
 // Layout para rutas internacionalizadas (/es/*, /pt/*)
 // Inyecta los proveedores de contexto necesarios para la UI y el idioma.
@@ -47,13 +48,15 @@ export default async function LangLayout({
 
   return (
     <AuthProvider>
-      <LanguageProvider initialLang={lang as SupportedLanguage}>
-        <Header />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
-      </LanguageProvider>
+      <Suspense fallback={null}>
+        <LanguageProvider initialLang={lang as SupportedLanguage}>
+          <Header />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </LanguageProvider>
+      </Suspense>
     </AuthProvider>
   );
 }

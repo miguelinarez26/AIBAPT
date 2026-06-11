@@ -22,12 +22,14 @@ export function TramiteSelector({ onSelect, searchTerm = "" }: TramiteSelectorPr
     return obj[lang] || "";
   };
 
-  // Filter tramites based on search term
+  // Filter tramites based on search term and exclude membership requests
   const tramitesArray = Object.values(AIBAPT_TRAMITES).filter(tr => 
-    !searchTerm || 
-    getTranslation(tr.title).toLowerCase().includes(searchTerm.toLowerCase()) || 
-    getTranslation(tr.description).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getTranslation(tr.categoria).toLowerCase().includes(searchTerm.toLowerCase())
+    tr.id !== "solicitud_membresia" && (
+      !searchTerm || 
+      getTranslation(tr.title).toLowerCase().includes(searchTerm.toLowerCase()) || 
+      getTranslation(tr.description).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getTranslation(tr.categoria).toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   // Group filtered tramites by category

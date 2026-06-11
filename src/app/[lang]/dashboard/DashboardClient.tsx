@@ -82,11 +82,11 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
           <div className="flex items-center gap-6">
             {/* Avatar sincronizado con la fuente de verdad (profiles.avatar_url) */}
             <div className="w-20 h-20 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-3xl font-display font-bold shadow-lg backdrop-blur-sm overflow-hidden relative">
-              {profile?.avatar_url ? (
+              {(profile as any)?.avatar_url ? (
                 <img
-                  src={profile.avatar_url.startsWith('http')
-                    ? profile.avatar_url
-                    : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${profile.avatar_url}`}
+                  src={(profile as any).avatar_url.startsWith('http')
+                    ? (profile as any).avatar_url
+                    : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${(profile as any).avatar_url}`}
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />

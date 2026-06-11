@@ -44,8 +44,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Actualizar el estado y las notas
-    const { error: updateError } = await supabaseAdmin
-      .from('applications')
+    const { error: updateError } = await (supabaseAdmin.from('applications') as any)
       .update({
         status: newStatus,
         admin_notes: adminNotes || null,
@@ -58,7 +57,7 @@ export async function POST(request: Request) {
 
     // Double-check de seguridad: Si es membresía pero el frontend envió GENERAL, forzamos el flujo de membresía
     let finalActionType = actionType;
-    if (appData.accreditation_types?.name?.includes('membresia')) {
+    if ((appData as any).accreditation_types?.name?.includes('membresia')) {
       finalActionType = 'Membresia';
     }
 
@@ -67,16 +66,15 @@ export async function POST(request: Request) {
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 365); // 1 año desde hoy
       
-      const metadata = appData.metadata as any;
+      const metadata = (appData as any).metadata as any;
       const memType = metadata?.escenario || 'pleno_salud_mental';
-      const profile = Array.isArray(appData.profiles) ? appData.profiles[0] : appData.profiles;
+      const profile = Array.isArray((appData as any).profiles) ? (appData as any).profiles[0] : (appData as any).profiles;
       const userLang = profile?.language_preference || 'es';
 
       // Generar el número de socio si no tiene uno
       let memberNumber = profile?.member_number;
       if (!memberNumber) {
-        const { data: generatedNumber, error: genError } = await supabaseAdmin
-          .rpc('generate_member_number', { 
+        const { data: generatedNumber, error: genError } = await (supabaseAdmin.rpc as any)('generate_member_number', { 
             p_category: memType, 
             p_language: userLang 
           });
@@ -88,8 +86,7 @@ export async function POST(request: Request) {
         }
       }
 
-      const { error: profileUpdateError } = await supabaseAdmin
-        .from('profiles')
+      const { error: profileUpdateError } = await (supabaseAdmin.from('profiles') as any)
         .update({
           is_member: true,
           is_public: true,
@@ -97,7 +94,7 @@ export async function POST(request: Request) {
           membership_expiry: expirationDate.toISOString(),
           member_number: memberNumber
         })
-        .eq('id', appData.user_id);
+        .eq('id', (appData as any).user_id);
 
       if (profileUpdateError) {
         console.error('Error actualizando perfil para membresía:', profileUpdateError);

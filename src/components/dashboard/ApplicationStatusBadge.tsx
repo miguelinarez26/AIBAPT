@@ -64,7 +64,7 @@ export function ApplicationStatusBadge({ status }: ApplicationStatusBadgeProps) 
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors ${config.className}`}>
       <span className="material-icons-round text-[14px]">{config.icon}</span>
-      {t(config.translationKey)}
+      {t(config.translationKey as any)}
     </span>
   );
 }

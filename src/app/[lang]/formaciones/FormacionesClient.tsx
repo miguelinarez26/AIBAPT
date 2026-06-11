@@ -106,7 +106,7 @@ export default function FormacionesClient({
     }, [activeTab, eventsData, webinarsData]);
 
     const filteredData = useMemo(() => {
-        let data = currentData;
+        let data: any[] = currentData;
         if (languageFilter !== "all") {
             data = data.filter(c => c.language === languageFilter);
         }

@@ -78,7 +78,8 @@ export const LanguageProvider = ({ children, initialLang }: LanguageProviderProp
     }, [pathname, router, searchParams]);
 
     const t = (key: LangKeys): string => {
-        const val = translations[lang][key];
+        const dict = translations[lang] || translations['es'];
+        const val = (dict as any)[key];
         return val !== undefined ? val : key;
     };
 

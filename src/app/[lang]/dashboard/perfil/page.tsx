@@ -34,8 +34,10 @@ export default async function ProfilePage({
     .eq('id', user.id)
     .single();
 
+  const isMissing = !profile || ((profileError as any) && ((profileError as any).code === 'PGRST116' || (profileError as any).code === '406'));
+
   // Si el perfil no se encuentra (PGRST116 o 406) o es null, redirigir a onboarding
-  if (!profile || (profileError && (profileError.code === 'PGRST116' || profileError.code === '406'))) {
+  if (isMissing) {
     redirect(`/${validLang}/onboarding`);
   } else if (profileError) {
     // Si es otro tipo de error, redirigir al login

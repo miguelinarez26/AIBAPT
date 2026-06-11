@@ -236,6 +236,15 @@ export interface Database {
         }
       }
     }
+    Functions: {
+      generate_member_number: {
+        Args: {
+          p_category: string
+          p_language: string
+        }
+        Returns: string
+      }
+    }
   }
 }
 

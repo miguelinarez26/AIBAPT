@@ -27,7 +27,9 @@ export default async function AdminUsersPage({ params }: Props) {
         .eq('id', user.id)
         .single();
 
-    if (profile?.role !== 'admin') {
+    const userProfile = profile as { role: string } | null;
+
+    if (userProfile?.role !== 'admin') {
         redirect(`/${lang}/dashboard`);
     }
 

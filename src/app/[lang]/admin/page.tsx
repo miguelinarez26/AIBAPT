@@ -25,7 +25,9 @@ export default async function AdminPage(props: { params: Promise<{ lang: string 
     .eq('id', user.id)
     .single();
 
-  if (!profile || profile.role !== 'admin') {
+  const userProfile = profile as { role: string } | null;
+
+  if (!userProfile || userProfile.role !== 'admin') {
     // Redirigir al dashboard normal si no es admin
     redirect(`/${validLang}/dashboard`);
   }

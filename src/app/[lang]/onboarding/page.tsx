@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -8,6 +8,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2 } from "lucide-react";
 
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+      <OnboardingContent />
+    </Suspense>
+  );
+}
+
+function OnboardingContent() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,16 +35,17 @@ export default function OnboardingPage() {
     try {
       const supabase = createBrowserSupabaseClient();
       
-      const { error: insertError } = await supabase.from("profiles").insert({
-        id: session.user.id,
-        email: session.user.email,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        full_name: `${firstName.trim()} ${lastName.trim()}`,
-        language_preference: lang,
-      });
+      const { error: updateError } = await (supabase as any)
+        .from("profiles")
+        .update({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          full_name: `${firstName.trim()} ${lastName.trim()}`,
+          language_preference: lang,
+        })
+        .eq("id", session.user.id);
 
-      if (insertError) throw insertError;
+      if (updateError) throw updateError;
       
       // Success, redirect to dashboard
       router.push(`/${lang}/dashboard`);

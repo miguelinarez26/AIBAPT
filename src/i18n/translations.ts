@@ -688,8 +688,6 @@ export const translations = {
         "profile.membership.title": "Matrícula Profesional",
         "profile.membership.pending": "PENDIENTE",
         "profile.membership.immutable": "Identificador Inmutable",
-        "tramite.category.emdr": "CERTIFICACIONES EMDR",
-
         // Admin
         "admin.panel.title": "Panel Maestro de Auditoría",
         "admin.panel.desc": "Gestiona, revisa y aprueba las solicitudes de los miembros.",
@@ -773,13 +771,10 @@ export const translations = {
 
         // Application Statuses
         "status.uploading_fallback": "Finalizando subida...",
-
+ 
         // Roles y Membresía
-        "dashboard.role.admin": "Administrador",
-        "dashboard.role.member": "Miembro",
         "dashboard.role.full_member": "Miembro Pleno",
         "dashboard.role.candidate": "Aspirante a Miembro",
-        "dashboard.membership.id": "Matrícula",
         "dashboard.identity.professional": "Identidad Profesional",
         "dashboard.welcome.aibapt": "¡Bienvenido a AIBAPT!",
         "dashboard.welcome.new_account": "¡Hola! Tu cuenta ha sido creada. Para disfrutar de los beneficios de AIBAPT, completa tu solicitud de membresía aquí.",
@@ -801,6 +796,12 @@ export const translations = {
         "tramite.name.emdr_psico": "EMDR Psicoterapeuta",
         "tramite.name.emdr_sup": "EMDR Supervisor",
         "tramite.name.emdr_equiv": "Equivalencia EMDR",
+        "tramite.name.emdr_basico": "EMDR — Registro Básico",
+        "tramite.name.emdr_psico_certificado": "Psicoterapeuta EMDR Certificado",
+        "tramite.name.emdr_psico_senior": "Psicoterapeuta EMDR Sénior",
+        "tramite.name.emdr_psico_master": "Psicoterapeuta EMDR Máster",
+        "tramite.name.emdr_sup_certificado": "Supervisor EMDR Certificado",
+        "tramite.name.emdr_sup_senior": "Supervisor EMDR Sénior",
         "tramite.name.trauma_ind": "Psicotrauma Individual",
         "tramite.name.trauma_prog": "Psicotrauma Programa",
 
@@ -872,8 +873,6 @@ export const translations = {
         "tramite.eventos.desc": "Acreditación de eventos puntuales o congresos completos.",
         "tramite.name.emision_cca.desc": "Solicitud del certificado tras finalizar un curso acreditado.",
         "tramite.name.renovacion_cca.desc": "Trámites para renovar certificación CCA o Mantenimiento de Equivalencia.",
-        "tramite.emdr.title": "Certificaciones EMDR 2026",
-        "tramite.emdr.desc": "Niveles profesionales de Psicoterapeuta y Supervisor.",
         "tramite.name.trauma_ind.desc": "Certificación en Psicotrauma Individual.",
         "tramite.name.trauma_prog.desc": "Dirigido a institutos o universidades.",
         "tramite.equivalencia_basica.title": "Reconocimiento de Formación Básica",
@@ -989,6 +988,12 @@ export const translations = {
         "tramite.name.emdr_psico": "EMDR Psicoterapeuta",
         "tramite.name.emdr_sup": "EMDR Supervisor",
         "tramite.name.emdr_equiv": "Equivalência EMDR",
+        "tramite.name.emdr_basico": "EMDR — Registo Básico",
+        "tramite.name.emdr_psico_certificado": "Psicoterapeuta EMDR Certificado",
+        "tramite.name.emdr_psico_senior": "Psicoterapeuta EMDR Sênior",
+        "tramite.name.emdr_psico_master": "Psicoterapeuta EMDR Mestre",
+        "tramite.name.emdr_sup_certificado": "Supervisor EMDR Certificado",
+        "tramite.name.emdr_sup_senior": "Supervisor EMDR Sênior",
         "tramite.name.trauma_ind": "Psicotrauma Individual",
         "tramite.name.trauma_prog": "Psicotrauma Programa",
 
@@ -1246,7 +1251,6 @@ export const translations = {
         "members.profile.info_updating": "Informação em processo de atualização",
         "members.profile.active": "Sócio Ativo",
         "members.profile.verified": "Perfil Verificado",
-        "members.profile.not_found": "Este perfil profissional ainda não possui uma matrícula atribuída.",
         "members.drawer.professional_summary": "Resumo Profissional",
         "members.drawer.view_cv": "Visualizar Currículo Vitae",
         "members.drawer.no_cv": "CV não disponível",
@@ -1586,8 +1590,6 @@ export const translations = {
         "portal.btn.login.select": "Entrar como Sócio",
         // Dashboard & Profile
         "dashboard.hello": "Olá",
-        "dashboard.role.admin": "Administrador",
-        "dashboard.role.member": "Membro",
         "dashboard.no_expiry": "Sem vencimento",
         "dashboard.inactive_membership": "Assinatura Inativa",
         "dashboard.inactive_desc": "Você não tem acesso a tarifas preferenciais nem a trâmites exclusivos para sócios. Ative sua assinatura para obter descontos em acreditações e acesso completo à plataforma.",

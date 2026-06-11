@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -15,9 +15,14 @@ import logoDark from "../../../public/images/logo_corto_en_blanco.png";
 
 export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+    }, []);
     const pathname = usePathname();
     const { lang, setLang, t } = useLanguage();
-    const { session, profile } = useAuth();
+    const { session, profile } = useAuth() as any;
 
     const handleSignOut = async () => {
         const supabase = createBrowserSupabaseClient();
@@ -110,7 +115,7 @@ export const Header = () => {
                                 className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${lang === 'pt' ? 'bg-white dark:bg-surface-light shadow-sm text-primary dark:text-secondary' : 'text-text-muted dark:text-white/70 hover:text-primary cursor-pointer'}`}
                             >PT</button>
                         </div>
-                        {session ? (
+                        {mounted && session ? (
                             <div className="relative group">
                                 <Link href={profile?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className={buttonVariants({ variant: "primary", size: "sm" })}>
                                     <span className="material-icons-round text-lg">account_circle</span>
@@ -184,7 +189,7 @@ export const Header = () => {
                         </div>
 
                         <div className="pt-4 border-t border-accent/20 dark:border-gray-800">
-                            {session ? (
+                            {mounted && session ? (
                                 <div className="space-y-3">
                                     <Link href={`/${lang}/dashboard`} onClick={() => setIsMenuOpen(false)} className={buttonVariants({ variant: "primary", size: "default", fullWidth: true })}>
                                         <span className="material-icons-round text-lg">account_circle</span>

@@ -48,6 +48,8 @@ export default async function DashboardPage({
   // Lógica segura para determinar si falta el perfil vs. un error real
   const isProfileMissing = !profileData && profileError && (profileError.code === 'PGRST116' || profileError.code === '406');
 
+  const profile = profileData as Profile | null;
+
   if (isProfileMissing) {
     redirect(`/${validLang}/onboarding`);
   } else if (profileError) {
@@ -55,12 +57,16 @@ export default async function DashboardPage({
     // para evitar un bucle de /dashboard -> /onboarding infinito.
     console.error('Error crítico consultando el perfil:', profileError);
     redirect(`/${validLang}/login?error=critical_profile_error`);
-  } else if (!profileData) {
-    // Failsafe por si la data es null pero no hubo un error explícito
+  } else if (
+    !profile ||
+    !profile.first_name ||
+    !profile.last_name ||
+    profile.first_name.trim() === '' ||
+    profile.last_name.trim() === ''
+  ) {
+    // Failsafe o perfil incompleto (nombre o apellido vacíos)
     redirect(`/${validLang}/onboarding`);
   }
-
-  const profile = profileData as Profile | null;
 
   // Fetch aplicaciones del usuario con el nombre del tipo de acreditación
   const { data: rawApplicationsData } = await supabaseAdmin

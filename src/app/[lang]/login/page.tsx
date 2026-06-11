@@ -23,28 +23,36 @@ function LoginContent() {
         setLoading(true);
         setError("");
 
-        const supabase = createBrowserSupabaseClient();
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            const supabase = createBrowserSupabaseClient();
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        if (authError) {
-            setError(authError.message);
+            if (authError) {
+                setError(authError.message);
+                setLoading(false);
+            } else {
+                // Obtener perfil para determinar rol y redirección
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', authData.user?.id)
+                    .single();
+
+                const role = (profile as any)?.role || 'member';
+                const defaultRoute = role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`;
+                
+                const redirectTo = searchParams.get("redirectTo");
+                router.push(role === 'admin' ? defaultRoute : (redirectTo || defaultRoute));
+            }
+        } catch (err: any) {
+            console.error("Error en login:", err);
+            setError(lang === 'es' 
+                ? "Error de conexión con el servidor de Supabase. Verifica tu red o inténtalo de nuevo." 
+                : "Erro de conexão com o servidor Supabase. Verifique sua rede ou tente novamente.");
             setLoading(false);
-        } else {
-            // Obtener perfil para determinar rol y redirección
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', authData.user?.id)
-                .single();
-
-            const role = profile?.role || 'member';
-            const defaultRoute = role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`;
-            
-            const redirectTo = searchParams.get("redirectTo");
-            router.push(role === 'admin' ? defaultRoute : (redirectTo || defaultRoute));
         }
     };
 

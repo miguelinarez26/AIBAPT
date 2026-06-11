@@ -37,13 +37,13 @@ export default function MemberProfileClient({ member }: MemberProfileClientProps
     };
 
     const handleViewCV = async () => {
-        if (!member.cv_url) return;
+        if (!(member as any).cv_url) return;
         setLoadingCV(true);
         try {
             const supabase = createBrowserSupabaseClient();
             const { data, error } = await supabase.storage
                 .from('public-assets')
-                .createSignedUrl(member.cv_url, 300); // 5 minutos
+                .createSignedUrl((member as any).cv_url, 300); // 5 minutos
             
             if (error) throw error;
             window.open(data.signedUrl, '_blank');
@@ -67,16 +67,16 @@ export default function MemberProfileClient({ member }: MemberProfileClientProps
                     {/* @ts-ignore */}
                     {t["members.profile.back"]}
                 </Link>
-
+ 
                 <div className="bg-white dark:bg-surface-dark rounded-[3rem] shadow-2xl shadow-gray-200/50 dark:shadow-none border border-accent/10 overflow-hidden">
                     {/* Hero Section */}
                     <div className="relative h-48 bg-gradient-to-r from-primary/20 to-primary/5 dark:from-primary/10 dark:to-transparent">
                         <div className="absolute -bottom-16 left-8 md:left-12">
                             <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white dark:bg-surface-dark p-2 shadow-xl border border-accent/10">
                                 <div className="w-full h-full rounded-[2rem] overflow-hidden bg-primary/10 relative">
-                                    {member.avatar_url ? (
+                                    {(member as any).avatar_url ? (
                                         <Image 
-                                            src={getAvatarUrl(member.avatar_url)!} 
+                                            src={getAvatarUrl((member as any).avatar_url)!} 
                                             alt={member.first_name} 
                                             fill 
                                             className="object-cover"
@@ -133,9 +133,9 @@ export default function MemberProfileClient({ member }: MemberProfileClientProps
                                         {/* @ts-ignore */}
                                         {t["members.profile.bio"]}
                                     </h2>
-                                    {member.bio ? (
+                                    {(member as any).bio ? (
                                         <p className="text-lg text-text-main dark:text-gray-300 leading-relaxed font-medium">
-                                            {member.bio}
+                                            {(member as any).bio}
                                         </p>
                                     ) : (
                                         <p className="text-text-muted italic">
@@ -145,7 +145,7 @@ export default function MemberProfileClient({ member }: MemberProfileClientProps
                                     )}
                                 </section>
                             </div>
-
+ 
                             {/* Sidebar Info */}
                             <div className="space-y-10">
                                 {/* Especialidad */}
@@ -161,13 +161,13 @@ export default function MemberProfileClient({ member }: MemberProfileClientProps
                                         <p className="text-xs text-text-muted">AIBAPT Certified Specialist</p>
                                     </div>
                                 </section>
-
+ 
                                 {/* Currículum */}
                                 <section>
                                     <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-muted mb-6">
                                         Professional CV
                                     </h2>
-                                    {member.cv_url ? (
+                                    {(member as any).cv_url ? (
                                         <button 
                                             onClick={handleViewCV}
                                             disabled={loadingCV}

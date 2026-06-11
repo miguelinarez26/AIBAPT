@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Antigravity Autonomous Pipeline
+production_artifacts/
+app_build/
+
+# Archivos Markdown locales (privados, no subir a GitHub)
+/local-md-files/
+
