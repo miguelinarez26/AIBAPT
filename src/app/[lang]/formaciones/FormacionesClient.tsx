@@ -7,6 +7,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { WEBINARS_DATA } from "@/data/webinars";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { UniversalStepper } from "@/components/acreditaciones/UniversalStepper";
+import { TramiteSelector } from "@/components/acreditaciones/TramiteSelector";
 
 // Import images for proper base path resolution
 import placeholderImg from "../../../../public/images/webinar_placeholder_new.png";
@@ -29,6 +31,7 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
     const [filterType, setFilterType] = useState<"all" | "official" | "external">("all");
     const [selectedCourse, setSelectedCourse] = useState<any>(null);
     const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+    const [selectedTramiteId, setSelectedTramiteId] = useState<string | null>(null);
 
     // Helper to get initials from name
     const getInitials = (name: string) => {
@@ -44,6 +47,23 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
             setActiveTab(tab as any);
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        const handleResetTab = (e: any) => {
+            const resetTab = e.detail;
+            if (resetTab === "accreditation") {
+                setSelectedTramiteId(null);
+            }
+            if (resetTab === "events" || resetTab === "recordings") {
+                setSelectedCourse(null);
+            }
+        };
+
+        if (typeof window !== "undefined") {
+            window.addEventListener("resetTabState", handleResetTab);
+            return () => window.removeEventListener("resetTabState", handleResetTab);
+        }
+    }, []);
 
     // TABS DEFINITION
     const tabs = [
@@ -276,13 +296,13 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                     <h1 className="text-4xl md:text-5xl font-serif text-text-light mb-4 leading-[1.1]">
                         {tabs.find(t => t.id === activeTab)?.label || t("edu.hub.title" as any)}
                     </h1>
-                    <p className="text-sm md:text-base text-text-dark leading-relaxed max-w-2xl mx-auto">
-                        {activeTab === "events"
-                            ? "Agenda de eventos futuros con inscripciones abiertas"
-                            : activeTab === "recordings"
-                                ? "Lista de cursos y eventos grabados disponibles para adquisición en el sitio web de la AIBAPT"
-                                : t("edu.hub.desc" as any)}
-                    </p>
+                    {(activeTab === "events" || activeTab === "recordings") && (
+                        <p className="text-sm md:text-base text-text-dark leading-relaxed max-w-2xl mx-auto">
+                            {activeTab === "events"
+                                ? "Agenda de eventos futuros con inscripciones abiertas"
+                                : "Lista de cursos y eventos grabados disponibles para adquisición en el sitio web de la AIBAPT"}
+                        </p>
+                    )}
                 </div>
 
                 <AnimatePresence mode="wait">
@@ -354,36 +374,33 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                 </div>
 
                                 {/* Controles de Vista y Resultados Reales */}
-                                <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
-                                    <span className="text-text-muted font-medium">
-                                        Mostrando <strong className="text-secondary">{filteredData.length}</strong> eventos
-                                    </span>
-
-                                    {/* Toggle: List vs Grid */}
-                                    <div className="hidden md:flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
-                                        <button
-                                            onClick={() => setViewMode("list")}
-                                            className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-white shadow-sm text-primary" : "text-gray-400 hover:text-gray-600"}`}
-                                            title="Vista Lista"
-                                        >
-                                            <span className="material-icons-round text-[20px]">view_list</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode("grid")}
-                                            className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-white shadow-sm text-primary" : "text-gray-400 hover:text-gray-600"}`}
-                                            title="Vista Cuadrícula"
-                                        >
-                                            <span className="material-icons-round text-[20px]">grid_view</span>
-                                        </button>
+                                {activeTab !== "accredited" && (
+                                    <div className="flex items-center justify-end mb-6">
+                                        <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200 shadow-sm">
+                                            <button
+                                                onClick={() => setViewMode("list")}
+                                                className={`px-2 py-1 rounded-md flex items-center justify-center transition-all ${viewMode === "list" ? "bg-white shadow-sm text-primary" : "text-gray-400 hover:text-gray-600"}`}
+                                                title="Vista Lista"
+                                            >
+                                                <span className="material-icons-round text-[18px]">view_list</span>
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode("grid")}
+                                                className={`px-2 py-1 rounded-md flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-white shadow-sm text-primary" : "text-gray-400 hover:text-gray-600"}`}
+                                                title="Vista Cuadrícula"
+                                            >
+                                                <span className="material-icons-round text-[18px]">grid_view</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className={viewMode === "grid" 
+                                <div className={(viewMode === "grid" && activeTab !== "accredited") 
                                     ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
                                     : "flex flex-col gap-4"
                                 }>
                                     {filteredData.map((course, idx) => (
-                                        viewMode === "grid" ? (
+                                        (viewMode === "grid" && activeTab !== "accredited") ? (
                                             /* GRID VIEW CARD - PREMIUM */
                                             <article key={idx} className="group flex flex-col bg-white rounded-3xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500 hover:-translate-y-1">
                                                 <div className="relative h-48 overflow-hidden bg-gray-50">
@@ -394,9 +411,11 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                         {course.badge}
                                                     </div>
                                                     <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2">
-                                                        <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border border-white/20 backdrop-blur-md shadow-sm ${course.isOfficial ? "bg-primary/90 text-white" : "bg-blue-600/90 text-white"}`}>
-                                                            {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
-                                                        </span>
+                                                        {activeTab !== "accredited" && (
+                                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border border-white/20 backdrop-blur-md shadow-sm ${course.isOfficial ? "bg-primary/90 text-white" : "bg-blue-600/90 text-white"}`}>
+                                                                {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="p-6 pt-5 flex flex-col flex-1">
@@ -473,9 +492,11 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <span className="text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/5 px-2 py-1 rounded-md">{course.category}</span>
-                                                            <span className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider ${course.isOfficial ? "bg-primary/10 text-primary" : "bg-blue-100 text-blue-600"}`}>
-                                                                {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
-                                                            </span>
+                                                            {activeTab !== "accredited" && (
+                                                                <span className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider ${course.isOfficial ? "bg-primary/10 text-primary" : "bg-blue-100 text-blue-600"}`}>
+                                                                    {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <h3 className="text-lg font-bold text-text-light group-hover:text-primary transition-colors line-clamp-1 mb-1">
                                                             {course.title}
@@ -537,7 +558,13 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                         
 
                         {activeTab === "accreditation" && (
-                            <div></div>
+                            <div className="max-w-4xl mx-auto pb-4">
+                                {!selectedTramiteId ? (
+                                    <TramiteSelector onSelect={(id) => setSelectedTramiteId(id)} searchTerm={searchTerm} />
+                                ) : (
+                                    <UniversalStepper tramiteId={selectedTramiteId} onBack={() => setSelectedTramiteId(null)} />
+                                )}
+                            </div>
                         )}
                     </motion.div>
                 </AnimatePresence>

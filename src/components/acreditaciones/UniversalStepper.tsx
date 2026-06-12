@@ -59,6 +59,11 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [membershipError, setMembershipError] = useState<string | null>(null);
 
+  // Scroll al inicio al montar el componente para evitar que se quede abajo tras hacer click en una tarjeta
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   // Sync scenario from URL if not preselected
   useEffect(() => {
     if (initialEscenario) return;
@@ -282,7 +287,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   // Restricción de Membresía
   if (config.requiresMembership && !userProfile?.is_member) {
     return (
-      <div className="bg-white dark:bg-surface-dark border border-amber-200 dark:border-amber-900 rounded-3xl p-10 text-center shadow-lg max-w-2xl mx-auto my-8">
+      <div className="bg-white dark:bg-surface-dark border border-amber-200 dark:border-amber-900 rounded-3xl p-10 text-center shadow-lg max-w-2xl mx-auto mb-8">
         <ShieldAlert className="w-20 h-20 text-amber-500 mx-auto mb-6" />
         <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">
           {lang === "es" ? "Membresía Requerida" : "Membresia Requerida"}
@@ -301,9 +306,14 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           </button>
           <button
             onClick={() => window.location.href = `/${lang}/dashboard?tramite=solicitud_membresia`}
-            className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dark transition-colors"
+            className="bg-primary text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
           >
             {lang === "es" ? "Solicitar Membresía" : "Solicitar Membresia"}
+            <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </span>
           </button>
         </div>
       </div>
@@ -316,7 +326,14 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
         <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">¡Solicitud Enviada!</h2>
         <p className="text-text-muted mb-8 text-lg">Hemos recibido tus documentos. Revisaremos tu solicitud en un plazo de 15 días hábiles.</p>
-        <button onClick={() => window.location.href = `/${lang}/dashboard`} className="bg-primary text-white px-8 py-3 rounded-full font-bold">Ir al Dashboard</button>
+        <button onClick={() => window.location.href = `/${lang}/dashboard`} className="bg-primary text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn mx-auto">
+          Ir al Dashboard
+          <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </button>
       </div>
     );
   }
@@ -527,9 +544,14 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
             </button>
             <button
               onClick={() => selectedEscenario ? setStep(2) : alert(lang === 'es' ? 'Selecciona un nivel' : 'Selecione um nível')}
-              className="bg-primary text-white px-10 py-4 rounded-full font-black text-lg shadow-lg hover:scale-[1.02] transition-all"
+              className="bg-primary text-white px-10 py-4 rounded-full font-black text-lg shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
             >
-              {lang === 'es' ? 'Continuar a Carga →' : 'Continuar para Upload →'}
+              {lang === 'es' ? 'Continuar a Carga' : 'Continuar para Upload'}
+              <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
             </button>
           </div>
         </div>
@@ -579,10 +601,15 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
             <button 
               type="submit" 
               disabled={isSubmitting} 
-              className="bg-[var(--color-aibapt-green)] text-white px-10 py-4 rounded-full font-black text-lg shadow-lg disabled:opacity-50 flex items-center"
+              className="bg-primary text-white px-10 py-4 rounded-full font-black text-lg shadow-lg disabled:opacity-50 flex items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark group/btn"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
               Finalizar Trámite
+              <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
             </button>
           </div>
         </form>

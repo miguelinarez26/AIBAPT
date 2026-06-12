@@ -96,10 +96,10 @@ export default function Navbar() {
                 {/* @ts-ignore */}
                 <h3 className="text-[26px] font-serif italic text-text-light tracking-tight">{t("nav.development")}</h3>
                 <div className="flex flex-col gap-1 text-[#555555] text-[14px] font-light">
-                  <Link href="/formaciones?tab=events" className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Próximos Eventos</Link>
-                  <Link href="/formaciones?tab=recordings" className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Videoteca</Link>
-                  <Link href="/formaciones?tab=accredited" className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Cursos y eventos acreditados</Link>
-                  <Link href="/formaciones?tab=accreditation" className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Acredita tu curso o evento</Link>
+                  <Link href="/formaciones?tab=events" onClick={() => {if(typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('resetTabState', { detail: 'events' }))}} className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Próximos Eventos</Link>
+                  <Link href="/formaciones?tab=recordings" onClick={() => {if(typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('resetTabState', { detail: 'recordings' }))}} className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Videoteca</Link>
+                  <Link href="/formaciones?tab=accredited" onClick={() => {if(typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('resetTabState', { detail: 'accredited' }))}} className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Cursos y eventos acreditados</Link>
+                  <Link href="/formaciones?tab=accreditation" onClick={() => {if(typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('resetTabState', { detail: 'accreditation' }))}} className="block px-4 py-2 -mx-4 rounded-md hover:bg-highlight hover:text-text-light transition-colors">Acredita tu curso o evento</Link>
                 </div>
               </div>
             </div>
