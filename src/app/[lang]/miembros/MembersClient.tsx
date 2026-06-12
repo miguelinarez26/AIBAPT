@@ -1,12 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import Image from "next/image";
-import { Search, User, BadgeCheck, X, FileText, ExternalLink, Loader2, Award } from "lucide-react";
-import { Profile } from "@/types/database";
-import { translations } from "@/i18n/translations";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { translations } from "@/i18n/translations";
+import { Profile } from "@/types/database";
+
+const categoryTypes = [
+  "pleno_salud_mental",
+  "pleno_agente_social",
+  "institucional",
+  "bienhechor",
+  "simpatizante"
+];
 
 interface MembersClientProps {
   initialMembers: Profile[];
@@ -14,25 +19,18 @@ interface MembersClientProps {
 }
 
 export default function MembersClient({ initialMembers, lang }: MembersClientProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [loadingCV, setLoadingCV] = useState(false);
-
   const t = translations[lang];
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("Todos");
+  const [selectedCategory, setSelectedCategory] = useState("Todas");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
 
-  const filteredMembers = useMemo(() => {
-    return initialMembers.filter((member) => {
-      const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
-      const memberNumber = (member.member_number || "").toLowerCase();
-      const search = searchTerm.toLowerCase();
-      return fullName.includes(search) || memberNumber.includes(search);
-    });
-  }, [initialMembers, searchTerm]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
-  const getAvatarUrl = (path: string | null) => {
-    if (!path) return null;
+  const getAvatarUrl = (path: string | null, firstName: string) => {
+    if (!path) return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName || 'U')}&background=random`;
     if (path.startsWith('http')) return path;
     return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${path}`;
   };
@@ -49,317 +47,483 @@ export default function MembersClient({ initialMembers, lang }: MembersClientPro
     return labels[type]?.[lang] || type.replace(/_/g, ' ');
   };
 
-  const handleOpenDrawer = async (member: Profile) => {
-    setSelectedMember(member);
-    setIsDrawerOpen(true);
-    setLoadingProfile(true);
+  const mockPartners = useMemo(() => {
+    return initialMembers.map((m: any) => ({
+      id: m.id,
+      name: `${m.first_name || ''} ${m.last_name || ''}`.trim(),
+      city: m.city || (lang === 'es' ? 'No especificada' : 'Não especificada'),
+      country: m.country || (lang === 'es' ? 'No especificado' : 'Não especificado'),
+      avatar: getAvatarUrl(m.avatar_url, m.first_name),
+      category: m.membership_type || 'ninguno',
+      categoryLabel: getMembershipLabel(m.membership_type),
+      bio: m.bio || '',
+      email: m.email || '',
+      member_number: m.member_number || 'PEND.'
+    }));
+  }, [initialMembers, lang]);
 
-    // Fetch rápido para obtener bio actualizada y otros campos
-    const supabase = createBrowserSupabaseClient();
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', member.id)
-      .single();
+  const countriesList = useMemo(() => {
+    const countries = new Set(mockPartners.map(m => m.country).filter(c => c && !c.includes('No especificad')));
+    return Array.from(countries).sort();
+  }, [mockPartners]);
 
-    if (data && !error) {
-      setSelectedMember(data);
-    }
-    setLoadingProfile(false);
-  };
-
-  const handleViewCV = async () => {
-    if (!(selectedMember as any)?.cv_url) return;
-    setLoadingCV(true);
-    try {
-      const supabase = createBrowserSupabaseClient();
-      const { data, error } = await supabase.storage
-        .from('public-assets')
-        .createSignedUrl((selectedMember as any).cv_url, 300);
-
-      if (error) throw error;
-      window.open(data.signedUrl, '_blank');
-    } catch (err) {
-      console.error("Error al obtener CV:", err);
-    } finally {
-      setLoadingCV(false);
-    }
-  };
-
-  // Cerrar con Esc
+  // Resetear a página 1 si cambian los filtros
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsDrawerOpen(false);
+      setCurrentPage(1);
+  }, [searchTerm, selectedCountry, selectedCategory]);
+
+  // Dropdown state and references
+  const [openDropdown, setOpenDropdown] = useState<"country" | "category" | null>(null);
+  const countryRef = useRef<HTMLDivElement>(null);
+  const categoryRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicks outside of dropdowns to close them
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdown === "country" && countryRef.current && !countryRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
+      }
+      if (openDropdown === "category" && categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
+      }
     };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, []);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openDropdown]);
+
+  // Filtrado de la data
+  const filteredPartners = mockPartners.filter(partner => {
+    const matchesSearch =
+      partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      partner.city.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCountry = selectedCountry === "Todos" || partner.country === selectedCountry;
+    const matchesCategory = selectedCategory === "Todas" || partner.category === selectedCategory;
+
+    return matchesSearch && matchesCountry && matchesCategory;
+  });
+
+  const totalPages = Math.ceil(filteredPartners.length / itemsPerPage);
+  const currentPartners = filteredPartners.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="space-y-8 relative">
-      {/* Buscador */}
-      <div className="max-w-xl mx-auto relative group">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-text-muted group-focus-within:text-primary transition-colors" />
-        </div>
-        <input
-          type="text"
-          placeholder={t["members.search"]}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="block w-full pl-12 pr-4 py-4 bg-white dark:bg-surface-dark border border-accent/30 dark:border-gray-800 rounded-2xl shadow-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-text-main dark:text-white"
-        />
-      </div>
+    <>
+      <div className="min-h-screen bg-background-light pt-10 md:pt-12 pb-20 overflow-hidden relative z-0">
+        {/* Esferas de fondo (Glassmorphism) */}
+        <div className="absolute top-[-10%] sm:top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[100px] animate-pulse -z-10" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-secondary/10 rounded-full blur-[120px] -z-10" style={{ animationDelay: '2s' }} />
 
-      {/* Listado Oficial de Miembros (Tabla) */}
-      <div className="bg-white dark:bg-surface-dark rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-accent/10 overflow-hidden">
-        {filteredMembers.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-accent/10">
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">
-                    {/* @ts-ignore */}
-                    {t["members.table.photo"]}
-                  </th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">
-                    {/* @ts-ignore */}
-                    {t["members.table.name"]}
-                  </th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted text-center">
-                    {/* @ts-ignore */}
-                    {t["members.table.id"]}
-                  </th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted hidden md:table-cell">
-                    {/* @ts-ignore */}
-                    {t["members.table.category"]}
-                  </th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted text-right">
-                    {/* @ts-ignore */}
-                    {t["members.table.action"]}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                <AnimatePresence mode="popLayout">
-                  {filteredMembers.map((member, idx) => (
-                    <motion.tr
-                      key={member.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ delay: Math.min(idx * 0.02, 0.3) }}
-                      className="hover:bg-primary/[0.03] transition-colors group cursor-default"
+        <main className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Cabecera */}
+          <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="text-center mb-10 max-w-4xl mx-auto"
+          >
+              <div className="inline-block bg-primary/10 text-primary font-bold text-xs px-4 py-1.5 rounded-full mb-3 uppercase tracking-wider">
+                  {/* @ts-ignore */}
+                  {t["partners.nav.partners"] || "Directorio"}
+              </div>
+              <h1 className="text-4xl md:text-5xl font-serif text-text-light mb-4 leading-[1.1]">
+                  {/* @ts-ignore */}
+                  {t["members.title"]}
+              </h1>
+              <p className="text-sm md:text-base text-text-dark leading-relaxed max-w-2xl mx-auto">
+                  {/* @ts-ignore */}
+                  {t["members.desc"]}
+              </p>
+          </motion.div>
+
+          {/* Filtros de Búsqueda */}
+          <div className="relative max-w-5xl mx-auto mb-10 z-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/10 to-primary/20 blur-2xl -z-10 rounded-full" />
+
+            <div className="flex flex-col md:flex-row items-center gap-2 p-2.5 rounded-3xl md:rounded-full bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgba(33,150,83,0.08)] transition-all">
+              
+              <div className="flex items-center flex-1 w-full md:w-auto px-4 py-2">
+                <span className="material-icons-round text-primary mr-3">search</span>
+                <input
+                  type="text"
+                  /* @ts-ignore */
+                  placeholder={t["members.search"]}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-transparent border-none outline-none text-text-main placeholder:text-text-muted/60 text-[15px] font-medium"
+                />
+                {searchTerm && (
+                    <button 
+                        onClick={() => setSearchTerm("")}
+                        className="ml-2 text-gray-400 hover:text-primary transition-colors flex items-center justify-center"
                     >
-                      {/* Foto */}
-                      <td className="px-6 py-4">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-accent/20 shrink-0 relative">
-                          {(member as any).avatar_url ? (
-                            <Image
-                              src={getAvatarUrl((member as any).avatar_url)!}
-                              alt={`${member.first_name} ${member.last_name}`}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-primary">
-                              {member.first_name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                      </td>
+                        <span className="material-icons-round text-[18px]">close</span>
+                    </button>
+                )}
+              </div>
 
-                      {/* Nombre */}
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-text-main dark:text-white group-hover:text-primary transition-colors">
-                            {member.first_name} {member.last_name}
-                          </span>
-                          <span className="text-[10px] text-text-muted md:hidden">
-                            {getMembershipLabel(member.membership_type)}
-                          </span>
-                        </div>
-                      </td>
+              <div className="hidden md:block w-px h-8 bg-gray-200 mx-1"></div>
 
-                      {/* Matrícula */}
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-text-main dark:text-gray-300 text-[10px] font-black tracking-widest uppercase border border-transparent group-hover:border-primary/20 group-hover:text-primary transition-all">
-                          <BadgeCheck className="w-3 h-3 text-primary" />
-                          {member.member_number || 'PEND.'}
-                        </span>
-                      </td>
+              <div className="flex items-center gap-2 w-full md:w-auto px-1 pb-1 md:pb-0 justify-between md:justify-end flex-wrap md:flex-nowrap">
+                
+                {/* Filtro País */}
+                <div className="relative flex-1 md:flex-none" ref={countryRef}>
+                  <button
+                    onClick={() => setOpenDropdown(openDropdown === "country" ? null : "country")}
+                    className="w-full md:w-44 pl-10 pr-8 py-2.5 bg-white/80 hover:bg-white border border-gray-100 rounded-2xl md:rounded-full text-sm font-bold text-primary outline-none cursor-pointer transition-colors shadow-sm focus:ring-2 focus:ring-primary/20 flex items-center justify-between"
+                  >
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-icons-round text-primary font-bold text-[18px]">public</span>
+                    <span className="truncate">
+                      {selectedCountry === "Todos" ? `País (Todos)` : selectedCountry}
+                    </span>
+                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 material-icons-round text-gray-400 text-[16px] transition-transform duration-300 ${openDropdown === "country" ? "rotate-180" : ""}`}>expand_more</span>
+                  </button>
 
-                      {/* Categoría */}
-                      <td className="px-6 py-4 hidden md:table-cell">
-                        <span className="text-xs font-bold text-text-muted dark:text-gray-400 uppercase tracking-tight">
-                          {getMembershipLabel(member.membership_type)}
-                        </span>
-                      </td>
-
-                      {/* Acción */}
-                      <td className="px-6 py-4 text-right">
-                        {member.member_number ? (
+                  <AnimatePresence>
+                    {openDropdown === "country" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-[calc(100%+8px)] left-0 w-full min-w-[220px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_40px_rgba(33,150,83,0.12)] border border-gray-100 p-2 z-50 origin-top"
+                      >
+                        <div className="max-h-[50vh] overflow-y-auto flex flex-col gap-1 pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(33,150,83,0.3) transparent' }}>
                           <button
-                            onClick={() => handleOpenDrawer(member)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary hover:text-white rounded-xl transition-all"
+                            onClick={() => { setSelectedCountry("Todos"); setOpenDropdown(null); }}
+                            className={`w-full text-left px-4 py-2.5 text-sm leading-normal rounded-xl transition-colors ${selectedCountry === "Todos" ? "bg-primary/10 text-primary font-bold" : "text-text-main hover:bg-gray-50"}`}
+                          >
+                            País (Todos)
+                          </button>
+                          {countriesList.map(country => (
+                            <button
+                              key={country}
+                              onClick={() => { setSelectedCountry(country); setOpenDropdown(null); }}
+                              className={`w-full text-left px-4 py-2.5 text-sm leading-normal rounded-xl transition-colors ${selectedCountry === country ? "bg-primary/10 text-primary font-bold" : "text-text-main hover:bg-gray-50"}`}
+                            >
+                              {country}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Filtro Categoría */}
+                <div className="relative flex-1 md:flex-none" ref={categoryRef}>
+                  <button
+                    onClick={() => setOpenDropdown(openDropdown === "category" ? null : "category")}
+                    className="w-full md:w-[220px] pl-10 pr-8 py-2.5 bg-white/80 hover:bg-white border border-gray-100 rounded-2xl md:rounded-full text-sm font-bold text-primary outline-none cursor-pointer transition-colors shadow-sm focus:ring-2 focus:ring-primary/20 flex items-center justify-between"
+                  >
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-icons-round text-primary font-bold text-[18px]">verified</span>
+                    <span className="truncate">
+                      {/* @ts-ignore */}
+                      {selectedCategory === "Todas" ? `${t["members.table.category"] || "Categoría"} (Todas)` : getMembershipLabel(selectedCategory)}
+                    </span>
+                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 material-icons-round text-gray-400 text-[16px] transition-transform duration-300 ${openDropdown === "category" ? "rotate-180" : ""}`}>expand_more</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {openDropdown === "category" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute md:right-0 top-[calc(100%+8px)] left-0 md:left-auto w-[calc(100vw-32px)] md:w-auto min-w-[260px] sm:min-w-[500px] max-w-[600px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_20px_40px_rgba(33,150,83,0.15)] border border-gray-100 p-3 z-50 origin-top-right flex flex-col"
+                      >
+                        <div className="flex items-center justify-between px-4 pb-2 mb-2 border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                          {/* @ts-ignore */}
+                          <span>{t["members.table.category"] || "Categoría"}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[50vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(33,150,83,0.3) transparent' }}>
+                          <button
+                            onClick={() => { setSelectedCategory("Todas"); setOpenDropdown(null); }}
+                            className={`w-full text-left px-4 py-2.5 text-[15px] leading-normal rounded-xl transition-colors ${selectedCategory === "Todas" ? "bg-primary/10 text-primary font-bold" : "text-text-main hover:bg-gray-50"}`}
                           >
                             {/* @ts-ignore */}
-                            {t["members.table.action"]}
-                            <ExternalLink className="w-3 h-3" />
+                            {t["members.table.category"] || "Categoría"} (Todas)
                           </button>
-                        ) : (
-                          <span className="text-[10px] font-bold text-text-muted italic uppercase tracking-widest px-4">
-                            {lang === 'es' ? 'Pendiente' : 'Pendente'}
-                          </span>
-                        )}
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-24 bg-white dark:bg-surface-dark">
-            <User className="w-16 h-16 text-text-muted mx-auto mb-4 opacity-10" />
-            <h4 className="text-xl font-bold text-text-main dark:text-white">{t["members.no_results"]}</h4>
-            <p className="text-text-muted dark:text-gray-400 text-sm">{t["members.no_results_desc"]}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Drawer (Panel Lateral) */}
-      <AnimatePresence>
-        {isDrawerOpen && selectedMember && (
-          <>
-            {/* Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsDrawerOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] transition-all"
-            />
-
-            {/* Panel */}
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-full md:w-2/3 lg:w-1/3 bg-white dark:bg-surface-dark z-[101] shadow-2xl overflow-y-auto"
-            >
-              <div className="p-8 space-y-8">
-                {/* Close Button */}
-                <button
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-muted"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-
-                {/* Header Profile */}
-                <div className="flex flex-col items-center text-center space-y-4 pt-8">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-primary/10 border-4 border-accent/10 relative">
-                    {(selectedMember as any).avatar_url ? (
-                      <Image
-                        src={getAvatarUrl((selectedMember as any).avatar_url)!}
-                        alt={selectedMember.first_name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl font-black text-primary">
-                        {selectedMember.first_name.charAt(0)}
-                      </div>
+                          {categoryTypes.map(cat => (
+                            <button
+                              key={cat}
+                              onClick={() => { setSelectedCategory(cat); setOpenDropdown(null); }}
+                              className={`w-full text-left px-4 py-2.5 text-[15px] leading-normal rounded-xl transition-colors ${selectedCategory === cat ? "bg-primary/10 text-primary font-bold" : "text-text-main hover:bg-gray-50"}`}
+                            >
+                              {getMembershipLabel(cat)}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
                     )}
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-text-main dark:text-white tracking-tight">
-                      {selectedMember.first_name} {selectedMember.last_name}
-                    </h3>
-                    <div className="flex items-center justify-center gap-2 mt-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
-                        {/* @ts-ignore */}
-                        {t["members.drawer.official_id"]}: {selectedMember.member_number}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="h-px bg-accent/10 w-full" />
-
-                {/* Info Sections */}
-                <div className="space-y-8">
-                  {/* Bio */}
-                  <section>
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-4 flex items-center gap-2">
-                      <span className="w-4 h-px bg-primary"></span>
-                      {/* @ts-ignore */}
-                      {t["members.drawer.professional_summary"]}
-                    </h4>
-                    {loadingProfile ? (
-                      <div className="flex items-center gap-3 text-text-muted py-4">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span className="text-xs font-bold uppercase tracking-widest animate-pulse">Cargando perfil...</span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-text-main dark:text-gray-300 leading-relaxed font-medium">
-                        {(selectedMember as any).bio || t["members.profile.info_updating"]}
-                      </p>
-                    )}
-                  </section>
-
-                  {/* Category */}
-                  <section>
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-4">
-                      {/* @ts-ignore */}
-                      {t["members.table.category"]}
-                    </h4>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-accent/10 text-xs font-bold text-secondary dark:text-white">
-                      <Award className="w-4 h-4 text-primary" />
-                      {getMembershipLabel(selectedMember.membership_type)}
-                    </div>
-                  </section>
-
-                  {/* CV Action */}
-                  <section className="pt-4">
-                    {(selectedMember as any).cv_url ? (
-                      <button
-                        onClick={handleViewCV}
-                        disabled={loadingCV}
-                        className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-primary/20 disabled:opacity-50"
-                      >
-                        {loadingCV ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <FileText className="w-5 h-5" />
-                        )}
-                        {/* @ts-ignore */}
-                        {t["members.drawer.view_cv"]}
-                      </button>
-                    ) : (
-                      <div className="p-6 rounded-2xl border border-dashed border-accent/30 text-center text-text-muted">
-                        <p className="text-xs font-bold uppercase tracking-widest">
-                          {/* @ts-ignore */}
-                          {t["members.drawer.no_cv"]}
-                        </p>
-                      </div>
-                    )}
-                  </section>
+                  </AnimatePresence>
                 </div>
               </div>
-            </motion.div>
-          </>
+            </div>
+          </div>
+
+          {/* Controles de Vista y Resultados */}
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100 ">
+            <span className="text-text-muted font-medium">
+              {/* @ts-ignore */}
+              Mostrando <strong className="text-secondary">{filteredPartners.length}</strong> resultados
+            </span>
+
+            <div className="hidden md:flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-white shadow-sm text-primary" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                <span className="material-icons-round text-[20px]">view_list</span>
+              </button>
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-white shadow-sm text-primary" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                <span className="material-icons-round text-[20px]">grid_view</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Resultados */}
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "flex flex-col gap-4"}>
+            <AnimatePresence>
+              {currentPartners.length > 0 ? (
+                currentPartners.map((partner) => (
+                  viewMode === "grid" ? (
+                    <motion.div
+                      key={`grid-${partner.id}`}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="group/card relative flex flex-col bg-white rounded-3xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500 hover:-translate-y-1 h-full cursor-pointer"
+                      onClick={() => setSelectedPartner(partner)}
+                    >
+                      <div className="relative h-28 bg-gradient-to-br from-primary via-[#6db366] to-secondary/80">
+                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+                        <div className="absolute left-1/2 -translate-x-1/2 -bottom-12 z-10">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={partner.avatar} alt={partner.name} className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg transition-transform duration-500 group-hover/card:scale-105 bg-white" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col flex-1 px-6 pt-16 pb-6 text-center">
+                        <h3 className="font-bold text-xl text-text-light mb-1 line-clamp-2">{partner.name}</h3>
+                        <p className="text-sm text-text-dark flex items-center justify-center gap-1 mb-6">
+                          <span className="material-icons-round text-[16px] text-primary">location_on</span>
+                          {partner.city}, {partner.country}
+                        </p>
+                        <div className="mb-6 flex-1 flex flex-col justify-center">
+                          <div className="flex flex-wrap justify-center gap-1.5">
+                            <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[11px] font-bold bg-gray-50 text-text-dark border border-gray-100 whitespace-nowrap h-fit group-hover/card:bg-secondary/15 group-hover/card:text-primary group-hover/card:border-secondary/40 transition-colors duration-300">
+                              {partner.categoryLabel}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
+                          <span className="text-[11px] font-bold text-primary uppercase tracking-wider flex items-center gap-1 opacity-80">
+                              <span className="material-icons-round text-[14px]">workspace_premium</span>
+                              AIBAPT
+                          </span>
+                          <div className="group/btn flex items-center gap-3 border-2 border-accent text-accent bg-transparent pl-5 pr-1.5 py-1.5 rounded-full text-xs font-bold transition-all duration-300 hover:bg-accent hover:text-white hover:-translate-y-1 hover:shadow-md w-full sm:w-auto justify-between sm:justify-center">
+                              {/* @ts-ignore */}
+                              <span>{t["members.table.action"] || "Ver Perfil"}</span>
+                              <div className="w-7 h-7 bg-accent/10 group-hover/btn:bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-0.5">
+                                  <span className="material-icons-round text-[14px]">arrow_forward</span>
+                              </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={`list-${partner.id}`}
+                      layout
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="group/card flex flex-col md:flex-row md:items-center bg-white rounded-3xl p-4 md:p-5 border border-gray-100 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 gap-4 md:gap-6 hover:-translate-y-0.5 cursor-pointer"
+                      onClick={() => setSelectedPartner(partner)}
+                    >
+                      <div className="flex items-center gap-4 min-w-[300px]">
+                        <div className="relative flex-none">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={partner.avatar} alt={partner.name} className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md transition-transform duration-500 group-hover/card:scale-105" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-text-light group-hover/card:text-primary/70 transition-colors duration-300">{partner.name}</h3>
+                          <p className="text-sm text-text-dark flex items-center gap-1">
+                            <span className="material-icons-round text-[14px] text-primary">location_on</span>
+                            {partner.city}, {partner.country}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-secondary/20 border border-secondary/30 text-text-light whitespace-nowrap">
+                            {partner.categoryLabel}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end mt-2 md:mt-0 border-t border-gray-100 md:border-none pt-4 md:pt-0">
+                          <div className="group/btn flex items-center gap-3 bg-accent text-white pl-5 pr-1.5 py-1.5 rounded-full text-xs font-bold transition-all duration-300 shadow-sm hover:bg-primary hover:-translate-y-1 hover:shadow-md w-full sm:w-auto justify-between sm:justify-center">
+                              {/* @ts-ignore */}
+                              <span>{t["members.table.action"] || "Ver Perfil"}</span>
+                              <div className="w-7 h-7 bg-white/20 group-hover/btn:bg-white/30 rounded-full flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-0.5">
+                                  <span className="material-icons-round text-[14px]">arrow_forward</span>
+                              </div>
+                          </div>
+                      </div>
+                    </motion.div>
+                  )
+                ))
+              ) : (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-full py-20 text-center">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400">
+                    <span className="material-icons-round text-4xl">search_off</span>
+                  </div>
+                  {/* @ts-ignore */}
+                  <h3 className="text-2xl font-bold text-secondary mb-2">{t["members.no_results"]}</h3>
+                  {/* @ts-ignore */}
+                  <p className="text-text-muted">{t["members.no_results_desc"]}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="mt-16 flex justify-center items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100 text-gray-400 hover:bg-gray-50 hover:text-primary disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 disabled:cursor-not-allowed transition-all"
+              >
+                <span className="material-icons-round">chevron_left</span>
+              </button>
+              
+              <div className="flex gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1).map((page, index, array) => (
+                  <React.Fragment key={page}>
+                    {index > 0 && page - array[index - 1] > 1 && (
+                      <span className="w-8 flex items-center justify-center text-gray-400">...</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-12 h-12 flex items-center justify-center rounded-full font-bold text-sm transition-all ${
+                        currentPage === page 
+                        ? 'bg-primary text-white shadow-md scale-105' 
+                        : 'bg-white shadow-sm border border-gray-100 text-text-dark hover:bg-gray-50 hover:text-primary'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </React.Fragment>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100 text-gray-400 hover:bg-gray-50 hover:text-primary disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 disabled:cursor-not-allowed transition-all"
+              >
+                <span className="material-icons-round">chevron_right</span>
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Modal Perfil Especialista */}
+      <AnimatePresence>
+        {selectedPartner && (
+          <div className="fixed inset-0 z-[100] overflow-y-auto overflow-x-hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedPartner(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+            
+            <div className="flex min-h-full items-center justify-center p-4 sm:p-6 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+                style={{ maxHeight: 'calc(100dvh - 3rem)' }}
+              >
+                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent pointer-events-none" />
+                <button
+                  onClick={() => setSelectedPartner(null)}
+                  className="absolute top-6 right-6 z-20 w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-md hover:bg-gray-100 rounded-full text-text-dark transition-colors shadow-sm"
+                >
+                  <span className="material-icons-round">close</span>
+                </button>
+
+                <div className="px-8 sm:px-12 pt-12 pb-8 relative z-10 shrink-0 bg-white/50 backdrop-blur-sm border-b border-gray-100/60">
+                  <div className="flex flex-col sm:flex-row gap-8 items-start sm:items-center">
+                    <div className="relative shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={selectedPartner.avatar} alt={selectedPartner.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-xl bg-white" />
+                    </div>
+                    <div className="pr-10 sm:pr-0">
+                      <h2 className="text-3xl md:text-4xl font-serif text-text-light mb-3 leading-tight">{selectedPartner.name}</h2>
+                      <p className="text-primary font-bold flex items-center gap-1.5 mb-2 text-sm uppercase tracking-wider">
+                        <span className="material-icons-round text-[18px]">workspace_premium</span>
+                        {/* @ts-ignore */}
+                        {t["members.drawer.official_id"] || "Matrícula"}: {selectedPartner.member_number}
+                      </p>
+                      <p className="text-text-dark flex items-center gap-1.5">
+                        <span className="material-icons-round text-[18px]">location_on</span>
+                        {selectedPartner.city}, {selectedPartner.country}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-8 sm:px-12 py-8 relative z-10 flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <div className="space-y-8">
+                    <section>
+                      <h3 className="text-xl font-bold text-text-light mb-4 flex items-center gap-2">
+                        {/* @ts-ignore */}
+                        {t["members.drawer.professional_summary"] || "Resumen Profesional"}
+                      </h3>
+                      <p className="text-text-dark leading-relaxed bg-gray-50 p-6 rounded-2xl">
+                        {selectedPartner.bio || (lang === 'es' ? 'El miembro aún no ha actualizado su resumen profesional.' : 'O membro ainda não atualizou seu resumo profissional.')}
+                      </p>
+                    </section>
+                    <section>
+                      <h3 className="text-xl font-bold text-text-light mb-4 flex items-center gap-2">
+                        {/* @ts-ignore */}
+                        {t["members.table.category"] || "Categoría"}
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center justify-center px-4 py-2 rounded-full text-sm font-bold bg-secondary/20 text-text-light border border-secondary/30 whitespace-nowrap h-fit">
+                          <span className="material-icons-round text-[16px] mr-2 text-primary">military_tech</span>
+                          {selectedPartner.categoryLabel}
+                        </span>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+                <div className="px-8 sm:px-12 py-6 bg-gray-50 flex justify-end gap-4 border-t border-gray-100">
+                  <button onClick={() => setSelectedPartner(null)} className="px-6 py-2 bg-transparent hover:bg-gray-200 text-text-dark font-bold rounded-full transition-colors">
+                    {lang === 'es' ? 'Cerrar' : 'Fechar'}
+                  </button>
+                  <button onClick={() => window.location.href = `mailto:${selectedPartner.email}`} className="group/btn flex items-center gap-3 bg-primary text-white pl-6 pr-2 py-2 rounded-full font-medium transition-all duration-300 hover:bg-secondary hover:-translate-y-1 shadow-md">
+                    <span className="whitespace-nowrap">{lang === 'es' ? 'Contactar' : 'Contato'}</span>
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                      <span className="material-icons-round text-[14px]">email</span>
+                    </div>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
-
-      {/* Footer Info */}
-      <div className="flex justify-center items-center gap-2 text-[10px] font-bold text-text-muted uppercase tracking-[0.3em] py-4">
-        <span className="w-8 h-px bg-accent/20"></span>
-        Registro Oficial AIBAPT {new Date().getFullYear()}
-        <span className="w-8 h-px bg-accent/20"></span>
-      </div>
-    </div>
+    </>
   );
 }
