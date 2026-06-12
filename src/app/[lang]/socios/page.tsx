@@ -91,7 +91,7 @@ export default function SociosPage() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="text-center mb-10 max-w-4xl mx-auto"
     >
-        <div className="inline-block bg-primary/10 text-primary font-bold text-sm px-4 py-1.5 rounded-full mb-4 uppercase tracking-wider">
+        <div className="inline-block bg-primary/10 text-primary font-bold text-xs px-4 py-1.5 rounded-full mb-3 uppercase tracking-wider">
             {t("partners.nav.partners")}
         </div>
         <h1 className="text-4xl md:text-5xl font-serif text-text-light mb-4 leading-[1.1]">

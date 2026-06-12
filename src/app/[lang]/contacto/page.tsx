@@ -133,8 +133,8 @@ export default function ContactoPage() {
                         className="lg:col-span-7 relative"
                     >
                         <div className="absolute inset-0 bg-primary/5 rounded-[32px] blur-xl -z-10 translate-y-4"></div>
-                        <div className="bg-secondary p-8 md:p-10 rounded-[32px] shadow-xl h-full relative overflow-hidden border border-white/10">
-                            <h2 className="text-2xl font-serif text-text-light mb-8 relative z-10">
+                        <div className="bg-gradient-to-br from-primary to-secondary/85 p-8 md:p-10 rounded-[32px] shadow-xl h-full relative overflow-hidden border border-white/10">
+                            <h2 className="text-2xl font-serif text-white mb-8 relative z-10">
                                 {t("contact.form.title")}
                             </h2>
                             
@@ -147,7 +147,7 @@ export default function ContactoPage() {
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <motion.div variants={fadeInUp} className="flex flex-col gap-2">
-                                        <label className="text-sm font-bold text-text-light pl-1">{t("contact.form.name")}</label>
+                                        <label className="text-sm font-bold text-white pl-1">{t("contact.form.name")}</label>
                                         <input 
                                             type="text" 
                                             required
@@ -156,7 +156,7 @@ export default function ContactoPage() {
                                         />
                                     </motion.div>
                                     <motion.div variants={fadeInUp} className="flex flex-col gap-2">
-                                        <label className="text-sm font-bold text-text-light pl-1">{t("contact.form.email")}</label>
+                                        <label className="text-sm font-bold text-white pl-1">{t("contact.form.email")}</label>
                                         <input 
                                             type="email" 
                                             required
@@ -167,7 +167,7 @@ export default function ContactoPage() {
                                 </div>
 
                                 <motion.div variants={fadeInUp} className="flex flex-col gap-2">
-                                    <label className="text-sm font-bold text-text-light pl-1">{t("contact.form.subject")}</label>
+                                    <label className="text-sm font-bold text-white pl-1">{t("contact.form.subject")}</label>
                                     
                                     {/* Custom Dropdown */}
                                     <div className="relative" ref={dropdownRef}>
@@ -235,7 +235,7 @@ export default function ContactoPage() {
                                 </motion.div>
 
                                 <motion.div variants={fadeInUp} className="flex flex-col gap-2">
-                                    <label className="text-sm font-bold text-text-light pl-1">{t("contact.form.msg")}</label>
+                                    <label className="text-sm font-bold text-white pl-1">{t("contact.form.msg")}</label>
                                     <textarea 
                                         required
                                         rows={5}

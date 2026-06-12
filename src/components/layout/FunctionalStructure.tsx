@@ -111,13 +111,14 @@ export const FunctionalStructure = () => {
     const [activeMember, setActiveMember] = useState<ActiveMemberDetail | null>(null);
 
     return (
-        <section className="py-24 bg-background-light overflow-hidden">
-            <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-24 bg-cream/30 dark:bg-bg-dark/50 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Encabezado */}
                 <div className="text-center mb-20">
-                    <p className="text-accent text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">Acompañando la excelencia</p>
-                    <h2 className="text-4xl md:text-[56px] font-serif text-text-light mb-6 leading-[1.1]">Organigrama <span className="italic font-light text-primary">Funcional</span></h2>
+                    <span className="text-primary italic font-display text-2xl mb-4 block">Acompañando la excelencia</span>
+                    <h2 className="text-4xl md:text-6xl font-bold text-secondary dark:text-white mb-6">Organigrama Funcional</h2>
+                    <div className="h-1.5 w-24 bg-primary mx-auto rounded-full"></div>
                 </div>
 
                 {/* Listado de Directivos */}
@@ -130,37 +131,38 @@ export const FunctionalStructure = () => {
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.6, delay: index * 0.1 }}
                                 onClick={() => setActiveMember(member)}
-                                className="group/card flex flex-col lg:flex-row items-center gap-8 bg-white p-8 md:p-10 rounded-[32px] border-2 border-accent hover:border-accent-light hover:shadow-2xl hover:shadow-accent/10 transition-all duration-500 cursor-pointer relative z-10"
+                                className="group flex flex-col lg:flex-row items-center gap-8 bg-white dark:bg-surface-dark p-8 md:p-10 rounded-[3rem] border border-accent/20 hover:border-primary/40 hover:shadow-2xl transition-all cursor-pointer relative z-10"
                             >
                                 {/* Imagen Directivo (Asegurando carga local) */}
                                 {member.img ? (
-                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl relative shrink-0 transition-colors duration-500">
-                                        <img src={member.img} alt={member.nombre} className="w-full h-full object-cover transition-transform group-hover/card:scale-105" />
+                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl relative shrink-0">
+                                        <img src={member.img} alt={member.nombre} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                     </div>
                                 ) : (
-                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-50 flex items-center justify-center text-text-light group-hover/card:text-accent shrink-0 transition-all duration-500 group-hover/card:scale-105">
+                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-110">
                                         <FiUsers className="text-5xl" />
                                     </div>
                                 )}
 
                                 {/* Datos Directivo */}
                                 <div className="flex-1 text-center lg:text-left">
-                                    <span className={`inline-block px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest mb-4 transition-colors duration-500 ${member.color === 'primary' ? 'bg-primary/10 text-primary' : 'bg-highlight/50 text-text-light'} group-hover/card:bg-accent/10 group-hover/card:text-accent`}>
+                                    <span className={`inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 ${member.color === 'primary' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}`}>
                                         {member.cargo}
                                     </span>
-                                    <h3 className="text-3xl md:text-4xl font-serif text-text-light mb-4">{member.nombre}</h3>
-                                    <p className="text-text-dark text-[15px] leading-relaxed max-w-2xl">{member.desc}</p>
+                                    <h3 className="text-3xl md:text-4xl font-bold text-secondary dark:text-white mb-4">{member.nombre}</h3>
+                                    <p className="text-text-muted dark:text-gray-400 text-lg max-w-2xl">{member.desc}</p>
                                 </div>
 
                                 {/* Botón Interactividad */}
-                                <div className="shrink-0 flex items-center gap-4 text-accent font-bold opacity-0 group-hover/card:opacity-100 transition-all duration-500">
-                                    Conocer Equipo <FiChevronRight className="text-2xl transition-transform group-hover/card:translate-x-1" />
+                                <div className="shrink-0 flex items-center gap-4 text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Conocer Equipo <FiChevronRight className="text-2xl" />
                                 </div>
                             </motion.div>
 
                             {/* Subcomités */}
                             {member.comites && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 pl-0 lg:pl-20 relative z-0">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 pl-8 md:pl-20 relative z-0">
+                                    <div className="hidden lg:block absolute left-10 top-[-80px] bottom-10 w-0.5 bg-primary/20 -z-10"></div>
 
                                     {member.comites.map((comite, idx) => (
                                         <motion.div
@@ -173,10 +175,10 @@ export const FunctionalStructure = () => {
                                                 e.stopPropagation();
                                                 setActiveMember({ ...comite, cargo: "Comité Directivo", nombre: comite.rol, desc: comite.desc || "Equipo de apoyo y gestión funcional." });
                                             }}
-                                            className="bg-white border-2 border-gray-100 hover:border-secondary p-6 rounded-[24px] hover:shadow-md transition-all duration-300 cursor-pointer group/comite"
+                                            className="bg-white/60 dark:bg-surface-light border border-primary/10 hover:border-primary/40 p-6 rounded-3xl hover:shadow-lg transition-all cursor-pointer group"
                                         >
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-dark/70 group-hover/comite:text-secondary mb-2 transition-colors">{comite.rol}</p>
-                                            <p className="text-[15px] font-medium text-text-light group-hover/comite:text-text-dark transition-colors">{comite.lider}</p>
+                                            <p className="text-[10px] font-bold uppercase text-primary/70 mb-2">{comite.rol}</p>
+                                            <p className="text-base font-bold text-secondary dark:text-white group-hover:text-primary transition-colors">{comite.lider}</p>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -190,28 +192,28 @@ export const FunctionalStructure = () => {
             <AnimatePresence>
                 {activeMember && (
                     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveMember(null)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }} className="bg-white max-w-xl w-full rounded-[32px] shadow-2xl relative z-[100] overflow-hidden">
-                            <div className="p-10 md:p-12 text-center">
-                                <button onClick={() => setActiveMember(null)} className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-text-dark hover:text-primary transition-colors"><FiX className="text-2xl" /></button>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveMember(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }} className="bg-white dark:bg-surface-dark max-w-xl w-full rounded-[3rem] shadow-2xl relative z-[100] overflow-hidden">
+                            <div className="p-12 text-center">
+                                <button onClick={() => setActiveMember(null)} className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary transition-colors"><FiX className="text-2xl" /></button>
 
                                 {activeMember.img && (
-                                    <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-8 border-4 border-white shadow-md relative">
+                                    <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6 border-4 border-primary/20 shadow-lg relative">
                                         <img src={activeMember.img} alt={activeMember.nombre} className="w-full h-full object-cover" />
                                     </div>
                                 )}
 
-                                <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-widest rounded-full mb-4">
+                                <span className="inline-block px-4 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest rounded-full mb-4">
                                     {activeMember.cargo || "Información"}
                                 </span>
-                                <h3 className="text-3xl font-serif text-text-light mb-4 leading-tight">{activeMember.nombre}</h3>
-                                <p className="text-text-dark text-[15px] mb-8 leading-relaxed">{activeMember.desc || "Parte vital del equipo de gestión de AIBAPT."}</p>
+                                <h3 className="text-3xl font-bold text-secondary dark:text-white mb-6 leading-tight">{activeMember.nombre}</h3>
+                                <p className="text-text-muted dark:text-gray-300 text-lg mb-8 leading-relaxed">{activeMember.desc || "Parte vital del equipo de gestión de AIBAPT."}</p>
 
                                 {activeMember.email && (
                                     <div className="space-y-4">
-                                        <p className="text-[11px] font-bold uppercase tracking-widest text-text-dark/50">Contacto Oficial</p>
-                                        <a href={`mailto:${activeMember.email}`} className="group/btn inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-primary text-white rounded-full font-medium hover:bg-secondary hover:-translate-y-1 transition-all shadow-sm">
-                                            <FiMail className="text-lg" /> {activeMember.email}
+                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Contacto Oficial</p>
+                                        <a href={`mailto:${activeMember.email}`} className="flex items-center justify-center gap-3 p-5 bg-primary text-white rounded-2xl font-bold hover:shadow-xl transition-all">
+                                            <FiMail className="text-xl" /> {activeMember.email}
                                         </a>
                                     </div>
                                 )}

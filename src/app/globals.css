@@ -1,5 +1,7 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #FFFFFF;
@@ -15,6 +17,10 @@
   --color-highlight: #ffd47f;
   --color-text-light: #333333;   
   --color-text-dark: #666666;    
+  --color-text-main: #333333;
+  --color-text-muted: #666666;
+  --color-surface-dark: #1f2937;
+  --color-background-dark: #111827;
   --color-background-light: #FFFFFF;
   --background-image-accent-gradient: linear-gradient(to bottom left, #d95858, #ff7a59);
   --color-background: var(--background);

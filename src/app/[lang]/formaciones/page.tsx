@@ -9,15 +9,15 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Import images for proper base path resolution
-import placeholderImg from "../../../public/images/webinar_placeholder_new.png";
-import imgEMDR from "../../../public/images/protocolos-corporais-em-terapia-emdr.png";
-import imgBS from "../../../public/images/treinamento-basico-em-brainspotting.jpeg";
-import imgTDAH from "../../../public/images/destravando-o-tdah-com-emdr-e-autorregula.jpeg";
-import imgCongreso from "../../../public/images/i-congreso-internacional-traumaclinic.jpg";
-import logoAibapt from "../../../public/images/aibapt_logo_transparent_seal.png";
+import placeholderImg from "../../../../public/images/webinar_placeholder_new.png";
+import imgEMDR from "../../../../public/images/protocolos-corporais-em-terapia-emdr.png";
+import imgBS from "../../../../public/images/treinamento-basico-em-brainspotting.jpeg";
+import imgTDAH from "../../../../public/images/destravando-o-tdah-com-emdr-e-autorregula.jpeg";
+import imgCongreso from "../../../../public/images/i-congreso-internacional-traumaclinic.jpg";
+import logoAibapt from "../../../../public/images/aibapt_logo_transparent_seal.png";
 
 function FormacionesContent() {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState<"events" | "recordings" | "accredited" | "accreditation" | "all">("events");
@@ -207,7 +207,7 @@ function FormacionesContent() {
     }, [activeTab, webinarsData, eventsData, recordingsData]);
 
     const filteredData = useMemo(() => {
-        let result = currentData;
+        let result: any[] = currentData;
 
         // Apply type filter
         if (filterType === "official") {
@@ -269,8 +269,8 @@ function FormacionesContent() {
             <main className="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Header Area Centered (Socios Standard) */}
                 <div className="text-center mb-10 max-w-4xl mx-auto flex flex-col items-center">
-                    <span className="inline-block bg-primary/10 text-primary font-bold text-sm px-4 py-1.5 rounded-full mb-4 uppercase tracking-wider">
-                        {activeTab === "events" ? "Desarrollo Profesional" : "Videoteca"}
+                    <span className="inline-block bg-primary/10 text-primary font-bold text-xs px-4 py-1.5 rounded-full mb-3 uppercase tracking-wider">
+                        {lang === "es" ? "Desarrollo Profesional" : "Desenvolvimento Profissional"}
                     </span>
                     <h1 className="text-4xl md:text-5xl font-serif text-text-light mb-4 leading-[1.1]">
                         {tabs.find(t => t.id === activeTab)?.label || t("edu.hub.title" as any)}

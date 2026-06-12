@@ -46,7 +46,12 @@ Dado que estamos usando Tailwind V4, estas variables deben reflejarse en nuestro
 Para mantener consistencia, los botones principales que llevan a la acción deben tener la siguiente estructura interactiva en Tailwind V4:
 - Contenedor principal: Usar `rounded-full`, padding adecuado, y `transition-all duration-300 hover:-translate-y-1`.
 - Aislamiento de grupo: Agregar `group/btn` al contenedor principal para que los efectos internos no interactúen con otros grupos (como menús desplegables).
-- Ícono interno: Un círculo de fondo semi-transparente conteniendo el SVG de la flecha.
+- Ícono interno: Un círculo de fondo semi-transparente conteniendo el SVG oficial de la flecha de la marca (con eje horizontal, no un chevron de Lucide):
+  ```xml
+  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+  </svg>
+  ```
 - Animación del ícono: Agregar `transition-transform duration-300 group-hover/btn:translate-x-1` al contenedor del ícono para que la flecha se mueva a la derecha cuando el usuario interactúe con el botón principal.
 
 ### Sistema de Tarjetas (Cards)
@@ -89,9 +94,10 @@ Para garantizar la estética premium y etérea en todas las nuevas páginas (com
 
 ### 2. Encabezados de Sección (Estándar Anti Falso-Fondo)
 Para evitar el efecto de "falso fondo" (donde el usuario no percibe que hay más contenido y abandona), todas las introducciones a secciones principales deben seguir estrictamente este estándar compacto:
-- **Padding Superior General:** El contenedor principal de la página debe tener un margen de `pt-10 md:pt-12` para despegarse del Navbar sin hundir demasiado el contenido visual.
+- **Padding Superior General (Regla de Oro):** El contenedor principal `<main>` de la página debe tener un padding superior de `pt-8 md:pt-12` (o `pt-10 md:pt-12` como máximo) para despegarse del Navbar.
+- **Regla Estricta de Alineación Vertical:** El contenedor interno de ancho (`max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8`) **NUNCA** debe llevar clases de padding superior (como `pt-6`, `pt-8`, `pt-12` o similares). El primer bloque de contenido (generalmente el badge/etiqueta) debe iniciar directamente heredando el padding únicamente del contenedor `<main>` principal para asegurar que la alineación vertical de la primera línea de texto sea milimétricamente idéntica en todo el sitio.
 - **Márgenes de Contenedor:** El contenedor del bloque de texto (título + intro) debe usar como máximo `mb-10` o `mb-6`. **Nunca usar `mb-20`**.
-- **Etiqueta (Badge):** Un "pill" superior con fondo sutil (`bg-primary/10`), texto del color de la marca (`text-primary`), en mayúsculas (`uppercase tracking-wider`) y márgenes controlados (`mb-4` o `mb-3`).
+- **Etiqueta (Badge):** Un "pill" superior con fondo sutil (`bg-primary/10`), texto del color de la marca (`text-primary`), en mayúsculas (`uppercase tracking-wider`), con tamaño de fuente estándar **xs** (`text-xs`) y margen inferior controlado (`mb-3`) en todas las páginas (como Quiénes Somos y Contacto) para asegurar total uniformidad visual.
 - **Título Principal (H1):** Tamaño estandarizado, elegante y proporcionado: `text-4xl md:text-5xl font-serif text-text-light mb-4 leading-[1.1]`. **Queda prohibido usar tamaños desproporcionados como `text-[60px]`** que empujen el contenido principal debajo del primer pantallazo ("above the fold").
 - **Subtítulo (Párrafo descriptivo):** Funciona como una nota aclaratoria fina. Su tamaño estándar debe ser `text-sm md:text-base text-text-dark leading-relaxed`.
 - **Regla Estricta de Ancho:** Es **OBLIGATORIO** incluir la regla de ancho máximo `max-w-2xl mx-auto` (o similar) en los subtítulos para evitar que las líneas de texto se estiren de lado a lado de la pantalla, lo cual causa fatiga visual.
