@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -15,13 +15,31 @@ function LoginContent() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    // Capturar mensajes o errores en la URL cuando el componente se monta
+    useEffect(() => {
+        const urlError = searchParams.get("error");
+        const urlMessage = searchParams.get("message");
+        
+        if (urlError === "profile_missing") {
+            setError(lang === 'es' ? "Tu perfil ha sido eliminado o está corrupto. Por favor, crea una cuenta nueva." : "Seu perfil foi excluído ou está corrompido. Por favor, crie uma nova conta.");
+        } else if (urlError === "critical_profile_error") {
+            setError(lang === 'es' ? "Error crítico al cargar tu perfil. Inténtalo de nuevo más tarde." : "Erro crítico ao carregar seu perfil. Tente novamente mais tarde.");
+        }
+        
+        if (urlMessage === "logged_out") {
+            setSuccess(lang === 'es' ? "Has cerrado sesión correctamente. ¡Hasta pronto!" : "Você saiu com sucesso. Até logo!");
+        }
+    }, [searchParams, lang]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
+        setSuccess("");
 
         try {
             const supabase = createBrowserSupabaseClient();
@@ -34,12 +52,16 @@ function LoginContent() {
                 setError(authError.message);
                 setLoading(false);
             } else {
+                setSuccess(lang === 'es' ? '¡Inicio de sesión exitoso! Entrando...' : 'Login bem-sucedido! Entrando...');
                 // Obtener perfil para determinar rol y redirección
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role')
                     .eq('id', authData.user?.id)
                     .single();
+
+                // Esperar 2 segundos para mostrar el mensaje de éxito
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
                 const role = (profile as any)?.role || 'member';
                 const defaultRoute = role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`;
@@ -106,6 +128,13 @@ function LoginContent() {
                             <p className="text-sm text-text-dark dark:text-white/60">{t("portal.desc")}</p>
                         </div>
 
+                        {success && (
+                            <div className="mb-6 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-4 rounded-xl flex items-center text-sm border border-green-100 dark:border-green-900/50">
+                                <span className="material-icons-round mr-2">check_circle</span>
+                                {success}
+                            </div>
+                        )}
+
                         {error && (
                             <div className="mb-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl flex items-center text-sm border border-red-100 dark:border-red-900/50">
                                 <span className="material-icons-round mr-2">error_outline</span>
@@ -122,9 +151,10 @@ function LoginContent() {
                                         id="email"
                                         type="email"
                                         required
+                                        disabled={loading || !!success}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40"
+                                        className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                         placeholder="tu@email.com"
                                     />
                                 </div>
@@ -141,9 +171,10 @@ function LoginContent() {
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         required
+                                        disabled={loading || !!success}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-12 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40"
+                                        className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-12 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                         placeholder="*****************"
                                     />
                                     <button

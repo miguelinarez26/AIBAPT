@@ -1,11 +1,29 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from "@/components/providers/AuthProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { LogOut } from "lucide-react";
 
 export default function Navbar() {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { lang, setLang, t } = useLanguage();
+  const { session, profile } = useAuth() as any;
+
+  const handleSignOut = async () => {
+      const supabase = createBrowserSupabaseClient();
+      await supabase.auth.signOut();
+      window.location.href = `/${lang}/login?message=logged_out`;
+  };
+
   return (
     <header className="w-full bg-[var(--background)] z-50 sticky top-0 transition-all duration-300">
       <div className="w-full px-4 md:px-8 lg:px-[140px] h-24 flex items-center justify-between">
@@ -141,14 +159,33 @@ export default function Navbar() {
           </div>
           
           <div className="flex items-center">
-            <Link href="/portal" className="group flex items-center gap-3 bg-primary text-white pl-6 pr-2 py-1.5 rounded-full font-medium transition-all duration-300 hover:bg-secondary hover:-translate-y-1">
-              <span className="whitespace-nowrap text-[15px]">{t("nav.portal")}</span>
-              <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                </svg>
+            {mounted && session ? (
+              <div className="relative group/auth">
+                <Link href={profile?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="group flex items-center gap-3 bg-primary text-white pl-6 pr-2 py-1.5 rounded-full font-medium transition-all duration-300 hover:bg-secondary hover:-translate-y-1">
+                  <span className="whitespace-nowrap text-[15px]">{t("nav.portal")}</span>
+                  <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                  </div>
+                </Link>
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover/auth:opacity-100 group-hover/auth:visible transition-all duration-300 py-2">
+                  <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {lang === 'es' ? 'Cerrar Sesión' : 'Sair'}
+                  </button>
+                </div>
               </div>
-            </Link>
+            ) : (
+              <Link href={`/${lang}/login`} className="group flex items-center gap-3 bg-primary text-white pl-6 pr-2 py-1.5 rounded-full font-medium transition-all duration-300 hover:bg-secondary hover:-translate-y-1">
+                <span className="whitespace-nowrap text-[15px]">{t("nav.portal")}</span>
+                <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  </svg>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
 

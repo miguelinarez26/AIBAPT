@@ -125,3 +125,16 @@ Las páginas no deben ser estáticas al cargar. Todas deben implementar `framer-
 - **Pilas vs Dropdowns:** Cuando hay 3 opciones o menos (ej. "Todos", "Oficiales", "Certificados"), se **deben usar Pilas (Pills)** (botones contiguos) dentro de una barra contenedora en lugar de un menú desplegable (`select`). Esto ahorra clics y mejora la usabilidad visual.
 - **Barra de Cristal (Glassmorphism):** El contenedor de estas pilas o de la barra de búsqueda superior debe utilizar el efecto cristal unificado: `bg-white/80 backdrop-blur border border-gray-100 rounded-full shadow-sm p-1`. Las pilas activas ganan un color sólido y una pequeña sombra (`shadow-sm scale-105`), y las inactivas quedan transparentes esperando el hover.
 - **Dropdowns Largos:** Para listas largas (ej. Países), se acepta el uso de dropdowns personalizados. **Regla de contraste:** El color del texto del trigger (ej. "País (Todos)") debe ser idéntico al color oscuro del ícono (`text-primary`), evitando usar colores claros (`text-secondary`) sobre fondos blancos para no causar choque visual o ilegibilidad.
+
+### 4. Validaciones de Formularios y Estados de Botones (Regla Anti-Bloqueo)
+Para garantizar la mejor experiencia de usuario (UX) en AIBAPT, se aplicará el estándar de validación activa en lugar de bloqueo silencioso.
+- **Botones Siempre Activos:** Queda prohibido el uso de botones principales "opacados" o deshabilitados (`disabled`) condicionados a rellenar campos. El usuario siempre debe poder hacer clic en el botón de acción principal (ej. "Comenzar", "Pagar", "Continuar").
+- **Excepción de Carga:** La única excepción válida para deshabilitar un botón es cuando el formulario ya se envió y está en estado de carga (`isSubmitting === true`), en cuyo caso el botón mostrará un spinner (`Loader2` de lucide-react).
+- **Diseño del Mensaje de Error (Alerta de Validación):** Si el usuario hace clic en el botón activo pero faltan campos requeridos o hay un error, se debe mostrar de inmediato una alerta de validación utilizando estrictamente el siguiente diseño:
+  ```jsx
+  <div className="mb-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl flex items-center text-sm border border-red-100 dark:border-red-900/50">
+    <span className="material-icons-round mr-2">error_outline</span>
+    {mensajeDeError}
+  </div>
+  ```
+- **Flujo de Error:** Las validaciones deben interrumpir el envío a la base de datos (función `onSubmit`) estableciendo un estado de error (`setError('Mensaje descriptivo')`) que renderice la alerta diseñada anteriormente, indicando exactamente qué campo falta o qué acción requiere el usuario.

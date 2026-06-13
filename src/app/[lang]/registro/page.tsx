@@ -19,6 +19,7 @@ function RegistroContent() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -37,6 +38,7 @@ function RegistroContent() {
 
         setLoading(true);
         setError("");
+        setSuccess(false);
 
         const supabase = createBrowserSupabaseClient();
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -59,9 +61,10 @@ function RegistroContent() {
             setError(lang === 'es' ? 'No se pudo crear el usuario. Intenta de nuevo.' : 'Não foi possível criar o usuário. Tente novamente.');
             setLoading(false);
         } else {
+            setSuccess(true);
             // Éxito en Auth, el trigger debería crear el perfil.
-            // Esperamos un momento para asegurar consistencia
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Esperamos un momento visual para que el usuario lea el éxito
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             const redirectTo = searchParams.get("redirectTo");
             const defaultRoute = `/${lang}/dashboard`;
@@ -128,6 +131,13 @@ function RegistroContent() {
                             </div>
                         )}
 
+                        {success && (
+                            <div className="mb-6 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-4 rounded-xl flex items-center text-sm border border-green-100 dark:border-green-900/50">
+                                <span className="material-icons-round mr-2">check_circle</span>
+                                {lang === 'es' ? '¡Registro exitoso! Iniciando sesión...' : 'Registro bem-sucedido! Iniciando sessão...'}
+                            </div>
+                        )}
+
                         <form onSubmit={handleRegister} className="flex flex-col gap-4">
                             {/* Nombres y Apellidos */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -139,9 +149,10 @@ function RegistroContent() {
                                             id="firstName"
                                             type="text"
                                             required
+                                            disabled={loading || success}
                                             value={firstName}
                                             onChange={(e) => setFirstName(e.target.value)}
-                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40"
+                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                             placeholder={lang === 'es' ? 'Ej: Juan' : 'Ex: João'}
                                         />
                                     </div>
@@ -154,9 +165,10 @@ function RegistroContent() {
                                             id="lastName"
                                             type="text"
                                             required
+                                            disabled={loading || success}
                                             value={lastName}
                                             onChange={(e) => setLastName(e.target.value)}
-                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40"
+                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                             placeholder={lang === 'es' ? 'Ej: Pérez' : 'Ex: Silva'}
                                         />
                                     </div>
@@ -171,9 +183,10 @@ function RegistroContent() {
                                         id="email"
                                         type="email"
                                         required
+                                        disabled={loading || success}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40"
+                                        className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                         placeholder="tu@email.com"
                                     />
                                 </div>
@@ -188,10 +201,11 @@ function RegistroContent() {
                                             id="password"
                                             type={showPassword ? "text" : "password"}
                                             required
+                                            disabled={loading || success}
                                             minLength={6}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-12 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40"
+                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-12 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                             placeholder="******"
                                         />
                                         <button
@@ -216,10 +230,11 @@ function RegistroContent() {
                                             id="confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
+                                            disabled={loading || success}
                                             minLength={6}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-12 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40"
+                                            className="w-full rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-surface-dark pl-11 pr-12 py-3 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 text-text-light dark:text-white transition-all placeholder:text-text-dark/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                             placeholder="******"
                                         />
                                         <button

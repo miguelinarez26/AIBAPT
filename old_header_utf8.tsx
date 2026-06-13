@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -27,7 +27,7 @@ export const Header = () => {
     const handleSignOut = async () => {
         const supabase = createBrowserSupabaseClient();
         await supabase.auth.signOut();
-        window.location.href = `/${lang}/login?message=logged_out`;
+        // El AuthProvider detectar├í el cambio y actualizar├í el estado
     };
 
     return (
@@ -41,7 +41,7 @@ export const Header = () => {
                     <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
                         <Link href={`/${lang}`} className={`text-sm font-medium transition-colors ${pathname === `/${lang}` || pathname === `/${lang}/` ? 'text-primary dark:text-secondary' : 'text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white'}`}>{t("nav.home")}</Link>
 
-                        {/* La Asociación Dropdown */}
+                        {/* La Asociaci├│n Dropdown */}
                         <div className="relative group">
                             <button className="flex items-center gap-1 text-sm font-medium text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white transition-colors">
                                 {/* @ts-ignore */}
@@ -57,7 +57,7 @@ export const Header = () => {
                             </div>
                         </div>
 
-                        {/* Membresía Dropdown */}
+                        {/* Membres├¡a Dropdown */}
                         <div className="relative group">
                             <button className="flex items-center gap-1 text-sm font-medium text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white transition-colors">
                                 {/* @ts-ignore */}
@@ -146,7 +146,7 @@ export const Header = () => {
                     <nav className="flex flex-col space-y-4 max-h-[75vh] overflow-y-auto no-scrollbar pb-4">
                         <Link href={`/${lang}`} onClick={() => setIsMenuOpen(false)} className="text-text-main dark:text-white/80 hover:text-primary font-medium px-2">{t("nav.home")}</Link>
 
-                        {/* La Asociación */}
+                        {/* La Asociaci├│n */}
                         <div className="flex flex-col space-y-3">
                             {/* @ts-ignore */}
                             <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.association" as any)}</span>
@@ -157,7 +157,7 @@ export const Header = () => {
                             <Link href={lang === 'es' ? '/docs/Reglamento_Interno_AIBAPT_ESP.pdf' : '/docs/Reglamento_Interno_AIBAPT_PT.pdf'} target="_blank" download onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.rules" as any)}</Link>
                         </div>
 
-                        {/* Membresía */}
+                        {/* Membres├¡a */}
                         <div className="flex flex-col space-y-3">
                             {/* @ts-ignore */}
                             <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.membership" as any)}</span>

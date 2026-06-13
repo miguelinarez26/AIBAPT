@@ -286,16 +286,26 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
   // Restricción de Membresía
   if (config.requiresMembership && !userProfile?.is_member) {
+    const isLoggedIn = !!session?.user;
+
     return (
-      <div className="bg-white dark:bg-surface-dark border border-amber-200 dark:border-amber-900 rounded-3xl p-10 text-center shadow-lg max-w-2xl mx-auto mb-8">
+      <div className="bg-white dark:bg-surface-dark border border-amber-200 dark:border-amber-900 rounded-3xl p-10 text-center shadow-lg max-w-2xl mx-auto mb-8 animate-fade-in-up">
         <ShieldAlert className="w-20 h-20 text-amber-500 mx-auto mb-6" />
         <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">
-          {lang === "es" ? "Membresía Requerida" : "Membresia Requerida"}
+          {isLoggedIn 
+             ? (lang === "es" ? "Membresía Requerida" : "Membresia Requerida")
+             : (lang === "es" ? "Inicia Sesión" : "Faça Login")
+          }
         </h2>
         <p className="text-text-muted mb-8 text-lg">
-          {lang === "es"
-            ? "Este trámite está restringido únicamente a miembros activos de AIBAPT. Por favor, solicita tu membresía primero."
-            : "Este trâmite é restrito apenas a membros ativos da AIBAPT. Por favor, solicite sua membresia primeiro."}
+          {isLoggedIn
+             ? (lang === "es"
+                 ? "Este trámite está restringido únicamente a miembros activos de AIBAPT. Por favor, solicita tu membresía primero."
+                 : "Este trâmite é restrito apenas a membros ativos da AIBAPT. Por favor, solicite sua membresia primeiro.")
+             : (lang === "es"
+                 ? "Debes iniciar sesión para verificar tu estado de membresía y continuar con este trámite."
+                 : "Você deve fazer login para verificar seu status de membresia e continuar com este trâmite.")
+          }
         </p>
         <div className="flex justify-center gap-4">
           <button
@@ -304,17 +314,32 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           >
             {lang === "es" ? "Volver" : "Voltar"}
           </button>
-          <button
-            onClick={() => window.location.href = `/${lang}/dashboard?tramite=solicitud_membresia`}
-            className="bg-primary text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
-          >
-            {lang === "es" ? "Solicitar Membresía" : "Solicitar Membresia"}
-            <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </span>
-          </button>
+          
+          {isLoggedIn ? (
+            <button
+              onClick={() => window.location.href = `/${lang}/dashboard?tramite=solicitud_membresia`}
+              className="bg-primary text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
+            >
+              {lang === "es" ? "Solicitar Membresía" : "Solicitar Membresia"}
+              <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => window.location.href = `/${lang}/login?redirect=/${lang}/formaciones?tab=accreditation`}
+              className="bg-primary text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
+            >
+              {lang === "es" ? "Iniciar Sesión" : "Fazer Login"}
+              <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </button>
+          )}
         </div>
       </div>
     );

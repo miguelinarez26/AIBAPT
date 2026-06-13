@@ -213,7 +213,7 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
         if (activeTab === "recordings") return recordingsData;
         if (activeTab === "accredited") return accreditedData.map((item: any) => ({
             ...item,
-            img: placeholderImg,
+            img: logoAibapt,
             category: "CURSO ACREDITADO",
             badge: item.hours,
             badgeIcon: "schedule",
@@ -411,11 +411,9 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                         {course.badge}
                                                     </div>
                                                     <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2">
-                                                        {activeTab !== "accredited" && (
-                                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border border-white/20 backdrop-blur-md shadow-sm ${course.isOfficial ? "bg-primary/90 text-white" : "bg-blue-600/90 text-white"}`}>
-                                                                {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
-                                                            </span>
-                                                        )}
+                                                        <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border border-white/20 backdrop-blur-md shadow-sm ${course.isOfficial ? "bg-primary/90 text-white" : "bg-blue-600/90 text-white"}`}>
+                                                            {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <div className="p-6 pt-5 flex flex-col flex-1">

@@ -55,7 +55,15 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
         (sp: { id: string }) => sp.id === selectedEscenario
       ));
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleContinue = () => {
+    if (!isSelectionValid) {
+      setError(lang === "es" ? "Por favor selecciona el tipo de membresía al que deseas aplicar para continuar." : "Por favor, selecione o tipo de membresia que deseja aplicar para continuar.");
+      return;
+    }
+    setError(null);
+
     if (!session) {
       const redirectPath = `/${lang}/afiliacion`;
       router.push(`/${lang}/registro?redirectTo=${encodeURIComponent(redirectPath)}`);
@@ -106,12 +114,12 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeInUp}
-          className="text-center mb-12 max-w-4xl mx-auto"
+          className="text-center mb-6 max-w-4xl mx-auto"
         >
           <div className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs mb-3 uppercase tracking-wider">
             {lang === "es" ? "Portal de Afiliación" : "Portal de Afiliação"}
           </div>
-          <h1 className="text-4xl md:text-5xl font-serif text-text-light mb-4 leading-[1.1]">
+          <h1 className="text-4xl md:text-5xl font-serif text-text-light mb-2 leading-[1.1]">
             {lang === "es" ? (
               <>
                 Solicitud de <span className="italic font-light text-primary">Membresía</span> AIBAPT
@@ -135,7 +143,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
           whileInView="visible"
           viewport={{ once: true }}
           variants={staggerContainer}
-          className="flex flex-col lg:flex-row justify-center items-stretch gap-8 w-full mb-12"
+          className="flex flex-col lg:flex-row justify-center items-stretch gap-4 lg:gap-6 w-full mb-8"
         >
           {config?.monto.map((esc) => {
             const isSelected =
@@ -158,6 +166,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
 
                 <div
                   onClick={() => {
+                    setError(null);
                     if (esc.subProfiles && esc.subProfiles.length > 0) {
                       if (!isSelected) setSelectedEscenario(esc.subProfiles[0].id);
                     } else {
@@ -170,25 +179,25 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                       : "bg-white border-secondary/35 shadow-md shadow-secondary/15 hover:bg-primary hover:border-primary hover:shadow-xl hover:shadow-primary/20 hover:-translate-y-1"
                   }`}
                 >
-                  <div className="p-8 md:p-10 text-center flex-1 flex flex-col relative z-10">
+                  <div className="p-6 md:p-8 text-center flex-1 flex flex-col relative z-10">
                     <div
-                      className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-colors duration-500 shadow-sm ${
+                      className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-500 shadow-sm ${
                         isSelected
                           ? "bg-secondary text-white shadow-md shadow-black/10"
                           : "bg-primary/10 text-primary group-hover:bg-white group-hover:text-primary"
                       }`}
                     >
-                      <Icon className="w-8 h-8" />
+                      <Icon className="w-7 h-7" />
                     </div>
                     <h3
-                      className={`text-[22px] font-serif transition-colors duration-500 mb-2 leading-snug ${
+                      className={`text-xl font-serif transition-colors duration-500 mb-1 leading-snug ${
                         isSelected ? "text-white" : "text-text-light group-hover:text-white"
                       }`}
                     >
                       {getTranslation(esc.label)}
                     </h3>
 
-                    <div className={`text-3xl font-black mb-3 transition-colors duration-500 ${
+                    <div className={`text-2xl font-black mb-2 transition-colors duration-500 ${
                         isSelected ? "text-white" : "text-accent group-hover:text-white"
                       }`}>
                       {esc.monto > 0
@@ -201,7 +210,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                       )}
                     </div>
 
-                    <p className={`text-[15px] leading-relaxed mb-4 transition-colors duration-500 ${
+                    <p className={`text-sm leading-relaxed mb-3 transition-colors duration-500 ${
                         isSelected ? "text-white/95" : "text-text-dark group-hover:text-white/95"
                       }`}>
                       {getTranslation(esc.description)}
@@ -294,11 +303,17 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
           })}
         </motion.div>
 
-        <div className="flex justify-center mt-10">
+        {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 max-w-xl mx-auto bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl flex items-center justify-center text-sm border border-red-100 dark:border-red-900/50">
+              <span className="material-icons-round mr-2">error_outline</span>
+              {error}
+            </motion.div>
+        )}
+
+        <div className="flex justify-center">
           <button
             onClick={handleContinue}
-            disabled={!isSelectionValid}
-            className="group/btn relative inline-flex items-center gap-4 bg-accent hover:bg-accent-light text-white pl-8 pr-2 py-2 rounded-full font-bold text-lg transition-all duration-300 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            className="group/btn relative inline-flex items-center gap-4 bg-accent hover:bg-accent-light text-white pl-8 pr-2 py-2 rounded-full font-bold text-lg transition-all duration-300 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-1"
           >
             <span className="leading-none">
               {!(mounted && session)
