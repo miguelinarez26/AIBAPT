@@ -384,7 +384,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
               
               {!action ? (
                 <div className="flex gap-4">
-                  <button onClick={() => setAction('approve')} className="flex-1 bg-aibapt-green hover:bg-aibapt-green/90 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+                  <button onClick={() => setAction('approve')} className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2">
                     <span className="material-icons-round">check_circle</span> {t("admin.modal.approve_btn")}
                   </button>
                   <button onClick={() => setAction('reject')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2">
@@ -412,7 +412,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                     <button 
                       disabled={submitting}
                       onClick={() => handleProcess(action === 'approve' ? 'approved' : 'rejected')}
-                      className={`px-6 py-2 text-white rounded-lg font-medium flex items-center gap-2 ${action === 'approve' ? 'bg-aibapt-green' : 'bg-red-600'}`}
+                      className={`px-6 py-2 text-white rounded-lg font-medium flex items-center gap-2 ${action === 'approve' ? 'bg-primary' : 'bg-red-600'}`}
                     >
                       {submitting ? <span className="material-icons-round animate-spin">refresh</span> : <span className="material-icons-round">gavel</span>}
                       {t("admin.modal.confirm")} {action === 'approve' ? t("admin.filter.approved") : t("admin.filter.rejected")}

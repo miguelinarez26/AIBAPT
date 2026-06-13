@@ -17,24 +17,10 @@ export async function POST(request: Request) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // 1. Obtener la solicitud actual para saber el type_id y la metadata
+    // 1. Obtener la solicitud actual
     const { data: appData, error: fetchError } = await supabaseAdmin
       .from('applications')
-      .select(`
-        *,
-        profiles (
-          id,
-          first_name,
-          last_name,
-          email,
-          language_preference,
-          member_number
-        ),
-        accreditation_types (
-          id,
-          name
-        )
-      `)
+      .select('*')
       .eq('id', applicationId)
       .single();
 
@@ -42,6 +28,24 @@ export async function POST(request: Request) {
       console.error('Error fetching app data:', fetchError);
       return NextResponse.json({ error: 'Solicitud no encontrada.' }, { status: 404 });
     }
+
+    // 2. Obtener el perfil del usuario y el tipo de acreditación en paralelo
+    const [profileResult, accTypeResult] = await Promise.all([
+      supabaseAdmin
+        .from('profiles')
+        .select('id, first_name, last_name, email, language_preference, member_number')
+        .eq('id', (appData as any).user_id)
+        .single(),
+      supabaseAdmin
+        .from('accreditation_types')
+        .select('id, name')
+        .eq('id', (appData as any).type_id)
+        .single(),
+    ]);
+
+    // Combinar en un solo objeto para mantener compatibilidad con el resto del código
+    (appData as any).profiles = profileResult.data || null;
+    (appData as any).accreditation_types = accTypeResult.data || null;
 
     // 2. Actualizar el estado y las notas
     const { error: updateError } = await (supabaseAdmin.from('applications') as any)
@@ -85,8 +89,9 @@ export async function POST(request: Request) {
         else if (['institucional'].includes(memType)) expectedPrefix = '700';
         else if (['simpatizante'].includes(memType)) expectedPrefix = '800';
         else if (['bienhechor'].includes(memType)) expectedPrefix = '500';
-        else if (['emdr_basico_default', 'psico_cert_default', 'psico_senior_default', 'psico_master_default', 'renovacion_psicoterapeuta', 'equivalencia_psicoterapeuta'].includes(memType)) expectedPrefix = '302';
-        else if (['sup_cert_default', 'sup_senior_default', 'renovacion_supervisor', 'equivalencia_supervisor'].includes(memType)) expectedPrefix = '402';
+        else if (['certificado', 'psico_cert_default', 'psico_senior_default', 'psico_master_default', 'renovacion_psicoterapeuta', 'equivalencia_psicoterapeuta', 'EMDR_Psicoterapeuta'].includes(memType)) expectedPrefix = '301';
+        else if (['emdr_basico_default'].includes(memType)) expectedPrefix = '302';
+        else if (['supervisor', 'sup_cert_default', 'sup_senior_default', 'renovacion_supervisor', 'equivalencia_supervisor', 'EMDR_Supervisor'].includes(memType)) expectedPrefix = '401';
 
         if (currentPrefix !== expectedPrefix) {
           shouldGenerateNewNumber = true;

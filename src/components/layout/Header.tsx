@@ -44,10 +44,12 @@ export const Header = () => {
         <header className="fixed w-full top-0 z-50 glass-header border-b border-accent/20 dark:border-accent/10 transition-all duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
-                    <Link href={`/${lang}`} className="flex items-center gap-2">
-                        <Image src={logoLight} alt="AIBAPT Logo" width={180} height={100} className="object-contain h-12 w-auto dark:hidden" />
-                        <Image src={logoDark} alt="AIBAPT Logo Blanco" width={180} height={100} className="object-contain h-12 w-auto hidden dark:block" />
-                    </Link>
+                    <div className="flex-1 flex justify-start">
+                        <Link href={`/${lang}`} className="flex items-center gap-2">
+                            <Image src={logoLight} alt="AIBAPT Logo" width={180} height={100} className="object-contain h-12 w-auto dark:hidden" />
+                            <Image src={logoDark} alt="AIBAPT Logo Blanco" width={180} height={100} className="object-contain h-12 w-auto hidden dark:block" />
+                        </Link>
+                    </div>
                     <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
                         <Link href={`/${lang}`} className={`text-sm font-medium transition-colors ${pathname === `/${lang}` || pathname === `/${lang}/` ? 'text-primary dark:text-secondary' : 'text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white'}`}>{t("nav.home")}</Link>
 
@@ -97,24 +99,9 @@ export const Header = () => {
                             </div>
                         </div>
 
-                        {/* Publicaciones Dropdown */}
-                        <div className="relative group">
-                            <button className="flex items-center gap-1 text-sm font-medium text-text-main dark:text-white/80 hover:text-primary dark:hover:text-white transition-colors">
-                                {/* @ts-ignore */}
-                                {t("nav.news" as any)}
-                                <span className="material-icons-round text-[16px]">expand_more</span>
-                            </button>
-                            <div className="absolute top-full left-0 mt-6 w-64 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-300 py-2">
-                                <Link href={`/${lang}/publicaciones?cat=articulos`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.clinical")}</Link>
-                                <Link href={`/${lang}/publicaciones?cat=entrevistas`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.interviews")}</Link>
-                                <Link href={`/${lang}/publicaciones?cat=prensa`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.prensa")}</Link>
-                                <Link href={`/${lang}/publicaciones?cat=libros`} className="block px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary">{t("news.cat.libros")}</Link>
-                                <div className="h-px bg-accent/10 my-1 mx-2"></div>
-                                <Link href={`/${lang}/publicaciones`} className="block px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-colors uppercase tracking-wider">{t("nav.see_all" as any)}</Link>
-                            </div>
-                        </div>
+
                     </nav>
-                    <div className="flex items-center gap-4">
+                    <div className="flex-1 flex items-center justify-end gap-4">
                         <div className="hidden sm:flex items-center bg-accent/50 dark:bg-surface-dark rounded-full p-1 border border-accent dark:border-gray-700">
                             <button
                                 onClick={() => setLang("es")}
@@ -136,28 +123,22 @@ export const Header = () => {
 
                                 <div className="relative group">
                                     <div className="relative">
-                                        <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+                                        <Link href={`/${lang}/dashboard`} className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white shadow-sm hover:bg-primary/80 transition-all">
                                             {avatarUrl ? (
-                                                <img 
-                                                    src={avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${avatarUrl}`}
-                                                    alt={displayName}
-                                                    className="w-full h-full object-cover rounded-full"
-                                                />
+                                                <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover rounded-full" />
                                             ) : (
                                                 <span className="font-bold text-[15px]">{initial}</span>
                                             )}
                                         </Link>
-                                        {/* Micro-Insignia de Estado (Status Badge - verde si es activo) */}
-                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-aibapt-green rounded-full border-2 border-[var(--background)] shadow-sm" title="Activo"></div>
                                     </div>
                                 <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-2">
                                     <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800 mb-1">
                                         <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("nav.portal")}</p>
                                         <p className="text-sm font-medium truncate text-text-main dark:text-white">{displayName}</p>
                                     </div>
-                                    <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary transition-colors">
+                                    <Link href={profile?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary transition-colors">
                                         <span className="material-icons-round text-[18px] mr-2 text-primary">dashboard</span>
-                                        {userMeta?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
+                                        {profile?.role === 'admin' ? 'Panel Administrativo' : 'Dashboard'}
                                     </Link>
                                     <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
                                         <LogOut className="w-4 h-4 mr-2" />
@@ -215,16 +196,7 @@ export const Header = () => {
                             <Link href={`/${lang}/formaciones?tab=accreditation`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("nav.development.accreditation" as any)}</Link>
                         </div>
 
-                        {/* Publicaciones */}
-                        <div className="flex flex-col space-y-3">
-                            {/* @ts-ignore */}
-                            <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider px-2 pt-2 border-t border-accent/10 dark:border-gray-800">{t("nav.news" as any)}</span>
-                            <Link href={`/${lang}/publicaciones?cat=articulos`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.clinical")}</Link>
-                            <Link href={`/${lang}/publicaciones?cat=entrevistas`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.interviews")}</Link>
-                            <Link href={`/${lang}/publicaciones?cat=prensa`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.prensa")}</Link>
-                            <Link href={`/${lang}/publicaciones?cat=libros`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-sm font-medium text-text-muted dark:text-gray-400 hover:text-primary">{t("news.cat.libros")}</Link>
-                            <Link href={`/${lang}/publicaciones`} onClick={() => setIsMenuOpen(false)} className="pl-4 text-xs font-bold text-primary tracking-wider uppercase">{t("nav.see_all" as any)}</Link>
-                        </div>
+
 
                         <div className="pt-4 border-t border-accent/20 dark:border-gray-800">
                             {mounted && session ? (

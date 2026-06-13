@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiMail, FiX, FiChevronRight, FiUsers } from "react-icons/fi";
+import { FiMail, FiX, FiUsers } from "react-icons/fi";
 
-// Definición de Interfaces para evitar errores de tipos
 interface SubComite {
     id: string;
     rol: string;
@@ -99,91 +98,67 @@ const DIRECTIVA_DATA: Directivo[] = [
     }
 ];
 
-interface ActiveMemberDetail {
-    cargo: string;
-    nombre: string;
-    desc: string;
-    img?: string;
-    email?: string;
-}
-
 export const FunctionalStructure = () => {
-    const [activeMember, setActiveMember] = useState<ActiveMemberDetail | null>(null);
+    const [activeMember, setActiveMember] = useState<Directivo | null>(null);
 
     return (
-        <section className="py-24 bg-cream/30 dark:bg-bg-dark/50 overflow-hidden">
+        <section className="py-24 bg-background-light overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Encabezado */}
                 <div className="text-center mb-20">
-                    <span className="text-primary italic font-display text-2xl mb-4 block">Acompañando la excelencia</span>
-                    <h2 className="text-4xl md:text-6xl font-bold text-secondary dark:text-white mb-6">Organigrama Funcional</h2>
-                    <div className="h-1.5 w-24 bg-primary mx-auto rounded-full"></div>
+                    <p className="text-accent text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">Acompañando la excelencia</p>
+                    <h2 className="text-4xl md:text-[56px] font-serif text-text-light mb-6 leading-[1.1]">Organigrama <span className="italic font-light text-primary">Funcional</span></h2>
                 </div>
 
-                {/* Listado de Directivos */}
-                <div className="space-y-12">
+                {/* Portrait Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {DIRECTIVA_DATA.map((member, index) => (
-                        <div key={index} className="relative">
-                            <motion.div
-                                initial={{ opacity: 0, x: -30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                onClick={() => setActiveMember(member)}
-                                className="group flex flex-col lg:flex-row items-center gap-8 bg-white dark:bg-surface-dark p-8 md:p-10 rounded-[3rem] border border-accent/20 hover:border-primary/40 hover:shadow-2xl transition-all cursor-pointer relative z-10"
-                            >
-                                {/* Imagen Directivo (Asegurando carga local) */}
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: index * 0.08 }}
+                            onClick={() => setActiveMember(member)}
+                            className="group/card bg-white rounded-[32px] shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+                        >
+                            {/* Panel de color superior */}
+                            <div className={`h-40 w-full rounded-t-[32px] flex items-end justify-center ${member.color === "primary" ? "bg-primary" : "bg-accent"}`}>
                                 {member.img ? (
-                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl relative shrink-0">
-                                        <img src={member.img} alt={member.nombre} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl translate-y-12 shrink-0">
+                                        <img
+                                            src={member.img}
+                                            alt={member.nombre}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                                        />
                                     </div>
                                 ) : (
-                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-110">
-                                        <FiUsers className="text-5xl" />
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl translate-y-12 shrink-0 bg-white">
+                                        <img src="/images/aibapt_logo_transparent_seal.png" alt="AIBAPT" className="w-full h-full object-contain p-1" />
                                     </div>
                                 )}
+                            </div>
 
-                                {/* Datos Directivo */}
-                                <div className="flex-1 text-center lg:text-left">
-                                    <span className={`inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 ${member.color === 'primary' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}`}>
-                                        {member.cargo}
-                                    </span>
-                                    <h3 className="text-3xl md:text-4xl font-bold text-secondary dark:text-white mb-4">{member.nombre}</h3>
-                                    <p className="text-text-muted dark:text-gray-400 text-lg max-w-2xl">{member.desc}</p>
-                                </div>
+                            {/* Contenido */}
+                            <div className="pt-16 pb-8 px-8 text-center flex flex-col items-center">
+                                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 ${member.color === "primary" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"}`}>
+                                    {member.cargo}
+                                </span>
+                                <h3 className="text-xl font-serif text-text-light mb-3 leading-snug">{member.nombre}</h3>
+                                <p className="text-text-dark text-sm leading-relaxed mb-6 line-clamp-3">{member.desc}</p>
 
-                                {/* Botón Interactividad */}
-                                <div className="shrink-0 flex items-center gap-4 text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Conocer Equipo <FiChevronRight className="text-2xl" />
-                                </div>
-                            </motion.div>
-
-                            {/* Subcomités */}
-                            {member.comites && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 pl-8 md:pl-20 relative z-0">
-                                    <div className="hidden lg:block absolute left-10 top-[-80px] bottom-10 w-0.5 bg-primary/20 -z-10"></div>
-
-                                    {member.comites.map((comite, idx) => (
-                                        <motion.div
-                                            key={idx}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            whileInView={{ opacity: 1, y: 0 }}
-                                            viewport={{ once: true }}
-                                            transition={{ delay: 0.2 + (idx * 0.1) }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setActiveMember({ ...comite, cargo: "Comité Directivo", nombre: comite.rol, desc: comite.desc || "Equipo de apoyo y gestión funcional." });
-                                            }}
-                                            className="bg-white/60 dark:bg-surface-light border border-primary/10 hover:border-primary/40 p-6 rounded-3xl hover:shadow-lg transition-all cursor-pointer group"
-                                        >
-                                            <p className="text-[10px] font-bold uppercase text-primary/70 mb-2">{comite.rol}</p>
-                                            <p className="text-base font-bold text-secondary dark:text-white group-hover:text-primary transition-colors">{comite.lider}</p>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                {/* Indicador de comités */}
+                                {member.comites && (
+                                    <div className="flex items-center gap-2 text-xs font-semibold text-accent mt-auto">
+                                        <span>{member.comites.length} {member.comites.length === 1 ? "comité" : "comités"}</span>
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="transition-transform duration-300 group-hover/card:translate-x-1">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>
@@ -191,35 +166,88 @@ export const FunctionalStructure = () => {
             {/* Modal de Detalle */}
             <AnimatePresence>
                 {activeMember && (
-                    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveMember(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }} className="bg-white dark:bg-surface-dark max-w-xl w-full rounded-[3rem] shadow-2xl relative z-[100] overflow-hidden">
-                            <div className="p-12 text-center">
-                                <button onClick={() => setActiveMember(null)} className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary transition-colors"><FiX className="text-2xl" /></button>
+                    <>
+                        {/* Backdrop separado — cubre toda la pantalla */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setActiveMember(null)}
+                            className="fixed inset-0 z-[140] bg-black/70 backdrop-blur-sm"
+                        />
 
-                                {activeMember.img && (
-                                    <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6 border-4 border-primary/20 shadow-lg relative">
-                                        <img src={activeMember.img} alt={activeMember.nombre} className="w-full h-full object-cover" />
-                                    </div>
-                                )}
+                        {/* Contenedor de posicionamiento — centrado horizontal y vertical */}
+                        <div className="fixed inset-0 z-[150] overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4 pt-32 pb-8">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                                className="bg-white max-w-xl w-full rounded-[32px] shadow-2xl relative flex flex-col max-h-[calc(100vh-120px)] overflow-hidden"
+                            >
+                                {/* Botón cerrar — siempre visible, fuera del scroll */}
+                                <button
+                                    onClick={() => setActiveMember(null)}
+                                    className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 text-gray-400 hover:text-primary transition-colors shadow-sm z-20"
+                                >
+                                    <FiX />
+                                </button>
 
-                                <span className="inline-block px-4 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest rounded-full mb-4">
-                                    {activeMember.cargo || "Información"}
-                                </span>
-                                <h3 className="text-3xl font-bold text-secondary dark:text-white mb-6 leading-tight">{activeMember.nombre}</h3>
-                                <p className="text-text-muted dark:text-gray-300 text-lg mb-8 leading-relaxed">{activeMember.desc || "Parte vital del equipo de gestión de AIBAPT."}</p>
+                                {/* Panel de color superior — fijo, nunca scrollea */}
+                                <div className={`h-28 w-full shrink-0 ${activeMember.color === "primary" ? "bg-primary" : "bg-accent"}`} />
 
-                                {activeMember.email && (
-                                    <div className="space-y-4">
-                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Contacto Oficial</p>
-                                        <a href={`mailto:${activeMember.email}`} className="flex items-center justify-center gap-3 p-5 bg-primary text-white rounded-2xl font-bold hover:shadow-xl transition-all">
-                                            <FiMail className="text-xl" /> {activeMember.email}
+                                {/* Foto — margen negativo para solapar el panel, nunca scrollea */}
+                                <div className="flex justify-center -mt-10 shrink-0 relative z-10">
+                                    {activeMember.img ? (
+                                        <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                                            <img src={activeMember.img} alt={activeMember.nombre} className="w-full h-full object-cover" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white">
+                                            <img src="/images/aibapt_logo_transparent_seal.png" alt="AIBAPT" className="w-full h-full object-contain p-1" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Contenido scrolleable — solo esta parte tiene scroll */}
+                                <div className="overflow-y-auto flex-1 px-10 pt-4 pb-10 text-center">
+                                    <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 ${activeMember.color === "primary" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"}`}>
+                                        {activeMember.cargo}
+                                    </span>
+                                    <h3 className="text-2xl font-serif text-text-light mb-3 leading-tight">{activeMember.nombre}</h3>
+                                    <p className="text-text-dark text-sm leading-relaxed mb-6">{activeMember.desc}</p>
+
+                                    {activeMember.email && (
+                                        <a
+                                            href={`mailto:${activeMember.email}`}
+                                            className="inline-flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:shadow-xl hover:shadow-primary/20 transition-all"
+                                        >
+                                            <FiMail /> {activeMember.email}
                                         </a>
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    </div>
+                                    )}
+
+                                    {/* Sub-comités */}
+                                    {activeMember.comites && (
+                                        <div className="mt-8">
+                                            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">Comités bajo su dirección</p>
+                                            <div className="space-y-3">
+                                                {activeMember.comites.map((comite, idx) => (
+                                                    <div key={idx} className="flex flex-col items-center gap-1 p-4 rounded-2xl border-2 border-gray-100 hover:border-secondary transition-colors duration-300 text-center">
+                                                        <p className="text-[10px] font-bold uppercase text-primary/70">{comite.rol}</p>
+                                                        <p className="text-sm font-bold text-text-light">{comite.lider}</p>
+                                                        {comite.email && (
+                                                            <p className="text-xs text-text-dark">{comite.email}</p>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </div>
+                        </div>
+                    </>
                 )}
             </AnimatePresence>
         </section>

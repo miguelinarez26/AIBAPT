@@ -556,9 +556,14 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                 href={`https://www.paypal.com/paypalme/aibapt`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 px-4 py-2 rounded-xl bg-[#009cde] hover:bg-[#0070ba] text-white text-xs font-black transition-colors shadow-sm"
+                className="shrink-0 bg-highlight hover:bg-highlight/90 text-text-light px-6 py-3 rounded-full font-bold text-sm shadow-lg transition-all duration-300 hover:-translate-y-1 flex items-center gap-3 group/btn"
               >
-                {lang === 'es' ? 'Pagar ahora' : 'Pagar agora'} ↗
+                {lang === 'es' ? 'Pagar ahora' : 'Pagar agora'}
+                <span className="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </span>
               </a>
             </div>
           )}

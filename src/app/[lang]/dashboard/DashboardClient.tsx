@@ -84,15 +84,13 @@ export default function DashboardClient({ profile, applications = [], lang }: an
             <h1 className="text-4xl md:text-5xl font-serif mb-2 leading-tight">
               {t["dashboard.hello"]}, <span className="font-light italic text-primary">{displayName}</span>
             </h1>
-            {profile?.member_number && (
-              <div className="flex items-center gap-2 mt-1 mb-3">
+            <div className="flex items-center gap-3 mt-2 mb-2 flex-wrap">
+              {profile?.member_number && (
                 <span className="bg-white dark:bg-surface-dark text-text-light dark:text-white px-3 py-1.5 rounded-full text-[11px] font-bold border border-secondary/20 flex items-center gap-1.5 shadow-sm uppercase">
                   <span className="material-icons-round text-[14px] text-primary">badge</span>
                   {t["dashboard.membership.id"]}: <span className="text-primary">{profile.member_number}</span>
                 </span>
-              </div>
-            )}
-            <div className="mt-2">
+              )}
               <MembershipBadge isMember={isMember} lang={lang} />
             </div>
           </div>
@@ -193,7 +191,7 @@ export default function DashboardClient({ profile, applications = [], lang }: an
                           </td>
                           <td className="py-5 px-4">
                             <span className="font-medium text-text-light dark:text-gray-200">
-                              {formatTypeName(app.tramite_type)}
+                              {formatTypeName(app.accreditation_type_name)}
                             </span>
                           </td>
                           <td className="py-5 px-4 text-text-dark dark:text-gray-400 hidden md:table-cell font-medium text-sm">

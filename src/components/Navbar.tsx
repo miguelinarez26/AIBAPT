@@ -40,7 +40,7 @@ export default function Navbar() {
       <div className="w-full px-4 md:px-8 lg:px-[140px] h-24 flex items-center justify-between">
         
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex-1 flex justify-start items-center gap-2">
           <Link href="/">
             <Image 
               src="/images/logo_aibapt.png" 
@@ -134,30 +134,11 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="group relative">
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-highlight transition-all duration-300 whitespace-nowrap">
-              {/* @ts-ignore */}
-              {t("nav.news")} 
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div className="absolute top-[calc(100%+16px)] left-1/2 -translate-x-1/2 min-w-[240px] bg-background-light rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 p-4 z-50">
-              <div className="flex flex-col gap-1 text-[#555555] text-[14px] font-light">
-                {/* @ts-ignore */}
-                <Link href="/publicaciones?cat=articulos" className="block px-4 py-2 rounded-md hover:bg-highlight hover:text-text-light transition-colors">{t("news.cat.clinical")}</Link>
-                {/* @ts-ignore */}
-                <Link href="/publicaciones?cat=entrevistas" className="block px-4 py-2 rounded-md hover:bg-highlight hover:text-text-light transition-colors">{t("news.cat.interviews")}</Link>
-                {/* @ts-ignore */}
-                <Link href="/publicaciones?cat=prensa" className="block px-4 py-2 rounded-md hover:bg-highlight hover:text-text-light transition-colors">{t("news.cat.prensa")}</Link>
-                {/* @ts-ignore */}
-                <Link href="/publicaciones?cat=libros" className="block px-4 py-2 rounded-md hover:bg-highlight hover:text-text-light transition-colors">{t("news.cat.libros")}</Link>
-                <Link href="/publicaciones" className="block px-4 py-2 rounded-md hover:bg-highlight hover:text-text-light transition-colors font-medium">Ver Todo</Link>
-              </div>
-            </div>
-          </div>
+
         </nav>
 
         {/* Right Actions */}
-        <div className="hidden lg:flex items-center gap-4">
+        <div className="flex-1 flex justify-end items-center gap-4">
           <div className="flex items-center bg-gray-100 rounded-full p-1 border border-gray-200">
             <button
               onClick={() => setLang("es")}
@@ -181,7 +162,7 @@ export default function Navbar() {
 
                 <div className="relative group/auth">
                   <div className="relative">
-                    <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+                    <Link href={`/${lang}/dashboard`} className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white shadow-sm hover:bg-primary/80 transition-all">
                       {avatarUrl ? (
                           <img 
                               src={avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${avatarUrl}`}
@@ -192,8 +173,6 @@ export default function Navbar() {
                           <span className="font-bold text-[15px]">{initial}</span>
                       )}
                     </Link>
-                    {/* Micro-Insignia de Estado (Status Badge - verde si es activo) */}
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-aibapt-green rounded-full border-2 border-[var(--background)] shadow-sm" title="Activo"></div>
                   </div>
                 <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover/auth:opacity-100 group-hover/auth:visible transition-all duration-300 py-2">
                   <div className="px-4 py-2 border-b border-gray-100 mb-1">
