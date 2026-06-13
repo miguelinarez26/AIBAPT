@@ -28,11 +28,13 @@ export default async function ProfilePage({
   );
 
   // Fetch perfil del usuario
-  const { data: profile, error: profileError } = await supabaseAdmin
+  const { data: profileRaw, error: profileError } = await supabaseAdmin
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single();
+    
+  const profile = profileRaw as any;
 
   const isProfileMissing = !profile || ((profileError as any) && ((profileError as any).code === 'PGRST116' || (profileError as any).code === '406'));
 

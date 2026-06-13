@@ -1,62 +1,56 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Profile } from "@/types/database";
-import { ApplicationStatusBadge } from "@/components/dashboard/ApplicationStatusBadge";
-import { MembershipBadge } from "@/components/dashboard/MembershipBadge";
-import type { ApplicationWithType } from "./page";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { translations } from "@/i18n/translations";
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
+import { translations } from '@/i18n/translations';
+import { MembershipBadge } from '@/components/dashboard/MembershipBadge';
+import { ApplicationStatusBadge } from '@/components/dashboard/ApplicationStatusBadge';
 
-interface DashboardClientProps {
-  profile: Profile | null;
-  applications: ApplicationWithType[];
-  lang: 'es' | 'pt';
-}
+// Helper to format date
+const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
 
-export default function DashboardClient({ profile, applications, lang }: DashboardClientProps) {
+export default function DashboardClient({ profile, applications = [], lang }: any) {
+  const { user } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const t = translations[lang as 'es' | 'pt'] as Record<string, string>;
 
-  const handleSignOut = async () => {
-    const supabase = createBrowserSupabaseClient();
-    await supabase.auth.signOut();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    // Forzar actualización total para limpiar middleware y estados de sesión
-    router.refresh();
-    window.location.href = `/${lang}/login`;
-  };
-
-  const t = translations[lang] as Record<string, string>;
   const isMember = profile?.is_member ?? false;
-  const displayName = profile?.first_name
-    ? `${profile.first_name} ${profile.last_name || ''}`.trim()
-    : profile?.full_name || profile?.email || (t["dashboard.hello"] === 'Hola' ? 'Usuario' : 'Usuário');
-  const roleLabel = profile?.role === 'admin'
-    ? t["dashboard.role.staff"]
-    : (isMember
-      ? (profile?.membership_type?.includes('pleno')
-        ? t["dashboard.role.full_member"]
-        : t["dashboard.role.member"])
-      : t["dashboard.role.candidate"]);
+  
+  const displayName = useMemo(() => {
+    const rawMetaName = user?.user_metadata?.full_name || user?.user_metadata?.name || '';
+    if (rawMetaName) {
+      return rawMetaName.split(' ')[0];
+    }
+    const rawName = profile?.first_name || '';
+    return rawName.split(' ')[0] || 'Usuario';
+  }, [user, profile]);
 
-  // Formatear fecha de vencimiento
-  const expiryDisplay = profile?.membership_expiry
-    ? new Date(profile.membership_expiry).toLocaleDateString(lang === 'es' ? 'es-ES' : 'pt-BR', {
-      day: 'numeric', month: 'long', year: 'numeric'
-    })
-    : t["dashboard.no_expiry"];
+  const expiryDisplay = useMemo(() => {
+    if (profile?.membership_expiry) {
+      return formatDate(profile.membership_expiry);
+    }
+    return isMember ? 'Activa' : 'Inactiva';
+  }, [profile?.membership_expiry, isMember]);
 
-  // Formatear fecha de solicitud
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString(lang === 'es' ? 'es-ES' : 'pt-BR', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
+  if (!mounted) return null;
 
-  // Mapeo de slugs técnicos a nombres legibles vía i18n
   const TRAMITE_NAMES: Record<string, string> = {
-    'solicitud_membresia': t["tramite.name.membresia"],
-    'CCA': t["tramite.name.cca"],
+    'Certificacion_EMDR': t["tramite.name.certificacion"],
     'Eventos_Conferencia': t["tramite.name.conferencia"],
     'Eventos_Workshop': t["tramite.name.workshop"],
     'Eventos_Congreso': t["tramite.name.congreso"],
@@ -70,55 +64,42 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
   };
   const formatTypeName = (name: string) => TRAMITE_NAMES[name] || name.replace(/_/g, ' ');
 
+  const handleSignOut = async () => {
+    const { createBrowserSupabaseClient } = await import('@/lib/supabase/client');
+    const supabase = createBrowserSupabaseClient();
+    await supabase.auth.signOut();
+    router.push(`/${lang}/auth/login`);
+    router.refresh();
+  };
+
   return (
-    <div className="pt-20 min-h-screen bg-accent/10 dark:bg-background-dark">
+    <main className="pt-8 md:pt-12 min-h-screen bg-background-light dark:bg-background-dark relative overflow-hidden">
+      {/* Organic Background Decorations */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/3 -z-10 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4 -z-10 pointer-events-none"></div>
 
       {/* Dashboard Header Banner */}
-      <div className="bg-primary pt-12 pb-24 px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
-
-        <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-start text-white relative z-10">
-          <div className="flex items-center gap-6">
-            {/* Avatar sincronizado con la fuente de verdad (profiles.avatar_url) */}
-            <div className="w-20 h-20 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-3xl font-display font-bold shadow-lg backdrop-blur-sm overflow-hidden relative">
-              {(profile as any)?.avatar_url ? (
-                <img
-                  src={(profile as any).avatar_url.startsWith('http')
-                    ? (profile as any).avatar_url
-                    : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${(profile as any).avatar_url}`}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                displayName.charAt(0).toUpperCase()
-              )}
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-medium tracking-tight mb-1">
-                {t["dashboard.hello"]}, {displayName}
-              </h1>
-              {profile?.member_number && (
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="bg-white/20 text-white px-3 py-1 rounded-full text-[11px] font-bold border border-white/30 flex items-center gap-1.5 shadow-sm uppercase">
-                    <span className="material-icons-round text-[14px]">badge</span>
-                    {t["dashboard.membership.id"]}: {profile.member_number}
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center gap-3 flex-wrap mt-1">
-                <span className="bg-white/15 text-xs px-3 py-1 rounded-full font-medium tracking-wide uppercase backdrop-blur-sm">
-                  {roleLabel}
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pb-10 flex flex-col md:flex-row justify-between items-start text-text-light dark:text-white relative z-10">
+        <div>
+            <h1 className="text-4xl md:text-5xl font-serif mb-2 leading-tight">
+              {t["dashboard.hello"]}, <span className="font-light italic text-primary">{displayName}</span>
+            </h1>
+            {profile?.member_number && (
+              <div className="flex items-center gap-2 mt-1 mb-3">
+                <span className="bg-white dark:bg-surface-dark text-text-light dark:text-white px-3 py-1.5 rounded-full text-[11px] font-bold border border-secondary/20 flex items-center gap-1.5 shadow-sm uppercase">
+                  <span className="material-icons-round text-[14px] text-primary">badge</span>
+                  {t["dashboard.membership.id"]}: <span className="text-primary">{profile.member_number}</span>
                 </span>
-                <MembershipBadge isMember={isMember} lang={lang} />
               </div>
+            )}
+            <div className="mt-2">
+              <MembershipBadge isMember={isMember} lang={lang} />
             </div>
           </div>
         </div>
-      </div>
 
       {/* Dashboard Main Content */}
-      <main className="max-w-[1280px] mx-auto px-6 -mt-16 pb-20 relative z-20">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
           {/* === Columna Izquierda (Contenido Principal) === */}
@@ -126,154 +107,99 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
 
             {/* Banner de Modo Gestión para Admins */}
             {profile?.role === 'admin' ? (
-              <div className="bg-slate-900 dark:bg-slate-800 p-8 rounded-[2rem] shadow-xl text-white relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/30 transition-colors"></div>
+              <div className="bg-text-light dark:bg-surface-dark p-8 md:p-10 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-white relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3 group-hover:bg-primary/30 transition-all duration-700"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent-light/10 rounded-full blur-[60px] -translate-x-1/3 translate-y-1/3 group-hover:bg-accent-light/20 transition-all duration-700"></div>
+                
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                   <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl shadow-inner backdrop-blur-sm">
                       <span className="material-icons-round text-primary">admin_panel_settings</span>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-display font-bold tracking-tight">
+                      <h2 className="text-2xl md:text-3xl font-serif font-bold tracking-tight mb-2">
                         {/* @ts-ignore */}
                         {t["dashboard.staff_mode"]}
                       </h2>
-                      <p className="text-white/60 text-sm max-w-md mt-1">
+                      <p className="text-white/80 font-light max-w-md leading-relaxed text-sm">
                         {/* @ts-ignore */}
-                        {t["dashboard.staff_mode_desc"]}
+                        {t["dashboard.staff_desc"]}
                       </p>
                     </div>
                   </div>
                   <Link
                     href={`/${lang}/admin`}
-                    className="shrink-0 px-8 py-4 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    className="flex-shrink-0 bg-primary hover:bg-primary-dark text-white px-8 py-3.5 rounded-full font-bold transition-all shadow-lg hover:shadow-primary/30 hover:-translate-y-1 flex items-center gap-2"
                   >
                     {/* @ts-ignore */}
-                    {t["dashboard.admin_panel"]}
-                    <span className="material-icons-round">arrow_forward</span>
+                    {t["dashboard.go_to_panel"]}
+                    <span className="material-icons-round text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
                   </Link>
                 </div>
               </div>
-            ) : (
-              /* Alerta para No Socios (Solo para usuarios no-admin) */
-              !isMember && (
-                (() => {
-                  const pendingMembershipApp = applications.find(
-                    (app) => app.type_id === 'solicitud_membresia' && (app.status === 'pending' || app.status === 'under_review' || app.status === 'uploading')
-                  );
-
-                  if (pendingMembershipApp) {
-                    return (
-                      <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-blue-100 dark:border-blue-900/30">
-                        <div>
-                          <h3 className="font-bold font-display text-blue-700 dark:text-blue-400 text-lg flex items-center gap-2 mb-2">
-                            <span className="material-icons-round">info</span>
-                            {t["dashboard.membership_under_review"] || "Tu solicitud de membresía está en revisión"}
-                          </h3>
-                          <p className="text-sm text-blue-600/80 dark:text-blue-300/80 leading-relaxed">
-                            {t["dashboard.membership_under_review_desc"] || "Estamos verificando tus documentos. Te notificaremos pronto."}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  if (applications.length === 0) {
-                    return (
-                      <div className="bg-white dark:bg-surface-dark border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50 dark:border-gray-800">
-                        <div>
-                          <h3 className="font-bold font-display text-aibapt-green text-lg flex items-center gap-2 mb-2">
-                            <span className="material-icons-round">waving_hand</span>
-                            {t["dashboard.welcome.aibapt"]}
-                          </h3>
-                          <p className="text-sm text-text-muted dark:text-gray-400 leading-relaxed">
-                            {t["dashboard.welcome.new_account"]}
-                          </p>
-                        </div>
-                        <Link
-                          href={`/${lang}/afiliacion`}
-                          className="shrink-0 w-full md:w-auto px-6 py-3 bg-aibapt-green text-white font-bold rounded-xl shadow-md shadow-aibapt-green/20 hover:bg-aibapt-green/90 transition-colors text-center"
-                        >
-                          {t["dashboard.start_affiliation"] || "Comenzar Afiliación"}
-                        </Link>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div className="bg-white border-l-4 border-l-aibapt-green p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between border-t border-r border-b border-accent/50">
-                      <div>
-                        <h3 className="font-bold font-display text-aibapt-green text-lg flex items-center gap-2 mb-2">
-                          <span className="material-icons-round">verified_user</span>
-                          {t["dashboard.inactive_membership"]}
-                        </h3>
-                        <p className="text-sm text-text-muted leading-relaxed">
-                          {t["dashboard.inactive_desc"]}
-                        </p>
-                      </div>
-                      <Link
-                        href={`/${lang}/afiliacion`}
-                        className="shrink-0 w-full md:w-auto px-6 py-3 bg-aibapt-green text-white font-bold rounded-xl shadow-md shadow-aibapt-green/20 hover:bg-aibapt-green/90 transition-colors text-center"
-                      >
-                        {t["dashboard.start_affiliation"] || "Quiero ser Socio"}
-                      </Link>
+            ) : !isMember && (
+              <div className="bg-gradient-to-br from-primary/15 to-secondary/5 dark:from-primary/20 dark:to-surface-dark p-8 md:p-10 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-primary/20 dark:border-primary/10 text-text-light relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 group-hover:bg-secondary/20 transition-all duration-700"></div>
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl shadow-inner text-primary border border-primary/20">
+                      <span className="material-icons-round">waving_hand</span>
                     </div>
-                  );
-                })()
-              )
+                    <div>
+                      <h2 className="text-2xl md:text-3xl font-serif font-bold text-text-light dark:text-white tracking-tight mb-2">
+                        {t["dashboard.welcome.aibapt"]}
+                      </h2>
+                      <p className="text-text-dark dark:text-gray-400 font-light max-w-md leading-relaxed text-sm">
+                        {t["dashboard.welcome.new_account"]}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/${lang}/afiliacion`}
+                    className="flex-shrink-0 bg-primary hover:bg-primary/90 text-white px-8 py-3.5 rounded-full font-bold transition-all shadow-lg hover:shadow-primary/30 hover:-translate-y-1 flex items-center gap-2"
+                  >
+                    {t["dashboard.start_affiliation"] || "Comenzar Afiliación"}
+                    <span className="material-icons-round text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
+                  </Link>
+                </div>
+              </div>
             )}
 
             {/* Tabla de Trámites Recientes */}
-            <div className="bg-white dark:bg-surface-dark p-6 md:p-8 rounded-3xl shadow-sm border border-accent/50 dark:border-gray-800">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold font-display text-secondary dark:text-white flex items-center gap-2">
-                  <span className="material-icons-round text-primary text-[22px]">assignment</span>
+            <div className="bg-white dark:bg-surface-dark rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-secondary/20 dark:border-gray-800 overflow-hidden flex flex-col transition-all duration-500 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+              <div className="px-8 py-6 border-b border-secondary/20 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-white/5 backdrop-blur-sm">
+                <h3 className="font-bold font-serif text-xl text-text-light dark:text-white flex items-center gap-2">
+                  <span className="material-icons-round text-primary">folder_open</span>
                   {t["dashboard.my_applications"]}
-                </h2>
-                {applications.length > 0 && (
-                  <span className="text-xs font-bold text-aibapt-gray bg-aibapt-gray/10 px-3 py-1 rounded-full">
-                    {applications.length} {t["dashboard.total"]}
-                  </span>
-                )}
+                </h3>
               </div>
 
               {applications.length > 0 ? (
-                <div className="overflow-x-auto -mx-2">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-accent/30 dark:border-gray-700">
-                        <th className="text-left py-3 px-3 text-xs font-bold text-aibapt-gray uppercase tracking-wider">
-                          {t["dashboard.application"]}
-                        </th>
-                        <th className="text-left py-3 px-3 text-xs font-bold text-aibapt-gray uppercase tracking-wider hidden md:table-cell">
-                          {t["dashboard.date"]}
-                        </th>
-                        <th className="text-left py-3 px-3 text-xs font-bold text-aibapt-gray uppercase tracking-wider">
-                          {t["dashboard.status"]}
-                        </th>
+                      <tr className="bg-gray-50/80 dark:bg-gray-800/50 border-b border-secondary/20 dark:border-gray-700 text-xs uppercase tracking-wider text-text-dark font-bold">
+                        <th className="py-4 px-8">{t["dashboard.table.id"]}</th>
+                        <th className="py-4 px-4">{t["dashboard.table.type"]}</th>
+                        <th className="py-4 px-4 hidden md:table-cell">{t["dashboard.table.date"]}</th>
+                        <th className="py-4 px-4">{t["dashboard.table.status"]}</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {applications.map((app) => (
-                        <tr
-                          key={app.id}
-                          className="border-b border-accent/10 dark:border-gray-800 last:border-b-0 hover:bg-accent/5 dark:hover:bg-white/5 transition-colors"
-                        >
-                          <td className="py-4 px-3">
-                            <span className="font-medium text-text-main dark:text-white">
-                              {formatTypeName(app.accreditation_type_name)}
-                            </span>
-                            {app.status === 'rejected' && (app as any).admin_notes && (
-                              <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-2 rounded-md border border-red-100 dark:border-red-900/30">
-                                <span className="font-bold block mb-1">{t["dashboard.note_reviewer"]}</span>
-                                {(app as any).admin_notes}
-                              </div>
-                            )}
+                    <tbody className="divide-y divide-secondary/10 dark:divide-gray-800">
+                      {applications.slice(0, 5).map((app: any) => (
+                        <tr key={app.id} className="hover:bg-primary/5 dark:hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => router.push(`/${lang}/dashboard/tramites/${app.id}`)}>
+                          <td className="py-5 px-8 font-mono text-sm font-bold text-primary">
+                            #{app.id.substring(0, 8)}
                           </td>
-                          <td className="py-4 px-3 text-text-muted dark:text-gray-400 hidden md:table-cell">
+                          <td className="py-5 px-4">
+                            <span className="font-medium text-text-light dark:text-gray-200">
+                              {formatTypeName(app.tramite_type)}
+                            </span>
+                          </td>
+                          <td className="py-5 px-4 text-text-dark dark:text-gray-400 hidden md:table-cell font-medium text-sm">
                             {formatDate(app.created_at)}
                           </td>
-                          <td className="py-4 px-3">
+                          <td className="py-5 px-4">
                             <ApplicationStatusBadge status={app.status} />
                           </td>
                         </tr>
@@ -282,19 +208,21 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
                   </table>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center gap-4 bg-accent/5 dark:bg-white/5 rounded-2xl border border-dashed border-accent/30 dark:border-gray-700">
-                  <span className="material-icons-round text-5xl text-aibapt-gray/40">inbox</span>
+                <div className="flex flex-col items-center justify-center py-16 text-center gap-4 bg-gray-50 dark:bg-white/5 rounded-b-[32px] border-t border-dashed border-secondary/40 dark:border-gray-700">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <span className="material-icons-round text-3xl text-secondary">inbox</span>
+                  </div>
                   <div>
-                    <p className="text-sm text-text-muted dark:text-gray-400 font-medium">
+                    <p className="text-base text-text-light dark:text-gray-300 font-bold">
                       {t["dashboard.no_applications"]}
                     </p>
-                    <p className="text-xs text-text-muted/70 dark:text-gray-500 max-w-sm mt-1">
+                    <p className="text-sm text-text-dark/80 dark:text-gray-500 max-w-sm mt-1 font-light">
                       {t["dashboard.no_app_desc"]}
                     </p>
                   </div>
                   <Link
                     href={`/${lang}/formaciones`}
-                    className="mt-2 text-xs font-bold text-primary border border-primary/30 px-4 py-2 rounded-xl hover:bg-primary/10 transition-colors"
+                    className="mt-4 text-sm font-bold text-primary bg-primary/10 px-6 py-2.5 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm"
                   >
                     {t["dashboard.explore"]}
                   </Link>
@@ -307,79 +235,70 @@ export default function DashboardClient({ profile, applications, lang }: Dashboa
           <div className="space-y-8">
 
             {/* Card de Membresía */}
-            <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl shadow-sm border border-accent/50 dark:border-gray-800 flex flex-col gap-4">
-              <h3 className="font-bold font-display text-secondary dark:text-white border-b border-accent/50 dark:border-gray-700 pb-3">
+            <div className="bg-white dark:bg-surface-dark p-8 rounded-[32px] shadow-[0_8px_30px_rgba(33,150,83,0.06)] border border-secondary/20 dark:border-gray-800 flex flex-col gap-5 transition-all duration-500 hover:border-primary/30">
+              <h3 className="font-bold font-serif text-xl text-text-light dark:text-white border-b border-secondary/20 dark:border-gray-700 pb-4 flex items-center gap-2">
+                <span className="material-icons-round text-primary">card_membership</span>
                 {t["dashboard.membership_status"]}
               </h3>
 
-              <div className="flex justify-between text-sm py-2">
-                <span className="text-text-muted dark:text-gray-400">{t["dashboard.status_label"]}</span>
+              <div className="flex justify-between items-center text-sm pt-2">
+                <span className="text-text-dark font-medium dark:text-gray-400">{t["dashboard.status_label"]}</span>
                 <MembershipBadge isMember={isMember} lang={lang} />
               </div>
-              <div className="flex justify-between text-sm py-2 bg-primary/5 dark:bg-primary/10 px-3 rounded-lg border border-primary/20">
+              <div className="flex justify-between items-center text-sm py-3 bg-primary/5 dark:bg-primary/10 px-4 rounded-2xl border border-primary/10">
                 <span className="text-primary font-bold">{t["dashboard.membership.id"]}</span>
-                <span className="font-mono font-bold text-primary">
+                <span className="font-mono font-bold text-primary text-base">
                   {isMember && profile?.member_number ? profile.member_number : 'N/A'}
                 </span>
               </div>
-              <div className="flex justify-between text-sm py-2">
-                <span className="text-text-muted dark:text-gray-400">{t["dashboard.expiry"]}</span>
-                <span className="font-bold text-text-main dark:text-white">{expiryDisplay}</span>
+              <div className="flex justify-between items-center text-sm pb-2">
+                <span className="text-text-dark font-medium dark:text-gray-400">{t["dashboard.expiry"]}</span>
+                <span className="font-bold text-text-light dark:text-white">{expiryDisplay}</span>
               </div>
-
-              <hr className="border-accent/50 dark:border-gray-700" />
-
-              {isMember ? (
-                <button className="w-full py-2.5 text-sm font-bold text-text-main dark:text-white hover:text-primary transition-colors flex items-center justify-between group">
-                  {t["dashboard.renew"]}
-                  <span className="material-icons-round text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                </button>
-              ) : (
-                <Link
-                  href={`/${lang}/afiliacion`}
-                  className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl shadow-sm hover:bg-[#689153] transition-colors text-center block"
-                >
-                  {t["dashboard.activate"]}
-                </Link>
-              )}
             </div>
 
-            {/* Mi Identidad (Navegación Unificada) */}
-            <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl shadow-sm border border-accent/50 dark:border-gray-800 flex flex-col gap-2">
-              <h3 className="font-bold font-display text-secondary dark:text-white mb-2 flex items-center gap-2">
-                <span className="material-icons-round text-primary text-[20px]">fingerprint</span>
+            {/* Identidad Profesional */}
+            <div className="bg-white dark:bg-surface-dark p-8 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-secondary/20 dark:border-gray-800 flex flex-col transition-all duration-500 hover:border-primary/30">
+              <h3 className="font-bold font-serif text-xl text-text-light dark:text-white border-b border-secondary/20 dark:border-gray-700 pb-4 mb-4 flex items-center gap-2">
+                <span className="material-icons-round text-primary">fingerprint</span>
                 {t["dashboard.identity.professional"]}
               </h3>
 
               <Link
                 href={`/${lang}/dashboard/perfil?tab=personal`}
-                className="flex items-center gap-3 p-3 text-sm text-text-main dark:text-gray-300 hover:bg-accent/20 dark:hover:bg-white/5 rounded-xl transition-colors font-medium border border-transparent hover:border-accent/50 dark:hover:border-gray-700 text-left"
+                className="group flex items-center gap-4 p-4 text-sm text-text-light dark:text-gray-300 hover:bg-primary/5 dark:hover:bg-white/5 rounded-2xl transition-colors font-bold border border-transparent hover:border-primary/20 dark:hover:border-gray-700 text-left"
               >
-                <span className="material-icons-round text-primary text-[18px]">manage_accounts</span>
+                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <span className="material-icons-round text-primary text-[20px]">manage_accounts</span>
+                </div>
                 {t["dashboard.personal_data"]}
               </Link>
               <Link
                 href={`/${lang}/dashboard/perfil?tab=profesional`}
-                className="flex items-center gap-3 p-3 text-sm text-text-main dark:text-gray-300 hover:bg-accent/20 dark:hover:bg-white/5 rounded-xl transition-colors font-medium border border-transparent hover:border-accent/50 dark:hover:border-gray-700 text-left"
+                className="group flex items-center gap-4 p-4 text-sm text-text-light dark:text-gray-300 hover:bg-primary/5 dark:hover:bg-white/5 rounded-2xl transition-colors font-bold border border-transparent hover:border-primary/20 dark:hover:border-gray-700 text-left"
               >
-                <span className="material-icons-round text-primary text-[18px]">verified</span>
+                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <span className="material-icons-round text-primary text-[20px]">verified</span>
+                </div>
                 {t["dashboard.cv_directory"]}
               </Link>
 
-              <div className="h-px w-full bg-accent/50 dark:bg-gray-700 my-2"></div>
+              <div className="h-px w-full bg-secondary/20 dark:bg-gray-700 my-3"></div>
 
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-3 p-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors font-bold text-left"
+                className="flex items-center gap-4 p-4 text-sm font-bold text-accent hover:bg-accent/5 rounded-2xl transition-colors border border-transparent hover:border-accent/20"
               >
-                <span className="material-icons-round text-[20px]">logout</span>
-                {t["dashboard.logout"]}
+                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                  <span className="material-icons-round text-accent text-[20px]">logout</span>
+                </div>
+                {lang === 'es' ? 'Cerrar Sesión' : 'Sair'}
               </button>
             </div>
           </div>
 
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

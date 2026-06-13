@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -21,14 +22,23 @@ export const Header = () => {
         setMounted(true);
     }, []);
     const pathname = usePathname();
+    const router = useRouter();
     const { lang, setLang, t } = useLanguage();
-    const { session, profile } = useAuth() as any;
+    const { session, user, profile } = useAuth() as any;
 
     const handleSignOut = async () => {
         const supabase = createBrowserSupabaseClient();
         await supabase.auth.signOut();
-        window.location.href = `/${lang}/login?message=logged_out`;
+        toast.success(lang === 'es' ? 'Has cerrado sesión correctamente. ¡Hasta pronto!' : 'Sessão encerrada com sucesso. Até logo!');
+        router.push(`/${lang}/login`);
     };
+
+    const userMeta = user?.user_metadata || {};
+    const displayName = userMeta?.first_name 
+        ? `${userMeta.first_name} ${userMeta.last_name || ''}`.trim()
+        : userMeta?.full_name || user?.email || 'U';
+    const initial = displayName.charAt(0).toUpperCase();
+    const avatarUrl = userMeta?.avatar_url;
 
     return (
         <header className="fixed w-full top-0 z-50 glass-header border-b border-accent/20 dark:border-accent/10 transition-all duration-300">
@@ -116,16 +126,44 @@ export const Header = () => {
                             >PT</button>
                         </div>
                         {mounted && session ? (
-                            <div className="relative group">
-                                <Link href={profile?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className={buttonVariants({ variant: "primary", size: "sm" })}>
-                                    <span className="material-icons-round text-lg">account_circle</span>
-                                    {t("nav.portal")}
-                                </Link>
+                            <div className="flex items-center gap-4">
+                                {/* Campanita de Notificaciones */}
+                                <button className="relative p-2 text-text-dark dark:text-gray-400 hover:text-primary transition-colors rounded-full hover:bg-primary/5">
+                                    <span className="material-icons-round text-[22px]">notifications_none</span>
+                                    {/* Puntito rojo de notificación (simulado) */}
+                                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--background)]"></span>
+                                </button>
+
+                                <div className="relative group">
+                                    <div className="relative">
+                                        <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+                                            {avatarUrl ? (
+                                                <img 
+                                                    src={avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${avatarUrl}`}
+                                                    alt={displayName}
+                                                    className="w-full h-full object-cover rounded-full"
+                                                />
+                                            ) : (
+                                                <span className="font-bold text-[15px]">{initial}</span>
+                                            )}
+                                        </Link>
+                                        {/* Micro-Insignia de Estado (Status Badge - verde si es activo) */}
+                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-aibapt-green rounded-full border-2 border-[var(--background)] shadow-sm" title="Activo"></div>
+                                    </div>
                                 <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-surface-dark border border-accent/20 dark:border-gray-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-2">
+                                    <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800 mb-1">
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("nav.portal")}</p>
+                                        <p className="text-sm font-medium truncate text-text-main dark:text-white">{displayName}</p>
+                                    </div>
+                                    <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary transition-colors">
+                                        <span className="material-icons-round text-[18px] mr-2 text-primary">dashboard</span>
+                                        {userMeta?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
+                                    </Link>
                                     <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
                                         <LogOut className="w-4 h-4 mr-2" />
                                         {t("nav.logout" as any)}
                                     </button>
+                                </div>
                                 </div>
                             </div>
                         ) : (

@@ -195,56 +195,57 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-accent/10 dark:bg-background-dark font-sans relative">
-      
-      {/* Header Estilo Pro (Simplificado) */}
-      <div className="bg-primary/5 dark:bg-primary/10 pt-12 pb-16 px-6 border-b border-primary/10 dark:border-primary/20">
-        <div className="max-w-[1140px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="text-center md:text-left">
-            <h1 className="text-3xl lg:text-4xl font-display font-medium text-text-main dark:text-white tracking-tight mb-2">
-              {firstName} {lastName}
-            </h1>
-            <div className="flex flex-wrap justify-center md:justify-start gap-3 items-center">
-              <MembershipBadge isMember={isMember} lang={lang} />
-              <span className="text-text-muted dark:text-gray-400 text-sm flex items-center gap-1">
-                <span className="material-icons-round text-[16px]">email</span>
-                {profile?.email}
-              </span>
-            </div>
-          </div>
+    <main className="pt-8 md:pt-12 min-h-screen bg-background-light dark:bg-background-dark relative overflow-hidden">
+      {/* Organic Background Decorations */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/3 -z-10 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4 -z-10 pointer-events-none"></div>
 
-          <Link
-            href={`/${lang}/dashboard`}
-            className="px-6 py-2.5 bg-white dark:bg-white/10 rounded-xl font-bold text-sm text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
-          >
-            {t["profile.back"]}
-          </Link>
+      {/* Header Banner */}
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pb-10 flex flex-col md:flex-row justify-between items-start text-text-light dark:text-white relative z-10">
+        <div>
+            <h1 className="text-4xl md:text-5xl font-serif mb-2 leading-tight">
+              {firstName} <span className="font-light italic text-primary">{lastName}</span>
+            </h1>
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+               <MembershipBadge isMember={isMember} lang={lang} />
+               <span className="text-text-dark dark:text-gray-400 text-sm flex items-center gap-1 font-medium bg-gray-50/50 dark:bg-white/5 px-4 py-2 rounded-full border border-secondary/20 shadow-sm">
+                 <span className="material-icons-round text-[16px] text-primary">email</span>
+                 {profile?.email}
+               </span>
+            </div>
         </div>
+        <Link
+          href={`/${lang}/dashboard`}
+          className="mt-6 md:mt-0 px-6 py-3 bg-white dark:bg-surface-dark border border-secondary/20 rounded-full font-bold text-sm text-text-light dark:text-white hover:text-primary transition-all shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex items-center gap-2 group"
+        >
+          <span className="material-icons-round text-[16px] transition-transform group-hover:-translate-x-1">arrow_back</span>
+          {t["profile.back"] || "Volver al Dashboard"}
+        </Link>
       </div>
 
-      <main className="max-w-[1140px] mx-auto px-4 md:px-6 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative z-20">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Navegación de Pestañas */}
-          <div className="lg:col-span-3">
-            <nav className="flex flex-col gap-2 p-2 bg-white dark:bg-surface-dark rounded-2xl border border-accent/30 dark:border-gray-800 shadow-sm">
+          <div className="lg:col-span-1">
+            <nav className="flex flex-col gap-2 p-3 bg-white dark:bg-surface-dark rounded-[32px] border border-secondary/20 dark:border-gray-800 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
               <button 
                 onClick={() => { setActiveTab('personal'); router.push(`/${lang}/dashboard/perfil?tab=personal`); }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'personal' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:bg-accent/10'}`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-[20px] font-bold text-sm transition-all ${activeTab === 'personal' ? 'bg-primary text-white shadow-md' : 'text-text-dark dark:text-gray-400 hover:bg-primary/5 dark:hover:bg-white/5 hover:text-primary'}`}
               >
                 <span className="material-icons-round">person</span>
                 {t["dashboard.personal_data"]}
               </button>
               <button 
                 onClick={() => { setActiveTab('profesional'); router.push(`/${lang}/dashboard/perfil?tab=profesional`); }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'profesional' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:bg-accent/10'}`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-[20px] font-bold text-sm transition-all ${activeTab === 'profesional' ? 'bg-primary text-white shadow-md' : 'text-text-dark dark:text-gray-400 hover:bg-primary/5 dark:hover:bg-white/5 hover:text-primary'}`}
               >
                 <span className="material-icons-round">contact_page</span>
                 {t["dashboard.cv_directory"]}
               </button>
               <button 
                 onClick={() => { setActiveTab('security'); router.push(`/${lang}/dashboard/perfil?tab=security`); }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'security' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:bg-accent/10'}`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-[20px] font-bold text-sm transition-all ${activeTab === 'security' ? 'bg-primary text-white shadow-md' : 'text-text-dark dark:text-gray-400 hover:bg-primary/5 dark:hover:bg-white/5 hover:text-primary'}`}
               >
                 <span className="material-icons-round">security</span>
                 {t["profile.security.title"]}
@@ -252,7 +253,7 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
             </nav>
 
             {/* Banner de Matrícula (Prominente pero Ineditable) */}
-            <div className="mt-6 p-6 bg-secondary text-white rounded-3xl shadow-lg relative overflow-hidden group">
+            <div className={`mt-6 p-6 ${profile?.member_number ? 'bg-primary shadow-[0_8px_30px_rgba(90,153,84,0.2)] border-primary/20' : 'bg-accent shadow-[0_8px_30px_rgba(217,88,88,0.2)] border-white/20'} text-white rounded-[32px] border relative overflow-hidden group`}>
               <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
                 <span className="material-icons-round text-8xl">verified</span>
               </div>
@@ -268,22 +269,22 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
           </div>
 
           {/* Contenido Dinámico */}
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-3">
             <AnimatePresence mode="wait">
               {activeTab === 'personal' && (
                 <motion.div 
                   key="personal"
                   initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                  className="bg-white dark:bg-surface-dark border border-accent/30 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden"
+                  className="bg-white dark:bg-surface-dark border border-secondary/20 dark:border-gray-800 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden transition-all duration-500"
                 >
                   <div className="p-8 space-y-8">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="material-icons-round text-primary">person</span>
-                      <h3 className="text-xl font-bold font-display">{t["dashboard.personal_data"]}</h3>
+                      <h3 className="font-bold font-serif text-xl text-text-light dark:text-white">{t["dashboard.personal_data"]}</h3>
                     </div>
 
                     {/* Cargador de Avatar Integrado en Tab Personal */}
-                    <div className="flex flex-col md:flex-row items-center gap-8 p-6 bg-accent/5 dark:bg-white/5 rounded-2xl border border-accent/10">
+                    <div className="flex flex-col md:flex-row items-center gap-8 p-6 bg-primary/5 dark:bg-white/5 rounded-2xl border border-primary/10">
                       <div className="relative group">
                         <div className="w-28 h-28 rounded-3xl overflow-hidden bg-primary/10 border-4 border-white dark:border-gray-800 shadow-lg relative">
                           {avatarUrl ? (
@@ -330,25 +331,25 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.fields.names"]}</label>
-                        <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" />
+                        <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.fields.lastnames"]}</label>
-                        <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" />
+                        <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none transition-all" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.fields.phone"]}</label>
-                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+123456789" className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" />
+                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+123456789" className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.lang_pref"]}</label>
                         <select 
                           value={languagePreference} 
                           onChange={(e) => setLanguagePreference(e.target.value as 'es' | 'pt')} 
-                          className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none"
+                          className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                         >
                           <option value="es">Español</option>
                           <option value="pt">Português</option>
@@ -357,10 +358,12 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-white/5 p-6 flex justify-end">
-                    <button onClick={handleSave} disabled={isSaving} className="bg-primary text-white font-bold px-10 py-3 rounded-2xl shadow-lg hover:bg-primary-dark transition-all flex items-center gap-2">
-                      {isSaving ? <span className="material-icons-round animate-spin">loop</span> : <span className="material-icons-round">save</span>}
+                  <div className="bg-gray-50 dark:bg-white/5 p-6 flex justify-end mt-auto border-t border-secondary/10 dark:border-gray-800">
+                    <button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-secondary text-white font-bold px-8 py-3 rounded-full shadow-[0_8px_20px_rgba(90,153,84,0.3)] transition-all duration-300 hover:-translate-y-1 flex items-center gap-3 group/btn">
                       {t["profile.save"]}
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                        {isSaving ? <span className="material-icons-round animate-spin text-[18px]">loop</span> : <span className="material-icons-round text-[18px]">save</span>}
+                      </div>
                     </button>
                   </div>
                 </motion.div>
@@ -370,12 +373,12 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                 <motion.div 
                   key="profesional"
                   initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                  className="bg-white dark:bg-surface-dark border border-accent/30 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden"
+                  className="bg-white dark:bg-surface-dark border border-secondary/20 dark:border-gray-800 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden transition-all duration-500"
                 >
                   <div className="p-8 space-y-6">
                       <div className="flex items-center gap-2">
                         <span className="material-icons-round text-primary">contact_page</span>
-                        <h3 className="text-xl font-bold font-display">{t["dashboard.cv_directory"]}</h3>
+                        <h3 className="font-bold font-serif text-xl text-text-light dark:text-white">{t["dashboard.cv_directory"]}</h3>
                       </div>
 
                     {/* Información de Visibilidad (Obligatoria para Socios) */}
@@ -392,7 +395,7 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
 
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.bio.label"]}</label>
-                      <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none resize-none" placeholder={t["profile.bio.placeholder"]} />
+                      <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none resize-none transition-all" placeholder={t["profile.bio.placeholder"]} />
                     </div>
 
                     {/* CV Upload */}
@@ -413,10 +416,12 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-white/5 p-6 flex justify-end">
-                    <button onClick={handleSave} disabled={isSaving} className="bg-primary text-white font-bold px-10 py-3 rounded-2xl shadow-lg hover:bg-primary-dark transition-all flex items-center gap-2">
-                      {isSaving ? <span className="material-icons-round animate-spin">loop</span> : <span className="material-icons-round">save</span>}
+                  <div className="bg-gray-50 dark:bg-white/5 p-6 flex justify-end mt-auto border-t border-secondary/10 dark:border-gray-800">
+                    <button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-secondary text-white font-bold px-8 py-3 rounded-full shadow-[0_8px_20px_rgba(90,153,84,0.3)] transition-all duration-300 hover:-translate-y-1 flex items-center gap-3 group/btn">
                       {t["profile.save"]}
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                        {isSaving ? <span className="material-icons-round animate-spin text-[18px]">loop</span> : <span className="material-icons-round text-[18px]">save</span>}
+                      </div>
                     </button>
                   </div>
                 </motion.div>
@@ -426,33 +431,39 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
                 <motion.div 
                   key="security"
                   initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                  className="bg-white dark:bg-surface-dark border border-accent/30 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden"
+                  className="bg-white dark:bg-surface-dark border border-secondary/20 dark:border-gray-800 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden transition-all duration-500"
                 >
-                  <form onSubmit={handlePasswordChange} className="p-8 space-y-6">
-                    <div className="flex items-center gap-2">
-                      <span className="material-icons-round text-red-500">lock</span>
-                      <h3 className="text-xl font-bold font-display">{t["profile.security.title"]}</h3>
+                  <form onSubmit={handlePasswordChange} className="flex flex-col h-full">
+                    <div className="p-8 space-y-8 flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="material-icons-round text-primary">security</span>
+                        <h3 className="font-bold font-serif text-xl text-text-light dark:text-white">{t["profile.security.title"]}</h3>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.security.current_password"]}</label>
+                          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none transition-all" required />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.security.new_password"]}</label>
+                          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none transition-all" required />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.security.confirm_password"]}</label>
+                          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-gray-50/50 dark:bg-white/5 border border-secondary/20 dark:border-gray-700 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-primary/10 outline-none transition-all" required />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="space-y-4 max-w-md">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.security.current_password"]}</label>
-                        <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" required />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.security.new_password"]}</label>
-                        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" required />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-text-muted tracking-widest">{t["profile.security.confirm_password"]}</label>
-                        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-accent/5 dark:bg-white/5 border border-accent/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" required />
-                      </div>
+                    <div className="bg-gray-50 dark:bg-white/5 p-6 flex justify-end mt-auto border-t border-secondary/10 dark:border-gray-800">
+                      <button type="submit" disabled={isChangingPass} className="bg-primary hover:bg-secondary text-white font-bold px-8 py-3 rounded-full shadow-[0_8px_20px_rgba(90,153,84,0.3)] transition-all duration-300 hover:-translate-y-1 flex items-center gap-3 group/btn">
+                        {t["profile.security.update_btn"]}
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
+                          {isChangingPass ? <span className="material-icons-round animate-spin text-[18px]">loop</span> : <span className="material-icons-round text-[18px]">update</span>}
+                        </div>
+                      </button>
                     </div>
-
-                    <button type="submit" disabled={isChangingPass} className="bg-secondary text-white font-bold px-10 py-3 rounded-2xl shadow-lg hover:bg-secondary-dark transition-all flex items-center gap-2">
-                      {isChangingPass ? <span className="material-icons-round animate-spin">loop</span> : <span className="material-icons-round">update</span>}
-                      {t["profile.security.update_btn"]}
-                    </button>
                   </form>
                 </motion.div>
               )}
@@ -483,7 +494,7 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
             </AnimatePresence>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

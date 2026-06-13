@@ -7,6 +7,7 @@ import { ApplicationStatus } from '@/types/database';
 import { useLanguage } from '@/contexts/LanguageContext';
 import AdminDetailModal from './AdminDetailModal';
 import { Eye, RotateCw } from 'lucide-react';
+import Link from 'next/link';
 
 interface ApplicationRow {
   id: string;
@@ -49,6 +50,7 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   
   const supabase = createBrowserSupabaseClient();
@@ -136,96 +138,151 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t("admin.panel.title")}</h1>
-        <p className="text-gray-600 dark:text-gray-400">{t("admin.panel.desc")}</p>
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative z-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 mt-4">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-serif text-text-light dark:text-white mb-2 leading-tight">
+            {t("admin.panel.title") || "Panel Maestro de Auditoría"}
+          </h1>
+          <p className="text-text-muted dark:text-gray-400 font-medium">
+            {t("admin.panel.desc") || "Gestiona, revisa y aprueba las solicitudes de los miembros."}
+          </p>
+        </div>
+        <Link
+          href={`/${lang}/dashboard`}
+          className="px-6 py-3 bg-white dark:bg-surface-dark border border-secondary/20 rounded-full font-bold text-sm text-text-light dark:text-white hover:text-primary transition-all shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex items-center gap-2 group"
+        >
+          <span className="material-icons-round text-[16px] transition-transform group-hover:-translate-x-1">arrow_back</span>
+          {t("profile.back") || "Volver a Mi Tablero"}
+        </Link>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden mb-6">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-wrap gap-4 items-center justify-between bg-white dark:bg-gray-800">
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{t("admin.filter.status")}</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-1.5 bg-gray-50/50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg text-xs font-semibold text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-primary outline-none transition-all"
-            >
-              <option value="all">{t("admin.filter.all")}</option>
-              <option value="pending">{t("admin.filter.pending")}</option>
-              <option value="under_review">{t("admin.filter.review")}</option>
-              <option value="approved">{t("admin.filter.approved")}</option>
-              <option value="rejected">{t("admin.filter.rejected")}</option>
-            </select>
+      <div className="bg-white dark:bg-surface-dark rounded-[32px] border border-secondary/20 dark:border-gray-800 shadow-[0_8px_40px_rgba(0,0,0,0.08)] border-t-4 border-t-primary overflow-hidden mb-6 relative">
+        <div className="px-8 py-6 border-b border-secondary/20 dark:border-gray-800 flex flex-wrap gap-4 items-center justify-between bg-gray-50/50 dark:bg-white/5 backdrop-blur-sm relative z-10">
+          <div className="flex items-center gap-3 relative">
+            <span className="text-[11px] font-black text-primary dark:text-primary uppercase tracking-widest">{t("admin.filter.status") || "Filtro de Estado"}</span>
+            <div className="relative">
+              <button 
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-xl text-xs font-black text-primary dark:text-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all shadow-sm w-auto min-w-[160px] hover:border-primary/40 hover:bg-primary/10"
+              >
+                <span>
+                  {statusFilter === 'all' && "Todas"}
+                  {statusFilter === 'pending' && "Pendientes"}
+                  {statusFilter === 'under_review' && "En Revisión"}
+                  {statusFilter === 'approved' && "Aprobadas"}
+                  {statusFilter === 'rejected' && "Rechazadas"}
+                </span>
+                <span className={`material-icons-round text-[16px] text-primary transition-transform ${isFilterOpen ? 'rotate-180' : ''}`}>expand_more</span>
+              </button>
+              
+              {isFilterOpen && (
+                <div className="absolute top-full left-0 mt-2 w-[180px] bg-white dark:bg-surface-dark border border-secondary/20 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col py-1">
+                  {[
+                    { id: 'all', label: "Todas" },
+                    { id: 'pending', label: "Pendientes" },
+                    { id: 'under_review', label: "En Revisión" },
+                    { id: 'approved', label: "Aprobadas" },
+                    { id: 'rejected', label: "Rechazadas" }
+                  ].map(option => (
+                    <button
+                      key={option.id}
+                      onClick={() => { setStatusFilter(option.id); setIsFilterOpen(false); }}
+                      className={`text-left px-4 py-2.5 text-xs font-bold transition-colors ${statusFilter === option.id ? 'bg-primary/10 text-primary' : 'text-text-main dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <button 
             onClick={loadApplications} 
-            className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-all group"
-            title={t("admin.btn.refresh")}
+            className="p-3 text-primary bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/40 transition-all group shadow-sm hover:shadow-md"
+            title={t("admin.btn.refresh") || "Actualizar"}
           >
             <RotateCw size={18} className={`group-active:rotate-180 transition-transform duration-500 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
-            <thead className="bg-gray-50/50 dark:bg-gray-900/20 text-gray-500 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800 uppercase text-[10px] font-bold tracking-widest">
-              <tr>
-                <th className="px-6 py-5">{t("admin.table.date")}</th>
-                <th className="px-6 py-5">{t("admin.table.applicant")}</th>
-                <th className="px-6 py-5">{t("admin.table.application")}</th>
-                <th className="px-6 py-5">{t("admin.table.status")}</th>
-                <th className="px-6 py-5 text-right">{t("admin.table.action")}</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gradient-to-r from-primary/5 to-transparent dark:from-primary/10 border-b border-primary/20 text-[10px] uppercase tracking-widest text-primary dark:text-primary font-black">
+                <th className="px-8 py-5">{t("admin.table.date") || "FECHA"}</th>
+                <th className="px-8 py-5">{t("admin.table.applicant") || "SOLICITANTE"}</th>
+                <th className="px-8 py-5">{t("admin.table.application") || "TRÁMITE"}</th>
+                <th className="px-8 py-5">{t("admin.table.status") || "ESTADO"}</th>
+                <th className="px-8 py-5 text-right">{t("admin.table.action") || "ACCIÓN"}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-secondary/10 dark:divide-gray-800">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">{t("admin.table.loading")}</td>
+                  <td colSpan={5} className="px-8 py-10 text-center text-text-muted font-bold text-sm">
+                    <span className="material-icons-round animate-spin text-primary text-3xl mb-2">loop</span><br />
+                    {t("admin.table.loading") || "Cargando solicitudes..."}
+                  </td>
                 </tr>
               ) : filteredApps.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">{t("admin.table.empty")}</td>
+                  <td colSpan={5} className="px-8 py-24 text-center">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="relative group cursor-default">
+                        <div className="absolute inset-0 bg-primary/20 rounded-[32px] blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+                        <div className="relative w-24 h-24 rounded-[32px] bg-primary border border-white/20 flex items-center justify-center rotate-3 group-hover:rotate-6 transition-all duration-500 shadow-xl group-hover:scale-105">
+                          <span className="material-icons-round text-white text-5xl -rotate-3 transition-transform">inbox</span>
+                        </div>
+                      </div>
+                      <h3 className="text-2xl font-serif text-primary mt-4 font-black">
+                        ¡Todo al día!
+                      </h3>
+                      <p className="text-text-muted dark:text-gray-400 font-medium text-sm max-w-sm mx-auto">
+                        No hay ninguna solicitud que coincida con este filtro. El panel está limpio.
+                      </p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
                 filteredApps.map((app) => (
-                  <tr key={app.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-6 py-4 text-text-muted dark:text-gray-400 font-medium">
+                  <tr key={app.id} className="hover:bg-primary/5 dark:hover:bg-white/5 transition-colors group">
+                    <td className="px-8 py-5 text-text-main dark:text-gray-400 font-medium text-sm">
                       {new Date(app.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'pt-BR', { 
                         day: 'numeric', 
-                        month: 'long', 
+                        month: 'short', 
                         year: 'numeric' 
                       })}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-8 py-5">
                       <div className="flex flex-col">
-                        <span className="font-black text-secondary dark:text-white group-hover:text-primary transition-colors">
+                        <span className="font-bold text-text-light dark:text-white group-hover:text-primary transition-colors text-sm">
                           {app.profiles?.first_name 
                             ? `${app.profiles.first_name} ${app.profiles.last_name}`.trim() 
                             : app.profiles?.full_name || '---'}
                         </span>
-                        <span className="text-[10px] text-text-muted dark:text-gray-500 uppercase tracking-tight mt-0.5">
+                        <span className="text-[11px] text-text-muted dark:text-gray-500 uppercase tracking-tight mt-0.5 font-bold">
                           {app.profiles?.member_number ? (
-                            <span className="font-black text-primary/70">ID: {app.profiles.member_number}</span>
+                            <span className="text-primary/80">ID: {app.profiles.member_number}</span>
                           ) : app.profiles?.email || app.user_id}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-bold text-text-main dark:text-gray-300 bg-accent/10 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-accent/20">
+                    <td className="px-8 py-5">
+                      <span className="text-xs font-bold text-text-main dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg">
                         {humanizeTramiteName(app.accreditation_types?.name)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-8 py-5">
                       <ApplicationStatusBadge status={app.status} />
                     </td>
-                    <td className="px-6 py-6 text-right">
+                    <td className="px-8 py-5 text-right">
                       <button
                         onClick={() => setSelectedAppId(app.id)}
-                        className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                        className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary text-primary hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
                       >
                         <Eye size={16} />
-                        {t("admin.table.audit")}
+                        {t("admin.table.audit") || "Auditar"}
                       </button>
                     </td>
                   </tr>

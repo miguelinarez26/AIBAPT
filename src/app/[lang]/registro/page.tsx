@@ -5,6 +5,7 @@ import { useState, Suspense } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
@@ -62,6 +63,7 @@ function RegistroContent() {
             setLoading(false);
         } else {
             setSuccess(true);
+            toast.success(lang === 'es' ? '¡Registro exitoso! Iniciando sesión...' : 'Registro bem-sucedido! Iniciando sessão...');
             // Éxito en Auth, el trigger debería crear el perfil.
             // Esperamos un momento visual para que el usuario lea el éxito
             await new Promise(resolve => setTimeout(resolve, 2000));

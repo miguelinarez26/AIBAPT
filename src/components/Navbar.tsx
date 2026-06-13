@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useAuth } from "@/components/providers/AuthProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { LogOut } from "lucide-react";
@@ -16,13 +18,22 @@ export default function Navbar() {
   }, []);
 
   const { lang, setLang, t } = useLanguage();
-  const { session, profile } = useAuth() as any;
+  const router = useRouter();
+  const { session, user } = useAuth() as any;
 
   const handleSignOut = async () => {
       const supabase = createBrowserSupabaseClient();
       await supabase.auth.signOut();
-      window.location.href = `/${lang}/login?message=logged_out`;
+      toast.success(lang === 'es' ? 'Has cerrado sesión correctamente. ¡Hasta pronto!' : 'Sessão encerrada com sucesso. Até logo!');
+      router.push(`/${lang}/login`);
   };
+
+  const userMeta = user?.user_metadata || {};
+  const displayName = userMeta?.first_name 
+      ? `${userMeta.first_name} ${userMeta.last_name || ''}`.trim()
+      : userMeta?.full_name || user?.email || 'U';
+  const initial = displayName.charAt(0).toUpperCase();
+  const avatarUrl = userMeta?.avatar_url;
 
   return (
     <header className="w-full bg-[var(--background)] z-50 sticky top-0 transition-all duration-300">
@@ -160,20 +171,44 @@ export default function Navbar() {
           
           <div className="flex items-center">
             {mounted && session ? (
-              <div className="relative group/auth">
-                <Link href={profile?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="group flex items-center gap-3 bg-primary text-white pl-6 pr-2 py-1.5 rounded-full font-medium transition-all duration-300 hover:bg-secondary hover:-translate-y-1">
-                  <span className="whitespace-nowrap text-[15px]">{t("nav.portal")}</span>
-                  <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                    </svg>
+              <div className="flex items-center gap-4">
+                {/* Campanita de Notificaciones */}
+                <button className="relative p-2 text-text-dark dark:text-gray-400 hover:text-primary transition-colors rounded-full hover:bg-primary/5">
+                  <span className="material-icons-round text-[22px]">notifications_none</span>
+                  {/* Puntito rojo de notificación (simulado) */}
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--background)]"></span>
+                </button>
+
+                <div className="relative group/auth">
+                  <div className="relative">
+                    <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+                      {avatarUrl ? (
+                          <img 
+                              src={avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/${avatarUrl}`}
+                              alt={displayName}
+                              className="w-full h-full object-cover rounded-full"
+                          />
+                      ) : (
+                          <span className="font-bold text-[15px]">{initial}</span>
+                      )}
+                    </Link>
+                    {/* Micro-Insignia de Estado (Status Badge - verde si es activo) */}
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-aibapt-green rounded-full border-2 border-[var(--background)] shadow-sm" title="Activo"></div>
                   </div>
-                </Link>
                 <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover/auth:opacity-100 group-hover/auth:visible transition-all duration-300 py-2">
+                  <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("nav.portal")}</p>
+                      <p className="text-sm font-medium truncate text-[#333333]">{displayName}</p>
+                  </div>
+                  <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-[#333333] hover:bg-primary/5 hover:text-primary transition-colors">
+                      <span className="material-icons-round text-[18px] mr-2 text-primary">dashboard</span>
+                      {userMeta?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
+                  </Link>
                   <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
                     <LogOut className="w-4 h-4 mr-2" />
                     {lang === 'es' ? 'Cerrar Sesión' : 'Sair'}
                   </button>
+                </div>
                 </div>
               </div>
             ) : (
