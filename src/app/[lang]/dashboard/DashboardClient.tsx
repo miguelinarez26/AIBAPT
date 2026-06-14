@@ -24,10 +24,44 @@ export default function DashboardClient({ profile, applications = [], lang }: an
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const t = translations[lang as 'es' | 'pt'] as Record<string, string>;
+  const [credits, setCredits] = useState<any[]>([]);
+  const [isLoadingCredits, setIsLoadingCredits] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+    const fetchCredits = async () => {
+      try {
+        const { createBrowserSupabaseClient } = await import('@/lib/supabase/client');
+        const supabase = createBrowserSupabaseClient();
+        const { data, error } = await supabase
+          .from('user_credits')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!error && data) {
+          setCredits(data);
+        }
+      } catch (err) {
+        console.error("Error fetching credits:", err);
+      } finally {
+        setIsLoadingCredits(false);
+      }
+    };
+    fetchCredits();
   }, []);
+
+  const bags = useMemo(() => {
+    let emdr = 0;
+    let psicotrauma = 0;
+    const today = new Date();
+    credits.forEach((c) => {
+      const isExpired = new Date(c.expiry_date) < today;
+      if (!isExpired) {
+        if (c.category === 'EMDR') emdr += c.amount;
+        if (c.category === 'Psicotrauma') psicotrauma += c.amount;
+      }
+    });
+    return { emdr, psicotrauma };
+  }, [credits]);
 
   const isMember = profile?.is_member ?? false;
   
@@ -162,6 +196,109 @@ export default function DashboardClient({ profile, applications = [], lang }: an
                 </div>
               </div>
             )}
+
+            {/* Mi Banco de Créditos */}
+            <div className="bg-white dark:bg-surface-dark p-8 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-secondary/20 dark:border-gray-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+              <h3 className="font-bold font-serif text-xl text-text-light dark:text-white flex items-center gap-2 mb-6">
+                <span className="material-icons-round text-primary flex items-center">analytics</span>
+                {t["dashboard.credits.title"] || "Mi Banco de Créditos"}
+              </h3>
+
+              {isLoadingCredits ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Contadores Visuales */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Bolsa EMDR */}
+                    <div className="bg-gradient-to-br from-primary/5 to-transparent p-6 rounded-2xl border border-primary/10 flex flex-col justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-primary uppercase tracking-wider block mb-1">
+                          {t["dashboard.credits.emdr"] || "Bolsa EMDR"}
+                        </span>
+                        <span className="text-3xl font-black text-text-light dark:text-white">
+                          {bags.emdr} <span className="text-sm font-medium text-text-dark">CCA</span>
+                        </span>
+                      </div>
+                      <div className="mt-4">
+                        {/* Barra de progreso visual (máximo recomendado por normativa ej: 24 como meta) */}
+                        <div className="w-full bg-gray-100 dark:bg-gray-850 h-2.5 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-primary h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.min((bags.emdr / 24) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-[10px] text-text-dark dark:text-gray-400 mt-1.5 block text-right font-medium">
+                          {bags.emdr} / 24 {t["dashboard.credits.goal"] || "créditos meta"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bolsa Psicotrauma */}
+                    <div className="bg-gradient-to-br from-secondary/10 to-transparent p-6 rounded-2xl border border-secondary/20 flex flex-col justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">
+                          {t["dashboard.credits.psicotrauma"] || "Bolsa Psicotrauma"}
+                        </span>
+                        <span className="text-3xl font-black text-text-light dark:text-white">
+                          {bags.psicotrauma} <span className="text-sm font-medium text-text-dark">CCA</span>
+                        </span>
+                      </div>
+                      <div className="mt-4">
+                        <div className="w-full bg-gray-100 dark:bg-gray-855 h-2.5 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-secondary h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.min((bags.psicotrauma / 24) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-[10px] text-text-dark dark:text-gray-400 mt-1.5 block text-right font-medium">
+                          {bags.psicotrauma} / 24 {t["dashboard.credits.goal"] || "créditos meta"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Últimos Créditos Obtenidos */}
+                  <div className="border-t border-secondary/10 dark:border-gray-800 pt-6">
+                    <h4 className="font-bold text-sm text-text-light dark:text-white mb-4">
+                      {t["dashboard.credits.history"] || "Últimos créditos obtenidos"}
+                    </h4>
+                    {credits.length > 0 ? (
+                      <ul className="space-y-3">
+                        {credits.slice(0, 3).map((credit) => {
+                          const expired = new Date(credit.expiry_date) < new Date();
+                          return (
+                            <li key={credit.id} className="flex justify-between items-center text-sm p-3 bg-gray-50/50 dark:bg-white/5 rounded-xl border border-secondary/5 dark:border-gray-850">
+                              <div className="flex items-center gap-3">
+                                <span className={`w-2.5 h-2.5 rounded-full ${expired ? 'bg-red-400' : 'bg-green-400'}`}></span>
+                                <span className="font-bold text-text-light dark:text-white">
+                                  {credit.amount} CCA
+                                </span>
+                                <span className="text-xs text-text-dark dark:text-gray-400 bg-secondary/10 px-2 py-0.5 rounded">
+                                  {credit.category}
+                                </span>
+                              </div>
+                              <span className="text-xs text-text-dark dark:text-gray-400 font-medium">
+                                {expired 
+                                  ? `${t["dashboard.credits.expired"] || "Expirado el"} ${formatDate(credit.expiry_date)}`
+                                  : `${t["dashboard.credits.expires"] || "Vence el"} ${formatDate(credit.expiry_date)}`
+                                }
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-text-dark/80 dark:text-gray-500 italic">
+                        {t["dashboard.credits.empty"] || "Aún no has acumulado créditos académicos."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Tabla de Trámites Recientes */}
             <div className="bg-white dark:bg-surface-dark rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-secondary/20 dark:border-gray-800 overflow-hidden flex flex-col transition-all duration-500 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">

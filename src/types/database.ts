@@ -175,6 +175,38 @@ export interface Database {
           created_at?: string
         }
       }
+      user_credits: {
+        Row: {
+          id: string
+          user_id: string
+          application_id: string | null
+          course_id: string | null
+          amount: number
+          category: 'EMDR' | 'Psicotrauma'
+          expiry_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          application_id?: string | null
+          course_id?: string | null
+          amount: number
+          category: 'EMDR' | 'Psicotrauma'
+          expiry_date: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          application_id?: string | null
+          course_id?: string | null
+          amount?: number
+          category?: 'EMDR' | 'Psicotrauma'
+          expiry_date?: string
+          created_at?: string
+        }
+      }
 
       // =============================================
       // TABLAS LEGACY — Compatibilidad con código existente.
@@ -254,3 +286,4 @@ export type AccreditationType = Database['public']['Tables']['accreditation_type
 export type Application = Database['public']['Tables']['applications']['Row']
 export type Document = Database['public']['Tables']['documents']['Row']
 export type CourseAccredited = Database['public']['Tables']['courses_accredited']['Row']
+export type UserCredit = Database['public']['Tables']['user_credits']['Row']

@@ -67,62 +67,116 @@ export async function POST(request: Request) {
     }
 
     // 3. Activación Automática de Membresía e Identificación Única
-    if (newStatus === 'approved' && finalActionType === 'Membresia') {
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 365); // 1 año desde hoy
+    // 3. Activación Automática de Membresía e Identificación Única
+    if (newStatus === 'approved') {
+      const metadata = (appData as any).metadata as any || {};
       
-      const metadata = (appData as any).metadata as any;
-      const memType = metadata?.escenario || 'pleno_salud_mental';
-      const profile = Array.isArray((appData as any).profiles) ? (appData as any).profiles[0] : (appData as any).profiles;
-      const userLang = profile?.language_preference || 'es';
-
-      // Generar el número de socio si no tiene uno o si cambió de nivel/categoría
-      let memberNumber = profile?.member_number;
-      let shouldGenerateNewNumber = !memberNumber;
-
-      if (memberNumber) {
-        const currentPrefix = memberNumber.split('.')[0];
-        let expectedPrefix = '999';
+      // CASO A: Acreditación CCA (Emisión de créditos)
+      if (accType.includes('Emision_CCA') || accType.includes('acreditacion_cca') || (appData as any).accreditation_types?.name === 'Emision_CCA') {
+        const creditsAmount = Number(metadata.credits || 12);
+        const courseId = metadata.course_id || null;
+        const courseTitle = metadata.course_title || 'Curso Acreditado';
         
-        if (['pleno_salud_mental'].includes(memType)) expectedPrefix = '201';
-        else if (['pleno_agente_social'].includes(memType)) expectedPrefix = '202';
-        else if (['institucional'].includes(memType)) expectedPrefix = '700';
-        else if (['simpatizante'].includes(memType)) expectedPrefix = '800';
-        else if (['bienhechor'].includes(memType)) expectedPrefix = '500';
-        else if (['certificado', 'psico_cert_default', 'psico_senior_default', 'psico_master_default', 'renovacion_psicoterapeuta', 'equivalencia_psicoterapeuta', 'EMDR_Psicoterapeuta'].includes(memType)) expectedPrefix = '301';
-        else if (['emdr_basico_default'].includes(memType)) expectedPrefix = '302';
-        else if (['supervisor', 'sup_cert_default', 'sup_senior_default', 'renovacion_supervisor', 'equivalencia_supervisor', 'EMDR_Supervisor'].includes(memType)) expectedPrefix = '401';
-
-        if (currentPrefix !== expectedPrefix) {
-          shouldGenerateNewNumber = true;
-        }
-      }
-
-      if (shouldGenerateNewNumber) {
-        const { data: generatedNumber, error: genError } = await (supabaseAdmin.rpc as any)('generate_member_number', { 
-            p_category: memType, 
-            p_language: userLang 
+        // Deducir categoría basado en el título del curso
+        const category = courseTitle.toUpperCase().includes('EMDR') ? 'EMDR' : 'Psicotrauma';
+        
+        const expiryDate = new Date();
+        expiryDate.setFullYear(expiryDate.getFullYear() + 2); // Válido por 2 años desde hoy
+        
+        const { error: creditInsertError } = await (supabaseAdmin.from('user_credits') as any)
+          .insert({
+            user_id: (appData as any).user_id,
+            application_id: applicationId,
+            course_id: courseId,
+            amount: creditsAmount,
+            category: category as 'EMDR' | 'Psicotrauma',
+            expiry_date: expiryDate.toISOString().split('T')[0]
           });
-        
-        if (!genError) {
-          memberNumber = generatedNumber;
-        } else {
-          console.error('Error generando número de socio:', genError);
+          
+        if (creditInsertError) {
+          console.error('❌ Error al insertar créditos en user_credits:', creditInsertError);
         }
       }
 
-      const { error: profileUpdateError } = await (supabaseAdmin.from('profiles') as any)
-        .update({
-          is_member: true,
-          is_public: true,
-          membership_type: memType,
-          membership_expiry: expirationDate.toISOString(),
-          member_number: memberNumber
-        })
-        .eq('id', (appData as any).user_id);
+      // CASO B: Renovación o Mantenimiento (+2 años en membresía)
+      const isRenovacion = accType.toLowerCase().includes('renovacion') || 
+                           accType.toLowerCase().includes('mantenimiento') || 
+                           metadata.nivel_solicitado?.toLowerCase().includes('renovacion') ||
+                           metadata.nivel_solicitado?.toLowerCase().includes('mantenimiento');
+                           
+      if (isRenovacion) {
+        const newExpiry = new Date();
+        newExpiry.setFullYear(newExpiry.getFullYear() + 2); // +2 Años desde hoy
+        
+        const { error: profileRenewError } = await (supabaseAdmin.from('profiles') as any)
+          .update({
+            membership_expiry: newExpiry.toISOString(),
+            is_member: true
+          })
+          .eq('id', (appData as any).user_id);
+          
+        if (profileRenewError) {
+          console.error('❌ Error al renovar membresía en perfil:', profileRenewError);
+        }
+      }
 
-      if (profileUpdateError) {
-        console.error('Error actualizando perfil para membresía:', profileUpdateError);
+      // CASO C: Flujo estándar de membresía inicial (1 año desde hoy)
+      if (finalActionType === 'Membresia' && !isRenovacion) {
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + 365); // 1 año desde hoy
+        
+        const memType = metadata?.escenario || 'pleno_salud_mental';
+        const profile = Array.isArray((appData as any).profiles) ? (appData as any).profiles[0] : (appData as any).profiles;
+        const userLang = profile?.language_preference || 'es';
+
+        // Generar el número de socio si no tiene uno o si cambió de nivel/categoría
+        let memberNumber = profile?.member_number;
+        let shouldGenerateNewNumber = !memberNumber;
+
+        if (memberNumber) {
+          const currentPrefix = memberNumber.split('.')[0];
+          let expectedPrefix = '999';
+          
+          if (['pleno_salud_mental'].includes(memType)) expectedPrefix = '201';
+          else if (['pleno_agente_social'].includes(memType)) expectedPrefix = '202';
+          else if (['institucional'].includes(memType)) expectedPrefix = '700';
+          else if (['simpatizante'].includes(memType)) expectedPrefix = '800';
+          else if (['bienhechor'].includes(memType)) expectedPrefix = '500';
+          else if (['certificado', 'psico_cert_default', 'psico_senior_default', 'psico_master_default', 'renovacion_psicoterapeuta', 'equivalencia_psicoterapeuta', 'EMDR_Psicoterapeuta'].includes(memType)) expectedPrefix = '301';
+          else if (['emdr_basico_default'].includes(memType)) expectedPrefix = '302';
+          else if (['supervisor', 'sup_cert_default', 'sup_senior_default', 'renovacion_supervisor', 'equivalencia_supervisor', 'EMDR_Supervisor'].includes(memType)) expectedPrefix = '401';
+
+          if (currentPrefix !== expectedPrefix) {
+            shouldGenerateNewNumber = true;
+          }
+        }
+
+        if (shouldGenerateNewNumber) {
+          const { data: generatedNumber, error: genError } = await (supabaseAdmin.rpc as any)('generate_member_number', { 
+              p_category: memType, 
+              p_language: userLang 
+            });
+          
+          if (!genError) {
+            memberNumber = generatedNumber;
+          } else {
+            console.error('Error generando número de socio:', genError);
+          }
+        }
+
+        const { error: profileUpdateError } = await (supabaseAdmin.from('profiles') as any)
+          .update({
+            is_member: true,
+            is_public: true,
+            membership_type: memType,
+            membership_expiry: expirationDate.toISOString(),
+            member_number: memberNumber
+          })
+          .eq('id', (appData as any).user_id);
+
+        if (profileUpdateError) {
+          console.error('Error actualizando perfil para membresía:', profileUpdateError);
+        }
       }
     }
 

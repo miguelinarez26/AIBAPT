@@ -195,7 +195,7 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
     ],
     fields: [
       { name: "certificado_formacion_basica", label: { es: "Certificado de Formación Básica", pt: "Certificado de Formação Básica" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "certificado_curso_avanzado", label: { es: "Certificado del Curso Avanzado", pt: "Certificado do Curso Avançado" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "certificado_curso_avanzado", label: { es: "Diploma del Curso", pt: "Diploma do Curso" }, typeLabel: "PDF", validator: FileValidators.pdf },
       { name: "comprobante_pago", label: { es: "Comprobante de Pago", pt: "Comprovante de Pagamento" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },

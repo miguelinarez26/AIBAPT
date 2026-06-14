@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { UniversalStepper } from "@/components/acreditaciones/UniversalStepper";
 import { TramiteSelector } from "@/components/acreditaciones/TramiteSelector";
+import { toast } from "sonner";
 
 // Import images for proper base path resolution
 import placeholderImg from "../../../../public/images/webinar_placeholder_new.png";
@@ -20,10 +21,11 @@ import logoAibapt from "../../../../public/images/aibapt_logo_transparent_seal.p
 
 interface FormacionesClientProps {
     initialEvents: any[];
+    initialAccredited?: any[];
     currentLang: string;
 }
 
-function FormacionesContent({ initialEvents, currentLang }: FormacionesClientProps) {
+function FormacionesContent({ initialEvents, initialAccredited = [], currentLang }: FormacionesClientProps) {
     const { t, lang } = useLanguage();
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
@@ -32,6 +34,7 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
     const [selectedCourse, setSelectedCourse] = useState<any>(null);
     const [viewMode, setViewMode] = useState<"grid" | "list">("list");
     const [selectedTramiteId, setSelectedTramiteId] = useState<string | null>(null);
+    const [selectedContactCourse, setSelectedContactCourse] = useState<any>(null);
 
     // Helper to get initials from name
     const getInitials = (name: string) => {
@@ -193,18 +196,34 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
         })), []);
 
     // DATA FOR "CURSOS ACREDITADOS"
-    const accreditedData = [
-        { title: "Acompañar pérdidas y procesos de duelo", instructor: "Belén Romá y Santiago Jácome", hours: "04 horas", contact: "mailto:belenromaromero@gmail.com" },
-        { title: "Aleces: Introducción a la Comprensión y Curación del Trauma", instructor: "C. Cuenca, C. Melo y M. Salvador", hours: "28 horas", contact: "https://www.aleces.com", linkTitle: t("edu.btn.website" as any) },
-        { title: "Atención intensiva", instructor: "Esly Carvalho / TraumaClinic", hours: "02 horas", contact: "https://www.traumacliniclatinoamerica.com/courses/atencionintensiva", linkTitle: t("edu.btn.website" as any) },
-        { title: "Capacitación para Supervisores Certificados en EMDR", instructor: "Elizabeth Maio e Silvia Guz", hours: "10 horas", contact: "mailto:helo.ludovice@gmail.com" },
-        { title: "Dilemas y toma de decisiones en la Terapia EMDR", instructor: "Belén Romá y Santiago Jácome", hours: "02 horas", contact: "mailto:belenromaromero@gmail.com" },
-        { title: "El arte de crear entretejidos terapéuticos", instructor: "Belén Romá y Santiago Jácome", hours: "06 horas", contact: "mailto:belenromaromero@gmail.com" },
-        { title: "PIPA: Intervención de Profesionales en la Adversidad", instructor: "Esly Carvalho / TraumaClinic", hours: "13 horas", contact: "mailto:soporte@traumacliniclatinoamerica.com" },
-        { title: "Protocolo de Episodios Traumáticos Grupales (G-TEP)", instructor: "Patricio Galleguillos", hours: "06 horas", contact: "mailto:contacto@atept.cl" },
-        { title: "Terapia Centrada en Esquemas", instructor: "Ariel Milton Pinto de Sousa", hours: "22 horas", contact: "mailto:arielmilton@gmail.com" },
-        { title: "Trauma Complejo, Disociación y EMDR", instructor: "Patricio Galleguillos", hours: "12 horas", contact: "mailto:contacto@atept.cl" },
-    ];
+    const accreditedData = useMemo(() => {
+        if (initialAccredited && initialAccredited.length > 0) {
+            return initialAccredited.map((c: any) => ({
+                title: c.title,
+                instructor: c.instructor_name || c.instructor || "AIBAPT",
+                hours: c.hours || `${c.credits || 12} créditos`,
+                contact: c.contact
+                    ? (c.contact.includes("@") && !c.contact.startsWith("mailto:") && !c.contact.startsWith("http")
+                        ? `mailto:${c.contact}`
+                        : c.contact)
+                    : "#",
+                linkTitle: c.link_title ? (c.link_title.startsWith("edu.btn") ? t(c.link_title as any) : c.link_title) : null
+            }));
+        }
+        // Fallback defensivo para no romper el frontend si la base de datos está vacía o falla
+        return [
+            { title: "Acompañar pérdidas y procesos de duelo", instructor: "Belén Romá y Santiago Jácome", hours: "04 horas", contact: "mailto:belenromaromero@gmail.com" },
+            { title: "Aleces: Introducción a la Comprensión y Curación del Trauma", instructor: "C. Cuenca, C. Melo y M. Salvador", hours: "28 horas", contact: "https://www.aleces.com", linkTitle: t("edu.btn.website" as any) },
+            { title: "Atención intensiva", instructor: "Esly Carvalho / TraumaClinic", hours: "02 horas", contact: "https://www.traumacliniclatinoamerica.com/courses/atencionintensiva", linkTitle: t("edu.btn.website" as any) },
+            { title: "Capacitación para Supervisores Certificados en EMDR", instructor: "Elizabeth Maio e Silvia Guz", hours: "10 horas", contact: "mailto:helo.ludovice@gmail.com" },
+            { title: "Dilemas y toma de decisiones en la Terapia EMDR", instructor: "Belén Romá y Santiago Jácome", hours: "02 horas", contact: "mailto:belenromaromero@gmail.com" },
+            { title: "El arte de crear entretejidos terapéuticos", instructor: "Belén Romá y Santiago Jácome", hours: "06 horas", contact: "mailto:belenromaromero@gmail.com" },
+            { title: "PIPA: Intervención de Profesionales en la Adversidad", instructor: "Esly Carvalho / TraumaClinic", hours: "13 horas", contact: "mailto:soporte@traumacliniclatinoamerica.com" },
+            { title: "Protocolo de Episodios Traumáticos Grupales (G-TEP)", instructor: "Patricio Galleguillos", hours: "06 horas", contact: "mailto:contacto@atept.cl" },
+            { title: "Terapia Centrada en Esquemas", instructor: "Ariel Milton Pinto de Sousa", hours: "22 horas", contact: "mailto:arielmilton@gmail.com" },
+            { title: "Trauma Complejo, Disociación y EMDR", instructor: "Patricio Galleguillos", hours: "12 horas", contact: "mailto:contacto@atept.cl" },
+        ];
+    }, [initialAccredited, t]);
 
 
     // Select active data for list/grid view
@@ -463,17 +482,23 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                                     </div>
                                                                 </button>
                                                             ) : (
-                                                                <Link 
+                                                                <a 
                                                                     href={course.route} 
                                                                     target="_blank" 
                                                                     rel="noopener noreferrer" 
+                                                                    onClick={(e) => {
+                                                                        if (course.route?.startsWith("mailto:")) {
+                                                                            e.preventDefault();
+                                                                            setSelectedContactCourse(course);
+                                                                        }
+                                                                    }}
                                                                     className="group/btn flex items-center gap-3 border-2 border-accent text-accent bg-transparent pl-5 pr-1.5 py-1.5 rounded-full text-xs font-bold transition-all duration-300 hover:bg-accent hover:text-white hover:-translate-y-1 hover:shadow-md w-full sm:w-auto justify-between sm:justify-center"
                                                                 >
                                                                     <span>{course.price}</span>
                                                                     <div className="w-7 h-7 bg-accent/10 group-hover/btn:bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-0.5">
                                                                         <span className="material-icons-round text-[14px]">open_in_new</span>
                                                                     </div>
-                                                                </Link>
+                                                                </a>
                                                             )}
                                                         </div>
                                                     </div>
@@ -532,17 +557,23 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                                 </div>
                                                             </button>
                                                         ) : (
-                                                            <Link 
+                                                            <a 
                                                                 href={course.route} 
                                                                 target="_blank" 
                                                                 rel="noopener noreferrer" 
+                                                                onClick={(e) => {
+                                                                    if (course.route?.startsWith("mailto:")) {
+                                                                        e.preventDefault();
+                                                                        setSelectedContactCourse(course);
+                                                                    }
+                                                                }}
                                                                 className="group/btn flex items-center gap-3 bg-accent text-white pl-5 pr-1.5 py-1.5 rounded-full text-xs font-bold transition-all duration-300 hover:bg-primary hover:-translate-y-1 hover:shadow-md w-full sm:w-auto justify-between sm:justify-center"
                                                             >
                                                                 <span>{course.price}</span>
                                                                 <div className="w-7 h-7 bg-white/20 group-hover/btn:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-0.5">
                                                                     <span className="material-icons-round text-[14px]">open_in_new</span>
                                                                 </div>
-                                                            </Link>
+                                                            </a>
                                                         )}
                                                     </div>
                                                 </div>
@@ -664,6 +695,131 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                         </motion.div>
                     </div>
                 )}
+            </AnimatePresence>
+
+            {/* Contact Modal (Premium UX Option A) */}
+            <AnimatePresence>
+                {selectedContactCourse && (() => {
+                    const rawEmail = selectedContactCourse.route.replace("mailto:", "");
+                    const emailSubject = encodeURIComponent(`Consulta: ${selectedContactCourse.title}`);
+                    const emailBody = encodeURIComponent(`Hola ${selectedContactCourse.instructorName || "Instructor"},\n\nMe pongo en contacto a través de la web de AIBAPT para consultar sobre el curso acreditado "${selectedContactCourse.title}".\n\nSaludos.`);
+
+                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${rawEmail}&su=${emailSubject}&body=${emailBody}`;
+                    const outlookUrl = `https://outlook.live.com/default.aspx?rru=compose&to=${rawEmail}&subject=${emailSubject}&body=${emailBody}`;
+
+                    const handleCopyEmail = () => {
+                        navigator.clipboard.writeText(rawEmail);
+                        toast.success(lang === "es" ? "Correo copiado al portapapeles" : "E-mail copiado para a área de transferência");
+                        setSelectedContactCourse(null);
+                    };
+
+                    return (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setSelectedContactCourse(null)}
+                                className="absolute inset-0 bg-text-light/60 backdrop-blur-md"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                className="relative w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl p-8 border border-gray-100 flex flex-col gap-6"
+                            >
+                                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                            <span className="material-icons-round text-base">mail</span>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-text-light text-base leading-snug">
+                                                {lang === "es" ? "Opciones de Contacto" : "Opções de Contato"}
+                                            </h4>
+                                            <p className="text-[10px] text-text-dark/80 font-medium">
+                                                {selectedContactCourse.instructorName || "AIBAPT"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedContactCourse(null)}
+                                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-text-main flex items-center justify-center transition-colors"
+                                    >
+                                        <span className="material-icons-round text-sm">close</span>
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col gap-3">
+                                    {/* Gmail Web */}
+                                    <a
+                                        href={gmailUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => setSelectedContactCourse(null)}
+                                        className="flex items-center justify-between p-4 bg-gray-50 hover:bg-primary/5 border border-gray-100 rounded-2xl transition-all group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-icons-round text-red-500">alternate_email</span>
+                                            <span className="text-sm font-semibold text-text-light group-hover:text-primary transition-colors">Gmail (Web)</span>
+                                        </div>
+                                        <span className="material-icons-round text-gray-400 group-hover:translate-x-1 transition-transform text-sm">open_in_new</span>
+                                    </a>
+
+                                    {/* Outlook Web */}
+                                    <a
+                                        href={outlookUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => setSelectedContactCourse(null)}
+                                        className="flex items-center justify-between p-4 bg-gray-50 hover:bg-primary/5 border border-gray-100 rounded-2xl transition-all group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-icons-round text-blue-500">mail_outline</span>
+                                            <span className="text-sm font-semibold text-text-light group-hover:text-primary transition-colors">Outlook / Hotmail (Web)</span>
+                                        </div>
+                                        <span className="material-icons-round text-gray-400 group-hover:translate-x-1 transition-transform text-sm">open_in_new</span>
+                                    </a>
+
+                                    {/* Copiar Correo */}
+                                    <button
+                                        onClick={handleCopyEmail}
+                                        className="flex items-center justify-between p-4 bg-gray-50 hover:bg-primary/5 border border-gray-100 rounded-2xl transition-all group w-full text-left"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-icons-round text-amber-500">content_copy</span>
+                                            <span className="text-sm font-semibold text-text-light group-hover:text-primary transition-colors">
+                                                {lang === "es" ? "Copiar dirección de correo" : "Copiar endereço de e-mail"}
+                                            </span>
+                                        </div>
+                                        <span className="material-icons-round text-gray-400 group-hover:translate-x-1 transition-transform text-sm">content_copy</span>
+                                    </button>
+
+                                    {/* Mailto local */}
+                                    <a
+                                        href={selectedContactCourse.route}
+                                        onClick={() => setSelectedContactCourse(null)}
+                                        className="flex items-center justify-between p-4 bg-gray-50 hover:bg-primary/5 border border-gray-100 rounded-2xl transition-all group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-icons-round text-primary">computer</span>
+                                            <span className="text-sm font-semibold text-text-light group-hover:text-primary transition-colors">
+                                                {lang === "es" ? "Usar aplicación del sistema" : "Usar aplicativo do sistema"}
+                                            </span>
+                                        </div>
+                                        <span className="material-icons-round text-gray-400 group-hover:translate-x-1 transition-transform text-sm">open_in_new</span>
+                                    </a>
+                                </div>
+
+                                <p className="text-[10px] text-center text-text-muted mt-2">
+                                    {lang === "es" 
+                                        ? "* Selecciona tu cliente de correo preferido para ponerte en contacto." 
+                                        : "* Selecione o seu cliente de e-mail preferido para entrar em contato."}
+                                </p>
+                            </motion.div>
+                        </div>
+                    );
+                })()}
             </AnimatePresence>
         </div>
     );
