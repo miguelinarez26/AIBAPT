@@ -116,11 +116,9 @@ export default function DashboardClient({ profile, applications = [], lang }: an
                     </div>
                     <div>
                       <h2 className="text-2xl md:text-3xl font-serif font-bold tracking-tight mb-2">
-                        {/* @ts-ignore */}
                         {t["dashboard.staff_mode"]}
                       </h2>
                       <p className="text-white/80 font-light max-w-md leading-relaxed text-sm">
-                        {/* @ts-ignore */}
                         {t["dashboard.staff_desc"]}
                       </p>
                     </div>
@@ -129,7 +127,6 @@ export default function DashboardClient({ profile, applications = [], lang }: an
                     href={`/${lang}/admin`}
                     className="flex-shrink-0 bg-primary hover:bg-primary-dark text-white px-8 py-3.5 rounded-full font-bold transition-all shadow-lg hover:shadow-primary/30 hover:-translate-y-1 flex items-center gap-2"
                   >
-                    {/* @ts-ignore */}
                     {t["dashboard.go_to_panel"]}
                     <span className="material-icons-round text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
                   </Link>

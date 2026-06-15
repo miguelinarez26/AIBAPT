@@ -66,12 +66,12 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
     }, []);
 
     // TABS DEFINITION
-    const tabs = [
-        { id: "events", label: "Próximos Eventos", icon: "event_available" },
-        { id: "recordings", label: "Videoteca", icon: "ondemand_video" },
-        { id: "accredited", label: "Cursos y eventos acreditados", icon: "verified" },
-        { id: "accreditation", label: "Acredita tu curso o evento", icon: "history_edu" },
-    ];
+    const tabs = useMemo(() => [
+        { id: "events", label: lang === "pt" ? "Próximos Eventos" : "Próximos Eventos", icon: "event_available" },
+        { id: "recordings", label: lang === "pt" ? "Videoteca" : "Videoteca", icon: "ondemand_video" },
+        { id: "accredited", label: lang === "pt" ? "Cursos e eventos acreditados" : "Cursos y eventos acreditados", icon: "verified" },
+        { id: "accreditation", label: lang === "pt" ? "Acredite seu curso ou evento" : "Acredita tu curso o evento", icon: "history_edu" },
+    ], [lang]);
     // DATA FOR "WEBINARS" (Programa 2026)
     const webinarsData = useMemo(() => [
         {
@@ -173,24 +173,25 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
         };
     }), [initialEvents, currentLang]);
 
-    // DATA FOR "GRABACIONES (VOD)" - MIGRATED TO INTERNAL ROUTES
     const recordingsData = useMemo(() => WEBINARS_DATA
         .filter(w => w?.badge === "VOD / Grabación")
         .map(w => ({
             img: w?.img || placeholderImg,
-            badge: "Grabaciones",
+            badge: lang === "pt" ? "Gravações" : "Grabaciones",
             badgeIcon: w?.badgeIcon || "play_circle",
             badgeStyle: w?.badgeStyle || "text-secondary",
-            category: w?.category || "Webinar",
+            category: w?.category === "Seminarios Internacionales" ? (lang === "pt" ? "Seminários Internacionais" : "Seminarios Internacionales") : (w?.category || "Webinar"),
             title: w?.title || "Sin título",
             desc: w?.descLong?.length > 100 ? w.descLong.substring(0, 100) + "..." : (w?.descLong || w?.desc || ""),
             instructorImg: "",
             instructorName: w?.instructorName || "AIBAPT",
             route: `/formaciones/${w?.slug || ""}`,
-            price: w?.price || "Consultar",
+            price: w?.price || (lang === "pt" ? "Consultar" : "Consultar"),
             isOfficial: w?.isOfficial !== undefined ? w.isOfficial : true,
-            duration: w?.duration || "1 Crédito AIBAPT"
-        })), []);
+            duration: w?.duration 
+                ? w.duration.replace("Horas de Formación", lang === "pt" ? "Horas de Formação" : "Horas de Formación")
+                : (lang === "pt" ? "1 Crédito AIBAPT" : "1 Crédito AIBAPT")
+        })), [lang]);
 
     // DATA FOR "CURSOS ACREDITADOS"
     const accreditedData = [
@@ -214,18 +215,18 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
         if (activeTab === "accredited") return accreditedData.map((item: any) => ({
             ...item,
             img: logoAibapt,
-            category: "CURSO ACREDITADO",
+            category: lang === "pt" ? "CURSO CREDENCIADO" : "CURSO ACREDITADO",
             badge: item.hours,
             badgeIcon: "schedule",
             badgeStyle: "text-secondary",
             instructorName: item.instructor,
             isOfficial: false,
             route: item.contact,
-            price: item.linkTitle || "Contactar",
+            price: item.linkTitle || (lang === "pt" ? "Contatar" : "Contactar"),
             desc: item.instructor
         }));
         return [];
-    }, [activeTab, webinarsData, eventsData, recordingsData, accreditedData]);
+    }, [activeTab, webinarsData, eventsData, recordingsData, accreditedData, lang]);
 
     const filteredData = useMemo(() => {
         let result: any[] = currentData;
@@ -299,8 +300,12 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                     {(activeTab === "events" || activeTab === "recordings") && (
                         <p className="text-sm md:text-base text-text-dark leading-relaxed max-w-2xl mx-auto">
                             {activeTab === "events"
-                                ? "Agenda de eventos futuros con inscripciones abiertas"
-                                : "Lista de cursos y eventos grabados disponibles para adquisición en el sitio web de la AIBAPT"}
+                                ? (lang === "pt" 
+                                    ? "Agenda de eventos futuros com inscrições abertas" 
+                                    : "Agenda de eventos futuros con inscripciones abiertas")
+                                : (lang === "pt" 
+                                    ? "Lista de cursos e eventos gravados disponíveis para aquisição no site da AIBAPT" 
+                                    : "Lista de cursos y eventos grabados disponibles para adquisición en el sitio web de la AIBAPT")}
                         </p>
                     )}
                 </div>
@@ -353,19 +358,19 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                         onClick={() => setFilterType("all")}
                                                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${filterType === "all" ? "bg-primary text-white shadow-sm" : "text-text-dark hover:text-primary hover:bg-white"}`}
                                                     >
-                                                        Todos
+                                                        {lang === "pt" ? "Todos" : "Todos"}
                                                     </button>
                                                     <button
                                                         onClick={() => setFilterType("official")}
                                                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${filterType === "official" ? "bg-primary text-white shadow-sm" : "text-text-dark hover:text-primary hover:bg-white"}`}
                                                     >
-                                                        Oficiales AIBAPT
+                                                        {lang === "pt" ? "Oficiais AIBAPT" : "Oficiales AIBAPT"}
                                                     </button>
                                                     <button
                                                         onClick={() => setFilterType("external")}
                                                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${filterType === "external" ? "bg-primary text-white shadow-sm" : "text-text-dark hover:text-primary hover:bg-white"}`}
                                                     >
-                                                        Certificados
+                                                        {lang === "pt" ? "Certificados" : "Certificados"}
                                                     </button>
                                                 </div>
                                             )}
@@ -412,7 +417,7 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                     </div>
                                                     <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2">
                                                         <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border border-white/20 backdrop-blur-md shadow-sm ${course.isOfficial ? "bg-primary/90 text-white" : "bg-blue-600/90 text-white"}`}>
-                                                            {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
+                                                            {course.isOfficial ? "Evento Oficial AIBAPT" : (lang === "pt" ? "Cursos e Eventos Certificados" : "Cursos y Eventos Certificados")}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -492,7 +497,7 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                                             <span className="text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/5 px-2 py-1 rounded-md">{course.category}</span>
                                                             {activeTab !== "accredited" && (
                                                                 <span className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider ${course.isOfficial ? "bg-primary/10 text-primary" : "bg-blue-100 text-blue-600"}`}>
-                                                                    {course.isOfficial ? "Evento Oficial AIBAPT" : "Cursos y Eventos Certificados"}
+                                                                    {course.isOfficial ? "Evento Oficial AIBAPT" : (lang === "pt" ? "Cursos e Eventos Certificados" : "Cursos y Eventos Certificados")}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -611,7 +616,7 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
 
                             {/* Right: Details & Checkout */}
                             <div className="w-full md:w-7/12 p-8 md:p-12 overflow-y-auto flex flex-col">
-                                <div className="mb-8 flex-1">
+                                                <div className="mb-8 flex-1">
                                     <span className="inline-block bg-primary/10 text-primary px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
                                         {selectedCourse.category}
                                     </span>
@@ -622,12 +627,12 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
 
                                     <div className="grid grid-cols-2 gap-4 mb-2">
                                         <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 flex flex-col gap-1">
-                                            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Ponente</span>
+                                            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{lang === "pt" ? "Palestrante" : "Ponente"}</span>
                                             <span className="text-sm font-semibold text-text-light">{selectedCourse.instructorName}</span>
                                         </div>
                                         <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 flex flex-col gap-1">
-                                            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Duración / Valor</span>
-                                            <span className="text-sm font-semibold text-text-light">{selectedCourse.duration || "Consultar"}</span>
+                                            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{lang === "pt" ? "Duração / Valor" : "Duración / Valor"}</span>
+                                            <span className="text-sm font-semibold text-text-light">{selectedCourse.duration || (lang === "pt" ? "Consultar" : "Consultar")}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -636,28 +641,30 @@ function FormacionesContent({ initialEvents, currentLang }: FormacionesClientPro
                                 <div className="pt-6 border-t border-gray-100 mt-auto">
                                     <h5 className="text-sm font-bold text-text-light mb-4 flex items-center gap-2">
                                         <span className="material-icons-round text-primary">payments</span>
-                                        Opciones de Inscripción
+                                        {lang === "pt" ? "Opções de Inscrição" : "Opciones de Inscripción"}
                                     </h5>
                                     
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <button className="flex items-center justify-between p-4 bg-white border-2 border-primary rounded-2xl hover:bg-primary/5 transition-all group">
                                             <div className="flex flex-col items-start gap-0.5">
-                                                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Inscribirse con</span>
-                                                <span className="text-sm font-semibold text-text-light">Pago Directo</span>
+                                                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{lang === "pt" ? "Inscrever-se com" : "Inscribirse con"}</span>
+                                                <span className="text-sm font-semibold text-text-light">{lang === "pt" ? "Pagamento Direto" : "Pago Directo"}</span>
                                             </div>
                                             <span className="material-icons-round text-primary group-hover:translate-x-1 transition-transform">credit_card</span>
                                         </button>
 
                                         <button className="flex items-center justify-between p-4 bg-primary text-white rounded-2xl hover:bg-primary-dark transition-all shadow-md hover:-translate-y-0.5 group">
                                             <div className="flex flex-col items-start gap-0.5">
-                                                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Canjear</span>
-                                                <span className="text-sm font-semibold">Crédito Prepago</span>
+                                                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">{lang === "pt" ? "Resgatar" : "Canjear"}</span>
+                                                <span className="text-sm font-semibold">{lang === "pt" ? "Crédito Pré-pago" : "Crédito Prepago"}</span>
                                             </div>
                                             <span className="material-icons-round group-hover:translate-x-1 transition-transform">confirmation_number</span>
                                         </button>
                                     </div>
                                     <p className="text-[11px] text-center text-text-muted mt-5">
-                                        * Los miembros activos de AIBAPT tienen acceso preferencial y descuentos especiales.
+                                        {lang === "pt" 
+                                            ? "* Os membros ativos da AIBAPT têm acesso preferencial e descontos especiais." 
+                                            : "* Los miembros activos de AIBAPT tienen acceso preferencial y descuentos especiales."}
                                     </p>
                                 </div>
                             </div>

@@ -1,48 +1,76 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const slides = [
-  {
-    id: 1,
-    image: "/images/1.jpg",
-    lines: [
-      { text: "Hazte socio", bg: "bg-accent" },
-      { text: "de AIBAPT", bg: "bg-accent", ml: "ml-12 md:ml-32" },
-      { text: "y destaca tu perfil", bg: "bg-accent-light", ml: "ml-6 md:ml-16" }
-    ],
-    align: "left"
-  },
-  {
-    id: 2,
-    image: "/images/2.jpg",
-    lines: [
-      { text: "Educación", bg: "bg-accent-light" },
-      { text: "continua", bg: "bg-accent", mr: "mr-8 md:mr-20" },
-      { text: "sin costo extra", bg: "bg-accent-light", mr: "mr-4 md:mr-10" }
-    ],
-    align: "right"
-  },
-  {
-    id: 3,
-    image: "/images/3.jpg",
-    lines: [
-      { text: "Certifica", bg: "bg-accent" },
-      { text: "tus propios cursos", bg: "bg-accent-light", ml: "ml-8 md:ml-20" }
-    ],
-    align: "left"
-  }
-];
-
-export default function HeroSlider() {
+export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
   const [activeSlide, setActiveSlide] = useState(0);
+  const { lang: contextLang } = useLanguage();
+  const lang = propLang || contextLang || 'es';
+
+  const dict = {
+    es: {
+      s1_l1: "Hazte socio",
+      s1_l2: "de AIBAPT",
+      s1_l3: "y destaca tu perfil",
+      s2_l1: "Educación",
+      s2_l2: "continua",
+      s2_l3: "sin costo extra",
+      s3_l1: "Certifica",
+      s3_l2: "tus propios cursos",
+    },
+    pt: {
+      s1_l1: "Torne-se sócio",
+      s1_l2: "da AIBAPT",
+      s1_l3: "e destaque seu perfil",
+      s2_l1: "Educação",
+      s2_l2: "contínua",
+      s2_l3: "sem custo extra",
+      s3_l1: "Certifique",
+      s3_l2: "seus próprios cursos",
+    }
+  };
+
+  const t = dict[lang] || dict.es;
+
+  const slides = [
+    {
+      id: 1,
+      image: "/images/1.jpg",
+      lines: [
+        { text: t.s1_l1, bg: "bg-accent" },
+        { text: t.s1_l2, bg: "bg-accent", ml: "ml-12 md:ml-32" },
+        { text: t.s1_l3, bg: "bg-accent-light", ml: "ml-6 md:ml-16" }
+      ],
+      align: "left"
+    },
+    {
+      id: 2,
+      image: "/images/2.jpg",
+      lines: [
+        { text: t.s2_l1, bg: "bg-accent-light" },
+        { text: t.s2_l2, bg: "bg-accent", mr: "mr-8 md:mr-20" },
+        { text: t.s2_l3, bg: "bg-accent-light", mr: "mr-4 md:mr-10" }
+      ],
+      align: "right"
+    },
+    {
+      id: 3,
+      image: "/images/3.jpg",
+      lines: [
+        { text: t.s3_l1, bg: "bg-accent" },
+        { text: t.s3_l2, bg: "bg-accent-light", ml: "ml-8 md:ml-20" }
+      ],
+      align: "left"
+    }
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   const nextSlide = () => setActiveSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);

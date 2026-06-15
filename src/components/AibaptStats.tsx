@@ -1,9 +1,15 @@
+"use client";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function AibaptStats() {
+  const { t } = useLanguage();
+
   const stats = [
-    { number: "500+", label: "MIEMBROS ACTIVOS" },
-    { number: "20+", label: "PAÍSES" },
-    { number: "50+", label: "EVENTOS ANUALES" },
-    { number: "12", label: "INVESTIGACIONES" },
+    { number: "500+", label: t("stats.members") },
+    { number: "20+", label: t("stats.countries") },
+    { number: "50+", label: t("stats.events") },
+    { number: "12", label: t("stats.research") },
   ];
 
   return (

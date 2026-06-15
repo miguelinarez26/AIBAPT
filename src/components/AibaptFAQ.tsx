@@ -1,14 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LangKeys } from "@/i18n/translations";
 
 export default function AibaptFAQ() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(1);
+  const [activeIndex, setActiveIndex] = useState<number | null>(0);
+  const { t } = useLanguage();
 
-  const faqs = Array(10).fill(null).map((_, i) => ({
-    question: `Lorem ipsum dolor sit amet, consectetur adipiscing elit ${i + 1}?`,
-    answer: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
-  }));
+  const faqs = Array.from({ length: 9 }).map((_, i) => {
+    const num = i + 1;
+    return {
+      question: t(`faq.q${num}` as LangKeys),
+      answer: t(`faq.a${num}` as LangKeys)
+    };
+  });
 
   const toggleFAQ = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
@@ -17,9 +23,16 @@ export default function AibaptFAQ() {
   return (
     <section className="w-full py-24 bg-background-light px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1000px] mx-auto">
-        <h2 className="text-4xl md:text-[56px] font-serif text-text-light leading-[1.1] mb-12">
-          Preguntas Frecuentes
-        </h2>
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          {/* @ts-ignore */}
+          <p className="text-accent text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">{t("faq.badge")}</p>
+          <h2 className="text-4xl md:text-[56px] font-serif text-text-light leading-[1.1] mb-6">
+            {/* @ts-ignore */}
+            {t("faq.title")}
+          </h2>
+          {/* @ts-ignore */}
+          <p className="text-text-dark text-lg">{t("faq.desc")}</p>
+        </div>
         
         <div className="flex flex-col gap-4">
           {faqs.map((faq, index) => {
@@ -37,9 +50,9 @@ export default function AibaptFAQ() {
                   </h3>
                   <div className="shrink-0 text-text-light">
                     {isActive ? (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/></svg>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 15l7-7 7 7"/></svg>
                     ) : (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 9l-7 7-7-7"/></svg>
                     )}
                   </div>
                 </div>

@@ -17,8 +17,13 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Online Therapy | Professional Counseling",
-  description: "Find the best online therapy and counseling services.",
+  title: "AIBAPT | Asociación Iberoamericana de Psicotrauma",
+  description: "Asociación Iberoamericana de Psicotrauma. Uniendo profesionales en Iberoamérica para avanzar en el estudio, prevención y tratamiento del trauma psicológico con un enfoque orgánico y humano.",
+  icons: {
+    icon: "/images/favicon_official.png",
+    shortcut: "/images/favicon_official.png",
+    apple: "/images/favicon_official.png",
+  }
 };
 
 export default function RootLayout({

@@ -8,42 +8,60 @@ import AibaptValueProps from "@/components/AibaptValueProps";
 import AibaptEvents from "@/components/AibaptEvents";
 import AibaptFAQ from "@/components/AibaptFAQ";
 
-export default function Home() {
-  const services = [
-    { title: "Individual Therapy", desc: "One-on-one sessions tailored to your unique needs." },
-    { title: "Couples Therapy", desc: "Strengthen your relationship and improve communication." },
-    { title: "Family Counseling", desc: "Resolve conflicts and build a healthier family dynamic." },
-    { title: "Teen Therapy", desc: "Support for adolescents navigating complex emotions." },
-    { title: "Depression Therapy", desc: "Evidence-based treatment to help you find joy again." },
-    { title: "Supportive Counseling", desc: "A safe space to process life transitions." },
-  ];
+interface PageProps {
+  params: Promise<{ lang: 'es' | 'pt' }>;
+}
 
-  const therapists = [
-    { name: "Dr. Emily Carter, PhD", role: "Clinical Psychologist" },
-    { name: "Michael Johnson, LCSW", role: "Licensed Social Worker" },
-    { name: "Dr. Sarah Mitchell, PsyD", role: "Couples Therapist" },
-  ];
+export default async function Home({ params }: PageProps) {
+  const { lang } = await params;
+
+  const dict = {
+    es: {
+      title: "Soporte Adaptado ",
+      titleItalic: "a tus Necesidades",
+      subtitle: "Terapia compasiva para cada etapa de la vida.",
+      services: [
+        { title: "Terapia Individual", desc: "Sesiones individuales adaptadas a tus necesidades únicas." },
+        { title: "Terapia de Pareja", desc: "Fortalece tu relación y mejora la comunicación." },
+        { title: "Consejería Familiar", desc: "Resuelve conflictos y construye una dinámica familiar más saludable." },
+        { title: "Terapia para Adolescentes", desc: "Apoyo para adolescentes que navegan por emociones complejas." },
+      ]
+    },
+    pt: {
+      title: "Suporte Adaptado ",
+      titleItalic: "às suas Necessidades",
+      subtitle: "Terapia compassiva para cada etapa da vida.",
+      services: [
+        { title: "Terapia Individual", desc: "Sessões individuais adaptadas às suas necessidades exclusivas." },
+        { title: "Terapia de Casal", desc: "Fortaleça seu relacionamento e melhore a comunicação." },
+        { title: "Aconselhamento Familiar", desc: "Resolva conflitos e construa uma dinâmica familiar mais saudável." },
+        { title: "Terapia para Adolescentes", desc: "Apoio para adolescentes que navegam por emoções complexas." },
+      ]
+    }
+  };
+
+  const t = dict[lang] || dict.es;
 
   return (
     <div className="flex flex-col w-full bg-[var(--background)]">
       {/* Hero Section (Mindcare Interactive Slider) */}
-      <HeroSlider />
+      <HeroSlider key={`hero-${lang}`} lang={lang} />
 
       {/* Webinar Calendar Section */}
-      <WebinarCalendar />
+      <WebinarCalendar key={`calendar-${lang}`} lang={lang} />
 
       {/* Services Section */}
       <section className="w-full py-24 bg-[var(--background)] px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-4xl md:text-[56px] font-serif text-[var(--foreground)] mb-6 leading-tight">
-              Support Tailored <span className="text-[var(--primary)] italic">to Your Needs</span>
+              {t.title}<span className="text-[var(--primary)] italic">{t.titleItalic}</span>
             </h2>
-            <p className="text-[var(--text-gray)] text-lg">Compassionate therapy for every stage of life.</p>
+            <p className="text-[var(--text-gray)] text-lg">{t.subtitle}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.slice(0, 4).map((service, idx) => {
+            {t.services.map((service, idx) => {
               const bgColors = ['bg-background-light', 'bg-highlight', 'bg-secondary', 'bg-accent-light'];
               const bgClass = bgColors[idx];
 
@@ -70,19 +88,19 @@ export default function Home() {
       </section>
 
       {/* AIBAPT Stats Section */}
-      <AibaptStats />
+      <AibaptStats key={`stats-${lang}`} />
 
       {/* AIBAPT Trauma Info Section */}
-      <AibaptTraumaInfo />
+      <AibaptTraumaInfo key={`trauma-${lang}`} />
 
       {/* AIBAPT Value Props Section */}
-      <AibaptValueProps />
+      <AibaptValueProps key={`benefits-${lang}`} />
 
       {/* AIBAPT Events Section */}
-      <AibaptEvents />
+      <AibaptEvents key={`events-${lang}`} />
 
       {/* AIBAPT FAQ Section */}
-      <AibaptFAQ />
+      <AibaptFAQ key={`faq-${lang}`} />
 
     </div>
   );

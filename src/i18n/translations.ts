@@ -21,7 +21,7 @@ export const translations = {
         "nav.development.recordings": "Videoteca",
         "nav.development.accredited": "Cursos y eventos acreditados",
         "nav.development.accreditation": "Acredita tu curso o evento",
-        "nav.see_all": "Ver Todo",
+        "nav.see_all": "Ver Eventos",
         "nav.logout": "Cerrar Sesión",
 
         // Home Page - Hero
@@ -395,7 +395,7 @@ export const translations = {
         "footer.library": "Biblioteca Digital",
         "footer.events": "Eventos y Congresos",
         "footer.news": "Noticias Mundiales",
-        "footer.contact": "Contacto Directo",
+        "footer.contact": "Contáctanos",
 
         // About Page
         "about.intro.title": "Nuestra Esencia",
@@ -783,7 +783,9 @@ export const translations = {
         "dashboard.role.admin_full": "Administrador",
         "dashboard.staff_mode": "Modo Gestión Staff",
         "dashboard.staff_mode_desc": "Tienes privilegios administrativos. Puedes gestionar solicitudes, usuarios y configuraciones del sistema.",
+        "dashboard.staff_desc": "Tienes privilegios administrativos. Puedes gestionar solicitudes, usuarios y configuraciones del sistema.",
         "dashboard.admin_panel": "Ir al Panel Admin",
+        "dashboard.go_to_panel": "Ir al Panel Admin",
 
         // Trámites Nombres
         "tramite.name.membresia": "Solicitud de Membresía",
@@ -900,7 +902,7 @@ export const translations = {
         "nav.development.recordings": "Videoteca",
         "nav.development.accredited": "Cursos e eventos acreditados",
         "nav.development.accreditation": "Acredite seu curso ou evento",
-        "nav.see_all": "Ver Tudo",
+        "nav.see_all": "Ver Eventos",
         "nav.logout": "Sair da Conta",
 
         // Admin (PT)
@@ -976,6 +978,11 @@ export const translations = {
         "dashboard.welcome.aibapt": "Bem-vindo à AIBAPT!",
         "dashboard.welcome.new_account": "Olá! Sua conta foi criada. Para aproveitar os benefícios da AIBAPT, preencha sua solicitação de membresia aqui.",
         "dashboard.note_reviewer": "Nota do Revisor:",
+        "dashboard.role.staff": "Staff AIBAPT",
+        "dashboard.role.admin_full": "Administrador",
+        "dashboard.staff_mode": "Modo de Gestão da Equipe",
+        "dashboard.staff_desc": "Você tem privilégios administrativos. Pode gerenciar solicitações, usuários e configurações do sistema.",
+        "dashboard.go_to_panel": "Ir para o Painel de Controle",
 
         // Trâmites Nomes
         "tramite.name.membresia": "Solicitação de Membresia",
@@ -1208,7 +1215,7 @@ export const translations = {
         "footer.library": "Biblioteca Digital",
         "footer.events": "Eventos e Congressos",
         "footer.news": "Notícias Mundiais",
-        "footer.contact": "Contato Direto",
+        "footer.contact": "Contate-nos",
         "member.pleno.title": "Pessoa Física (Membro Pleno)",
         "member.pleno.desc": "Para profissionais que desejam participar ativamente da comunidade acadêmica e clínica.",
         "member.otros.title": "Pessoa Física (Outras Categorias)",
@@ -1629,6 +1636,26 @@ export const translations = {
         "profile.save": "Salvar Alterações",
         "profile.lang_pref": "Idioma de Preferência",
         "profile.lang_desc": "Mudar o idioma salvará automaticamente sua preferência e atualizará a página.",
+        "profile.public_info": "Visibilidade no Diretório",
+        "profile.public_notice": "Como sócio ativo, seu perfil é público por padrão para validação profissional.",
+        "profile.avatar.title": "Foto de Perfil",
+        "profile.avatar.desc": "Envie uma foto profissional para sua credencial e diretório.",
+        "profile.avatar.change": "Alterar Imagem",
+        "profile.fields.names": "Nomes",
+        "profile.fields.lastnames": "Sobrenomes",
+        "profile.fields.phone": "Telefone",
+        "profile.bio.label": "Biografia Profissional",
+        "profile.bio.placeholder": "Descreva sua especialidade...",
+        "profile.cv.status.loaded": "Seu currículo profissional está carregado.",
+        "profile.cv.status.empty": "Envie seu currículo para completar seu perfil.",
+        "profile.cv.btn.update": "ATUALIZAR CV",
+        "profile.cv.btn.upload": "ENVIAR CV",
+        "profile.success.saved": "Alterações salvas com sucesso.",
+        "profile.error.upload_img": "Erro ao enviar imagem",
+        "profile.error.upload_cv": "Erro ao enviar CV",
+        "profile.membership.title": "Matrícula Profissional",
+        "profile.membership.pending": "PENDENTE",
+        "profile.membership.immutable": "Identificador Imutável",
 
         // Segurança
         "profile.security.title": "Gestão de Segurança",

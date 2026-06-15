@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiMail, FiX, FiUsers } from "react-icons/fi";
+import { FiMail, FiX } from "react-icons/fi";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubComite {
     id: string;
@@ -23,7 +24,7 @@ interface Directivo {
     comites?: SubComite[];
 }
 
-const DIRECTIVA_DATA: Directivo[] = [
+const DIRECTIVA_DATA_ES: Directivo[] = [
     {
         cargo: "Asamblea General",
         nombre: "Órgano Supremo",
@@ -98,8 +99,87 @@ const DIRECTIVA_DATA: Directivo[] = [
     }
 ];
 
+const DIRECTIVA_DATA_PT: Directivo[] = [
+    {
+        cargo: "Assembleia Geral",
+        nombre: "Órgão Supremo",
+        email: "secretaria@aibapt.org",
+        img: "/images/aibapt_logo_transparent_seal.png",
+        desc: "Integrada por todos os membros ativos da associação.",
+        color: "accent"
+    },
+    {
+        cargo: "Comissão de Garantias",
+        nombre: "Comitê de Ética",
+        email: "secretaria@aibapt.org",
+        desc: "Vela pelo cumprimento estatutário e ético.",
+        color: "accent"
+    },
+    {
+        cargo: "Presidente",
+        nombre: "Elizabeth Maio",
+        email: "presidencia@aibapt.org",
+        img: "/images/elizabeth.jpg",
+        desc: "Liderança global e representação institucional da AIBAPT.",
+        color: "primary"
+    },
+    {
+        cargo: "Vice-Presidente Acadêmico",
+        nombre: "Cristina Melo",
+        img: "/images/cristina.jpg",
+        desc: "Direção científica e padrões de formação acadêmica.",
+        comites: [
+            { id: "ca", rol: "Comitê de Apoio Acadêmico", lider: "Glenda Villamarín", img: "/images/webinar_placeholder.png" },
+            { id: "cc", rol: "Comitê de Certificação", lider: "María Inés Mesquita / Ivete Rizzato", email: "certificacao@aibapt.org" },
+            { id: "ce", rol: "Comitê de Certificação Esp.", lider: "María Eugenia Francis / Rosaura Boada", email: "certificacion@aibapt.org" }
+        ],
+        color: "primary"
+    },
+    {
+        cargo: "VP Relações Internacionais",
+        nombre: "Deglya Camero",
+        email: "deglya@aibapt.org",
+        img: "/images/deglya.jpg",
+        desc: "Coordenação de alianças globais e gestão humanitária.",
+        comites: [
+            { id: "cm", rol: "Comunicação e Marketing", lider: "Equipes RRSS, Web y Miembros", email: "comunicacion@aibapt.org" },
+            { id: "ah", rol: "Ajuda Humanitária", lider: "Olivar E. Ribeiro / Daniel Gabarra", desc: "Gestão de projetos sociais." },
+            { id: "ap", rol: "Atenção a Paraprofissionais", lider: "María Alejandra Pérez" }
+        ],
+        color: "primary"
+    },
+    {
+        cargo: "Secretaria",
+        nombre: "Neide Zucoli",
+        email: "secretaria@aibapt.org",
+        img: "/images/secrvetaria.jpg",
+        desc: "Gestão documental, atas, comunicação oficial e supervisão do registro de membros ativos.",
+        comites: [
+            { id: "as", rol: "Apoio à Secretaria", lider: "Anacelia Fornes" },
+            { id: "cm2", rol: "Comitê de Membros", lider: "Eduarda P. / Pedro Bregola", email: "miembroes@aibapt.org" },
+            { id: "er", rol: "Gestão de Membros", lider: "Erika Rojas" }
+        ],
+        color: "primary"
+    },
+    {
+        cargo: "Tesoureiro",
+        nombre: "Mario Salvador",
+        email: "financiero@aibapt.org",
+        img: "/images/mario.jpg",
+        desc: "Administração financeira e sustentabilidade da associação.",
+        comites: [
+            { id: "cf", rol: "Comitê Financeiro", lider: "Roseane Ferreira", email: "financeiro@aibapt.org" }
+        ],
+        color: "primary"
+    }
+];
+
 export const FunctionalStructure = () => {
-    const [activeMember, setActiveMember] = useState<Directivo | null>(null);
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const { lang } = useLanguage();
+
+    const data = lang === "pt" ? DIRECTIVA_DATA_PT : DIRECTIVA_DATA_ES;
+    const activeMember = activeIndex !== null ? data[activeIndex] : null;
 
     return (
         <section className="py-24 bg-background-light overflow-hidden">
@@ -107,20 +187,25 @@ export const FunctionalStructure = () => {
 
                 {/* Encabezado */}
                 <div className="text-center mb-20">
-                    <p className="text-accent text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">Acompañando la excelencia</p>
-                    <h2 className="text-4xl md:text-[56px] font-serif text-text-light mb-6 leading-[1.1]">Organigrama <span className="italic font-light text-primary">Funcional</span></h2>
+                    <p className="text-accent text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">
+                        {lang === "pt" ? "Acompanhando a excelência" : "Acompañando la excelencia"}
+                    </p>
+                    <h2 className="text-4xl md:text-[56px] font-serif text-text-light mb-6 leading-[1.1]">
+                        {lang === "pt" ? "Organograma" : "Organigrama"}{" "}
+                        <span className="italic font-light text-primary">Funcional</span>
+                    </h2>
                 </div>
 
                 {/* Portrait Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {DIRECTIVA_DATA.map((member, index) => (
+                    {data.map((member, index) => (
                         <motion.div
                             key={index}
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.08 }}
-                            onClick={() => setActiveMember(member)}
+                            onClick={() => setActiveIndex(index)}
                             className="group/card bg-white rounded-[32px] shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
                         >
                             {/* Panel de color superior */}
@@ -151,7 +236,12 @@ export const FunctionalStructure = () => {
                                 {/* Indicador de comités */}
                                 {member.comites && (
                                     <div className="flex items-center gap-2 text-xs font-semibold text-accent mt-auto">
-                                        <span>{member.comites.length} {member.comites.length === 1 ? "comité" : "comités"}</span>
+                                        <span>
+                                            {member.comites.length}{" "}
+                                            {member.comites.length === 1
+                                                ? (lang === "pt" ? "comitê" : "comité")
+                                                : (lang === "pt" ? "comitês" : "comités")}
+                                        </span>
                                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="transition-transform duration-300 group-hover/card:translate-x-1">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7" />
                                         </svg>
@@ -172,22 +262,21 @@ export const FunctionalStructure = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setActiveMember(null)}
-                            className="fixed inset-0 z-[140] bg-black/70 backdrop-blur-sm"
+                            onClick={() => setActiveIndex(null)}
+                            className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm"
                         />
 
                         {/* Contenedor de posicionamiento — centrado horizontal y vertical */}
-                        <div className="fixed inset-0 z-[150] overflow-y-auto">
-                        <div className="flex min-h-full items-center justify-center p-4 pt-32 pb-8">
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9, y: 30 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                                className="bg-white max-w-xl w-full rounded-[32px] shadow-2xl relative flex flex-col max-h-[calc(100vh-120px)] overflow-hidden"
+                                className="bg-white max-w-xl w-full rounded-[32px] shadow-2xl relative flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden"
                             >
                                 {/* Botón cerrar — siempre visible, fuera del scroll */}
                                 <button
-                                    onClick={() => setActiveMember(null)}
+                                    onClick={() => setActiveIndex(null)}
                                     className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 text-gray-400 hover:text-primary transition-colors shadow-sm z-20"
                                 >
                                     <FiX />
@@ -229,7 +318,9 @@ export const FunctionalStructure = () => {
                                     {/* Sub-comités */}
                                     {activeMember.comites && (
                                         <div className="mt-8">
-                                            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">Comités bajo su dirección</p>
+                                            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">
+                                                {lang === "pt" ? "Comitês sob sua direção" : "Comités bajo su dirección"}
+                                            </p>
                                             <div className="space-y-3">
                                                 {activeMember.comites.map((comite, idx) => (
                                                     <div key={idx} className="flex flex-col items-center gap-1 p-4 rounded-2xl border-2 border-gray-100 hover:border-secondary transition-colors duration-300 text-center">
@@ -245,7 +336,6 @@ export const FunctionalStructure = () => {
                                     )}
                                 </div>
                             </motion.div>
-                        </div>
                         </div>
                     </>
                 )}

@@ -14,7 +14,7 @@ const getCourseData = (slug: string) => {
 };
 
 export default function CourseDetailClient({ slug }: { slug: string }) {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const course = getCourseData(slug);
 
     if (!course) {
@@ -37,10 +37,10 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                         <div className="max-w-3xl space-y-6 md:space-y-8">
                             <div className="flex flex-wrap items-center gap-3">
                                 <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[11px] font-bold tracking-widest uppercase backdrop-blur-xl border border-primary/20">
-                                    {course.badge}
+                                    {course.badge === "VOD / Grabación" ? (lang === "pt" ? "VOD / Gravação" : "VOD / Grabación") : course.badge}
                                 </span>
                                 <span className="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full text-[11px] font-bold tracking-widest uppercase backdrop-blur-xl border border-secondary/20">
-                                    {course.category}
+                                    {course.category === "Seminarios Internacionales" ? (lang === "pt" ? "Seminários Internacionais" : "Seminarios Internacionales") : course.category}
                                 </span>
                             </div>
 
@@ -80,7 +80,9 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                                 <div className="relative z-10">
                                     <div className="flex items-center justify-between mb-8">
                                         <div>
-                                            <p className="text-[11px] font-bold text-text-muted tracking-widest uppercase mb-1.5">Inversión total</p>
+                                            <p className="text-[11px] font-bold text-text-muted tracking-widest uppercase mb-1.5">
+                                                {lang === "pt" ? "Investimento total" : "Inversión total"}
+                                            </p>
                                             <p className="text-5xl font-extrabold text-primary dark:text-white leading-none tracking-tight">
                                                 {course.price}
                                             </p>
@@ -95,13 +97,15 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                                             href={`/formaciones/${slug}/checkout`}
                                             className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-full flex items-center justify-center gap-3 transition-all shadow-md shadow-primary/20 hover:-translate-y-1 text-sm tracking-wide group/btn"
                                         >
-                                            <span>Adquirir grabación</span>
+                                            <span>{lang === "pt" ? "Adquirir gravação" : "Adquirir grabación"}</span>
                                             <span className="material-icons-round text-[18px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                                         </Link>
 
                                         {/* Garantía de Seguridad */}
                                         <div className="pt-6 mt-4 border-t border-gray-100 dark:border-gray-800 text-center">
-                                            <p className="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">Pago 100% seguro</p>
+                                            <p className="text-[10px] font-bold text-text-muted mb-4 tracking-widest uppercase">
+                                                {lang === "pt" ? "Pagamento 100% seguro" : "Pago 100% seguro"}
+                                            </p>
                                             <div className="flex items-center justify-center gap-10 py-5 px-8 bg-background-light dark:bg-bg-dark rounded-3xl opacity-80">
                                                 <PayPalLogo className="" />
                                                 <div className="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
@@ -132,7 +136,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[80px]"></div>
                             <h2 className="text-3xl font-extrabold text-primary dark:text-white mb-8 flex items-center gap-4">
                                 <span className="w-2 h-8 bg-primary rounded-full"></span>
-                                Detalles de la grabación
+                                {lang === "pt" ? "Detalhes da gravação" : "Detalles de la grabación"}
                             </h2>
                             <p className="text-lg text-text-muted dark:text-gray-300 leading-[1.8] font-medium max-w-4xl">
                                 {course.descLong}
@@ -169,7 +173,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                             <div className="relative z-10">
                                 <h3 className="text-2xl font-extrabold mb-8 flex items-center gap-3 text-white tracking-tight">
                                     <span className="material-icons-round text-accent text-3xl animate-pulse">auto_awesome</span>
-                                    Beneficios
+                                    {lang === "pt" ? "Benefícios" : "Beneficios"}
                                 </h3>
                                 <ul className="space-y-6">
                                     {course.includes.map((item, idx) => (
@@ -189,7 +193,9 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                              <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent"></div>
                              <div className="relative z-10">
                                 <div className="mb-6">
-                                    <p className="text-[11px] font-bold text-text-muted tracking-widest uppercase mb-1">Inversión total</p>
+                                    <p className="text-[11px] font-bold text-text-muted tracking-widest uppercase mb-1">
+                                        {lang === "pt" ? "Investimento total" : "Inversión total"}
+                                    </p>
                                     <p className="text-4xl font-extrabold text-primary leading-none tracking-tight">
                                         {course.price}
                                     </p>
@@ -199,11 +205,13 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                                         href={`/formaciones/${slug}/checkout`}
                                         className="w-full bg-primary text-white font-bold py-4 rounded-full flex items-center justify-center gap-3 text-sm tracking-wide shadow-md hover:bg-primary/90 transition-colors"
                                     >
-                                        <span>Adquirir grabación</span>
+                                        <span>{lang === "pt" ? "Adquirir gravação" : "Adquirir grabación"}</span>
                                         <span className="material-icons-round text-[18px]">arrow_forward</span>
                                     </Link>
                                 </div>
-                                <p className="text-[10px] font-bold text-center text-text-muted mt-6 tracking-widest uppercase">Proceso de pago seguro</p>
+                                <p className="text-[10px] font-bold text-center text-text-muted mt-6 tracking-widest uppercase">
+                                    {lang === "pt" ? "Processo de pagamento seguro" : "Proceso de pago seguro"}
+                                </p>
                             </div>
                         </div>
 
@@ -211,7 +219,9 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
                         <div className="p-8 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[40px] flex flex-col items-center gap-6 text-center">
                             <Image src="/images/logo_aibapt.png" alt="AIBAPT Logo" width={60} height={60} className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
                             <p className="text-[10px] font-bold text-text-muted tracking-widest leading-relaxed uppercase px-2">
-                                Calidad educativa respaldada por el comité científico de AIBAPT Internacional
+                                {lang === "pt" 
+                                    ? "Qualidade educativa respaldada pelo comitê científico da AIBAPT Internacional" 
+                                    : "Calidad educativa respaldada por el comité científico de AIBAPT Internacional"}
                             </p>
                         </div>
                     </aside>

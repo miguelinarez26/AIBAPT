@@ -137,10 +137,10 @@ export default function QuienesSomosPage() {
                     </div>
                 </motion.div>
 
-                {/* ESTRUCTURA FUNCIONAL */}
-                <FunctionalStructure />
-
             </div>
+
+            {/* ESTRUCTURA FUNCIONAL */}
+            <FunctionalStructure />
         </main>
     );
 }
