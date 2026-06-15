@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,6 +33,30 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
   const config = AIBAPT_TRAMITES[tramiteId];
   const isMembresiaPreselected = tramiteId === 'solicitud_membresia' && !!initialEscenario;
+
+  const generateSchema = (escenarioValue?: string) => {
+    const shape: any = {
+      escenario: z.string().min(1, "Debes seleccionar un nivel")
+    };
+
+    config.fields.forEach(field => {
+      if (field.dependsOnEscenario && escenarioValue && !field.dependsOnEscenario.includes(escenarioValue)) return;
+      shape[field.name] = field.validator;
+    });
+
+    return z.object(shape);
+  };
+
+  const { control, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<any>({
+    resolver: (values, context, options) => {
+      return zodResolver(generateSchema(values.escenario))(values, context, options);
+    },
+    defaultValues: {
+      escenario: initialEscenario || searchParams.get("tipo_membresia") || searchParams.get("escenario") || "",
+      course_id: "",
+      fecha_finalizacion: ""
+    }
+  });
   
   const [step, setStep] = useState(1);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -47,6 +71,57 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   });
   const [isOnline, setIsOnline] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // States para Acreditación CCA
+  const [courses, setCourses] = useState<any[]>([]);
+  const watchedCourseId = watch("course_id");
+  const watchedCompletionDate = watch("fecha_finalizacion");
+
+  const selectedCourse = useMemo(() => {
+    return courses.find(c => c.id === watchedCourseId) || null;
+  }, [watchedCourseId, courses]);
+
+  const [isOver5Months, setIsOver5Months] = useState(false);
+
+  useEffect(() => {
+    if (tramiteId === 'acreditacion_cca') {
+      const loadCourses = async () => {
+        const supabase = createBrowserSupabaseClient();
+        const { data, error } = await supabase
+          .from('courses_accredited')
+          .select('*')
+          .eq('is_public', true);
+        if (!error && data) {
+          setCourses(data);
+        }
+      };
+      loadCourses();
+    }
+  }, [tramiteId]);
+
+  useEffect(() => {
+    if (watchedCompletionDate) {
+      const today = new Date();
+      const finishDate = new Date(watchedCompletionDate);
+      const diffTime = Math.abs(today.getTime() - finishDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      // 5 meses son aproximadamente 152 días
+      if (finishDate < today && diffDays > 152) {
+        setIsOver5Months(true);
+      } else {
+        setIsOver5Months(false);
+      }
+    } else {
+      setIsOver5Months(false);
+    }
+  }, [watchedCompletionDate]);
+
+  const getDynamicPrice = () => {
+    if (!selectedCourse) return 0;
+    const isMember = userProfile?.is_member ?? false;
+    const blocks = Math.ceil((selectedCourse.credits || 12) / 12);
+    return blocks * (isMember ? 10 : 15);
+  };
 
   // Contact states
   const [contactMessage, setContactMessage] = useState("");
@@ -151,27 +226,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   const isContactFormMode = currentEscenarioObj?.isContactForm === true;
 
   // Validación de esquema dinámica
-  const generateSchema = (escenarioValue?: string) => {
-    const shape: any = {
-      escenario: z.string().min(1, "Debes seleccionar un nivel")
-    };
 
-    config.fields.forEach(field => {
-      if (field.dependsOnEscenario && escenarioValue && !field.dependsOnEscenario.includes(escenarioValue)) return;
-      shape[field.name] = field.validator;
-    });
-
-    return z.object(shape);
-  };
-
-  const { control, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<any>({
-    resolver: (values, context, options) => {
-      return zodResolver(generateSchema(values.escenario))(values, context, options);
-    },
-    defaultValues: {
-      escenario: initialEscenario || searchParams.get("tipo_membresia") || searchParams.get("escenario") || ""
-    }
-  });
 
   useEffect(() => {
     if (selectedEscenario) setValue("escenario", selectedEscenario);
@@ -192,27 +247,45 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
     try {
       // Resolver Monto Final
-      const directMatch = config.monto.find(e => e.id === data.escenario);
-      const parentMatch = config.monto.find(e => e.subProfiles?.some(sp => sp.id === data.escenario));
-      const finalPrice = directMatch?.monto ?? parentMatch?.monto ?? 0;
+      let finalPrice = 0;
+      let finalEscenario = data.escenario;
+      const isMember = userProfile?.is_member ?? false;
+
+      if (tramiteId === 'acreditacion_cca' && selectedCourse) {
+        finalPrice = getDynamicPrice();
+        finalEscenario = isMember ? 'cca_miembro' : 'cca_no_miembro';
+      } else {
+        const directMatch = config.monto.find(e => e.id === data.escenario);
+        const parentMatch = config.monto.find(e => e.subProfiles?.some(sp => sp.id === data.escenario));
+        finalPrice = directMatch?.monto ?? parentMatch?.monto ?? 0;
+      }
 
       // Resolver categoría EMDR para metadata enriquecida
       const categoriaEmdr = config.accreditationTypeKey?.startsWith('EMDR') ? config.accreditationTypeKey : null;
 
       // Crear Solicitud
+      const metadataPayload: any = {
+        escenario: finalEscenario,
+        nivel_solicitado: tramiteId,
+        categoria_emdr: categoriaEmdr,
+        precio_aplicado: finalPrice,
+        monto_pagado: finalPrice,
+        idioma: lang,
+        modalidad_online: isOnline
+      };
+
+      if (tramiteId === 'acreditacion_cca' && selectedCourse) {
+        metadataPayload.course_id = selectedCourse.id;
+        metadataPayload.course_title = selectedCourse.title;
+        metadataPayload.credits = selectedCourse.credits;
+        metadataPayload.fecha_finalizacion = data.fecha_finalizacion;
+      }
+
       const { data: appData, error: appError } = await (supabase.from('applications') as any).insert({
         user_id: session.user.id,
         type_id: accreditationType.id,
         status: 'uploading',
-        metadata: {
-          escenario: data.escenario,
-          nivel_solicitado: tramiteId,
-          categoria_emdr: categoriaEmdr,
-          precio_aplicado: finalPrice,
-          monto_pagado: finalPrice,
-          idioma: lang,
-          modalidad_online: isOnline
-        }
+        metadata: metadataPayload
       }).select('id').maybeSingle();
 
       if (appError) throw appError;
@@ -403,7 +476,90 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
       {step === 1 && (
         <div className="space-y-10 animate-fade-in-up">
           {/* Selección de Escenario o Detalles del Trámite */}
-          {initialEscenario ? (
+          {tramiteId === 'acreditacion_cca' ? (
+            <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-6">
+              <h3 className="text-xl font-bold text-primary flex items-center mb-2">
+                <Info className="w-6 h-6 mr-2" /> {lang === 'es' ? 'Datos del Curso Acreditado' : 'Dados do Curso Acreditado'}
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Dropdown de cursos */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-bold text-text-main dark:text-white">
+                    {lang === 'es' ? 'Curso Realizado' : 'Curso Realizado'}
+                  </label>
+                  <select
+                    value={watchedCourseId || ""}
+                    onChange={(e) => setValue("course_id", e.target.value)}
+                    className="p-3 bg-white dark:bg-surface-dark border border-gray-300 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:border-primary text-text-main dark:text-white"
+                  >
+                    <option value="">{lang === 'es' ? '-- Seleccionar Curso --' : '-- Selecionar Curso --'}</option>
+                    {courses.map(c => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Créditos bloqueados */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-bold text-text-main dark:text-white">
+                    {lang === 'es' ? 'Créditos Otorgados' : 'Créditos Concedidos'}
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={selectedCourse ? `${selectedCourse.credits} CCA` : ""}
+                    placeholder={lang === 'es' ? 'Autocompletado' : 'Autocompletado'}
+                    className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm text-text-muted cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Fecha de finalización */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-bold text-text-main dark:text-white">
+                    {lang === 'es' ? 'Fecha de finalización del curso' : 'Data de conclusão do curso'}
+                  </label>
+                  <input
+                    type="date"
+                    value={watchedCompletionDate || ""}
+                    onChange={(e) => setValue("fecha_finalizacion", e.target.value)}
+                    className="p-3 bg-white dark:bg-surface-dark border border-gray-300 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:border-primary text-text-main dark:text-white"
+                  />
+                </div>
+
+                {/* Info de Membresía e Inversión Dinámica */}
+                <div className="bg-cream/40 dark:bg-bg-dark/40 border border-accent/15 rounded-2xl p-5 flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-text-muted dark:text-gray-400 uppercase tracking-widest mb-1">
+                    {lang === 'es' ? 'Inversión Calculada' : 'Investimento Calculado'}
+                  </span>
+                  <span className="text-2xl font-black text-primary">
+                    {getDynamicPrice()} €
+                  </span>
+                  <span className="text-[10px] text-text-muted dark:text-gray-400 mt-1 leading-tight">
+                    {(userProfile?.is_member) 
+                      ? (lang === 'es' ? 'Tarifa de Socio Aplicada (10€ por cada 12 créditos)' : 'Tarifa de Sócio Aplicada (10€ por 12 créditos)')
+                      : (lang === 'es' ? 'Tarifa Regular Aplicada (15€ por cada 12 créditos)' : 'Tarifa Regular Aplicada (15€ por 12 créditos)')
+                    }
+                  </span>
+                </div>
+              </div>
+
+              {/* Alerta de 5 meses */}
+              {isOver5Months && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 rounded-2xl text-sm font-medium flex gap-3 items-start">
+                  <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold">{lang === 'es' ? 'Aviso Normativo' : 'Aviso Normativo'}</p>
+                    <p className="text-xs mt-0.5">
+                      {lang === 'es' 
+                        ? 'Han transcurrido más de 5 meses desde la finalización del curso. Este trámite excede los plazos estándar establecidos por la normativa AIBAPT.' 
+                        : 'Decorrera mais de 5 meses desde a conclusão do curso. Este trâmite excede os prazos padrão estabelecidos pela regulamentação AIBAPT.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : initialEscenario ? (
             <div className="bg-cream/40 dark:bg-bg-dark/40 border border-accent/15 rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div>
                 <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-1">Nivel Seleccionado</span>
@@ -537,7 +693,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           )}
 
           {/* Caja PayPal — solo visible cuando hay coste y el trámite lo requiere */}
-          {config.monto.length === 1 && config.monto[0].monto > 0 && (
+          {((config.monto.length === 1 && config.monto[0].monto > 0) || (tramiteId === 'acreditacion_cca' && getDynamicPrice() > 0)) && (
             <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="w-10 h-10 shrink-0 rounded-xl bg-[#009cde]/10 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" className="w-6 h-6 fill-[#003087]" xmlns="http://www.w3.org/2000/svg"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19a.75.75 0 0 0-.741.636l-.979 6.37zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a1.637 1.637 0 0 0-1.617 1.387l-1.039 6.787-.155 1.01h3.18a.563.563 0 0 0 .556-.65l.047-.303.878-5.567.057-.306a.562.562 0 0 1 .555-.477h.35c2.263 0 4.034-.919 4.551-3.578.217-1.114.105-2.044-.47-2.7a2.232 2.232 0 0 0-.917-.517z"/></svg>
@@ -548,8 +704,8 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                 </p>
                 <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
                   {lang === 'es'
-                    ? `Transfiere ${config.monto[0].monto} € a financiero@aibapt.org antes de subir tus documentos. Adjunta el comprobante en el Paso 2.`
-                    : `Transfira ${config.monto[0].monto} € para financiero@aibapt.org antes de enviar seus documentos. Anexe o comprovante no Passo 2.`}
+                    ? `Transfiere ${tramiteId === 'acreditacion_cca' ? getDynamicPrice() : config.monto[0].monto} € a financiero@aibapt.org antes de subir tus documentos. Adjunta el comprobante en el Paso 2.`
+                    : `Transfira ${tramiteId === 'acreditacion_cca' ? getDynamicPrice() : config.monto[0].monto} € para financiero@aibapt.org antes de enviar seus documentos. Anexe o comprovante no Passo 2.`}
                 </p>
               </div>
               <a
@@ -561,7 +717,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                 {lang === 'es' ? 'Pagar ahora' : 'Pagar agora'}
                 <span className="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </span>
               </a>
@@ -573,7 +729,21 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
               {lang === 'es' ? 'Cancelar' : 'Cancelar'}
             </button>
             <button
-              onClick={() => selectedEscenario ? setStep(2) : alert(lang === 'es' ? 'Selecciona un nivel' : 'Selecione um nível')}
+              onClick={() => {
+                if (tramiteId === 'acreditacion_cca') {
+                  if (!watchedCourseId) {
+                    alert(lang === 'es' ? 'Por favor, selecciona un curso' : 'Por favor, selecione um curso');
+                    return;
+                  }
+                  if (!watchedCompletionDate) {
+                    alert(lang === 'es' ? 'Por favor, ingresa la fecha de finalización' : 'Por favor, insira a data de conclusão');
+                    return;
+                  }
+                  setStep(2);
+                } else {
+                  selectedEscenario ? setStep(2) : alert(lang === 'es' ? 'Selecciona un nivel' : 'Selecione um nível');
+                }
+              }}
               className="bg-primary text-white px-10 py-4 rounded-full font-black text-lg shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
             >
               {lang === 'es' ? 'Continuar a Carga' : 'Continuar para Upload'}

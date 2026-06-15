@@ -69,6 +69,18 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
         // Combinar datos en el objeto application
         appObj.profiles = profile || null;
         appObj.accreditation_types = accType || null;
+
+        // Cargar detalles del curso acreditado (instructor, etc.)
+        if (appObj.metadata && (appObj.metadata as any).course_id) {
+          const { data: courseData, error: courseError } = await supabase
+            .from('courses_accredited')
+            .select('*')
+            .eq('id', (appObj.metadata as any).course_id)
+            .single();
+          if (!courseError && courseData) {
+            appObj.course_details = courseData;
+          }
+        }
       }
 
       setAppData(appObj);
@@ -272,6 +284,68 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
               </div>
             </div>
           </div>
+
+          {/* Panel de Auditoría Académica (CCA) */}
+          {appData.course_details && (
+            <div className="p-5 bg-amber-50/40 dark:bg-amber-950/10 rounded-xl border border-amber-200/50 dark:border-amber-900/30 space-y-4">
+              <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                <span className="material-icons-round text-[18px] flex items-center">workspace_premium</span>
+                Auditoría de Curso Acreditado
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="space-y-2">
+                  <p>
+                    <span className="text-gray-500">Instructor Avalado:</span>{" "}
+                    <strong className="text-gray-900 dark:text-white">
+                      {appData.course_details.instructor_name || "N/A"}
+                    </strong>
+                  </p>
+                  <p>
+                    <span className="text-gray-500">Créditos Oficiales del Curso:</span>{" "}
+                    <strong className="text-gray-900 dark:text-white">
+                      {appData.course_details.credits || 12} CCA
+                    </strong>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {(() => {
+                    const finishDateStr = metadata.fecha_finalizacion;
+                    if (!finishDateStr) return <p className="text-gray-500 italic">Fecha de finalización no provista.</p>;
+                    
+                    const finishDate = new Date(finishDateStr);
+                    const today = new Date();
+                    const diffMonths = (today.getFullYear() - finishDate.getFullYear()) * 12 + today.getMonth() - finishDate.getMonth();
+                    const isOverLimit = diffMonths > 5;
+                    
+                    return (
+                      <>
+                        <p>
+                          <span className="text-gray-500">Fecha de Conclusión:</span>{" "}
+                          <strong className="text-gray-900 dark:text-white">
+                            {new Date(finishDateStr).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          </strong>
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <span className="text-gray-500">Tiempo Transcurrido:</span>{" "}
+                          <span className={`font-bold px-2 py-0.5 rounded text-xs ${isOverLimit ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300' : 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-300'}`}>
+                            {diffMonths} meses
+                          </span>
+                        </p>
+                        {isOverLimit && (
+                          <p className="text-xs text-red-600 dark:text-red-400 font-bold flex items-center gap-1.5 mt-1">
+                            <span className="material-icons-round text-xs">error</span>
+                            Excede el límite normativo de 5 meses.
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Metadata */}
           {Object.keys(metadata).length > 0 && (
