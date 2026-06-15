@@ -9,65 +9,65 @@ export default function Footer() {
   const { lang, t } = useLanguage();
 
   return (
-    <footer className="bg-gradient-to-b from-white to-primary/5 dark:from-background-dark dark:to-surface-dark/40 pt-20 pb-10 border-t border-secondary/20 dark:border-gray-800 relative overflow-hidden">
+    <footer className="bg-gradient-to-br from-primary to-secondary text-white pt-20 border-t border-white/10 relative overflow-hidden">
       {/* Background Organic Glows */}
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-[80px] translate-x-1/3 translate-y-1/3 pointer-events-none -z-10"></div>
-      <div className="absolute top-0 left-0 w-72 h-72 bg-secondary/5 rounded-full blur-[70px] -translate-x-1/4 -translate-y-1/4 pointer-events-none -z-10"></div>
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-[80px] translate-x-1/3 translate-y-1/3 pointer-events-none -z-10"></div>
+      <div className="absolute top-0 left-0 w-72 h-72 bg-white/5 rounded-full blur-[70px] -translate-x-1/4 -translate-y-1/4 pointer-events-none -z-10"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 items-start">
           {/* Brand & Trust Seal */}
-          <div className="md:col-span-1">
-            <div className="-mt-2.5">
+          <div className="md:col-span-1 flex flex-col items-center md:items-start">
+            <div className="flex flex-col items-center -mt-7">
               <Link href={`/${lang}`} className="inline-block transition-transform hover:scale-[1.02]">
                 <Image 
-                  src="/images/logo_aibapt.png" 
+                  src="/images/aibapt_logo_transparent_seal.png" 
                   alt="AIBAPT Logo" 
-                  width={240} 
-                  height={80} 
-                  className="object-contain w-auto h-14"
+                  width={96} 
+                  height={96} 
+                  className="object-contain w-24 h-24"
                 />
               </Link>
-            </div>
-            {/* Social Media Links */}
-            <div className="flex gap-4 mt-8">
-              <a href="https://www.facebook.com/AIBAPT/" target="_blank" rel="noopener noreferrer" className="notranslate text-[#d95858] hover:text-primary dark:hover:text-secondary transition-all hover:scale-110 duration-300" aria-label="Facebook" translate="no">
-                <FiFacebook className="w-5 h-5" />
-              </a>
-              <a href="https://www.instagram.com/aibapt" target="_blank" rel="noopener noreferrer" className="notranslate text-[#d95858] hover:text-primary dark:hover:text-secondary transition-all hover:scale-110 duration-300" aria-label="Instagram" translate="no">
-                <FiInstagram className="w-5 h-5" />
-              </a>
-              <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" className="notranslate text-[#d95858] hover:text-primary dark:hover:text-secondary transition-all hover:scale-110 duration-300" aria-label="YouTube" translate="no">
-                <FiYoutube className="w-5 h-5" />
-              </a>
+              {/* Social Media Links */}
+              <div className="flex gap-3.5 mt-8">
+                <a href="https://www.facebook.com/AIBAPT/" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white border border-accent hover:bg-white hover:text-accent transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="Facebook" translate="no">
+                  <FiFacebook className="w-4.5 h-4.5" />
+                </a>
+                <a href="https://www.instagram.com/aibapt" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white border border-accent hover:bg-white hover:text-accent transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="Instagram" translate="no">
+                  <FiInstagram className="w-4.5 h-4.5" />
+                </a>
+                <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white border border-accent hover:bg-white hover:text-accent transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="YouTube" translate="no">
+                  <FiYoutube className="w-4.5 h-4.5" />
+                </a>
+              </div>
             </div>
           </div>
           
           {/* La Organización */}
           <div>
             {/* @ts-ignore */}
-            <h3 className="font-serif font-bold text-sm text-text-light dark:text-white uppercase tracking-wider mb-6 border-b border-secondary/20 pb-2 inline-block">
+            <h3 className="font-serif font-bold text-sm text-text-light uppercase tracking-wider mb-6 border-b border-text-light/20 pb-2 inline-block">
               {/* @ts-ignore */}
               {t("footer.org")}
             </h3>
-            <ul className="space-y-3.5 text-sm text-text-dark dark:text-gray-300">
+            <ul className="space-y-3.5 text-sm text-text-light">
               {/* @ts-ignore */}
               <li>
-                <Link href={`/${lang}/quienes-somos`} className="transition-all duration-300 hover:text-primary dark:hover:text-secondary hover:translate-x-1 inline-block">
+                <Link href={`/${lang}/quienes-somos`} className="transition-all duration-300 hover:text-accent hover:translate-x-1 inline-block">
                   {/* @ts-ignore */}
                   {t("footer.about")}
                 </Link>
               </li>
               {/* @ts-ignore */}
               <li>
-                <Link href={`/${lang}/socios`} className="transition-all duration-300 hover:text-primary dark:hover:text-secondary hover:translate-x-1 inline-block">
+                <Link href={`/${lang}/socios`} className="transition-all duration-300 hover:text-accent hover:translate-x-1 inline-block">
                   {/* @ts-ignore */}
                   {t("nav.partners")}
                 </Link>
               </li>
               {/* @ts-ignore */}
               <li>
-                <Link href={`/${lang}/contacto`} className="transition-all duration-300 hover:text-primary dark:hover:text-secondary hover:translate-x-1 inline-block">
+                <Link href={`/${lang}/contacto`} className="transition-all duration-300 hover:text-accent hover:translate-x-1 inline-block">
                   {/* @ts-ignore */}
                   {t("footer.contact")}
                 </Link>
@@ -78,28 +78,28 @@ export default function Footer() {
           {/* Enlaces Rápidos */}
           <div>
             {/* @ts-ignore */}
-            <h3 className="font-serif font-bold text-sm text-text-light dark:text-white uppercase tracking-wider mb-6 border-b border-secondary/20 pb-2 inline-block">
+            <h3 className="font-serif font-bold text-sm text-text-light uppercase tracking-wider mb-6 border-b border-text-light/20 pb-2 inline-block">
               {/* @ts-ignore */}
               {t("footer.resources")}
             </h3>
-            <ul className="space-y-3.5 text-sm text-text-dark dark:text-gray-300">
+            <ul className="space-y-3.5 text-sm text-text-light">
               {/* @ts-ignore */}
               <li>
-                <Link href={`/${lang}/afiliacion`} className="transition-all duration-300 hover:text-primary dark:hover:text-secondary hover:translate-x-1 inline-block">
+                <Link href={`/${lang}/afiliacion`} className="transition-all duration-300 hover:text-accent hover:translate-x-1 inline-block">
                   {/* @ts-ignore */}
                   {t("nav.afiliacion")}
                 </Link>
               </li>
               {/* @ts-ignore */}
               <li>
-                <Link href={`/${lang}/miembros`} className="transition-all duration-300 hover:text-primary dark:hover:text-secondary hover:translate-x-1 inline-block">
+                <Link href={`/${lang}/miembros`} className="transition-all duration-300 hover:text-accent hover:translate-x-1 inline-block">
                   {/* @ts-ignore */}
                   {t("nav.members")}
                 </Link>
               </li>
               {/* @ts-ignore */}
               <li>
-                <Link href={`/${lang}/dashboard`} className="transition-all duration-300 hover:text-primary dark:hover:text-secondary hover:translate-x-1 inline-block">
+                <Link href={`/${lang}/dashboard`} className="transition-all duration-300 hover:text-accent hover:translate-x-1 inline-block">
                   {/* @ts-ignore */}
                   {t("footer.portal")}
                 </Link>
@@ -108,14 +108,16 @@ export default function Footer() {
           </div>
 
         </div>
-        
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-secondary/20 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center text-xs text-text-dark dark:text-gray-400 font-light gap-4">
+      </div>
+
+      {/* Bottom Bar con fondo oficial de la marca text-light */}
+      <div className="bg-text-light w-full border-t border-white/10 py-5 mt-16 text-white/60 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center text-xs font-light gap-4">
           {/* @ts-ignore */}
           <p>{t("footer.rights")}</p>
 
           {/* CarMiDev Branding */}
-          <div className="flex items-center gap-2 text-text-dark/80 dark:text-gray-400 font-bold text-[9px] uppercase tracking-widest">
+          <div className="flex items-center gap-2 text-white/40 font-bold text-[9px] uppercase tracking-widest">
             <span>Desarrollado y Diseñado por</span>
             <a 
               href="https://wa.me/message/R76OMSCAFXNTG1"
@@ -140,7 +142,7 @@ export default function Footer() {
               <img
                 src="/images/logo-carmidev.png"
                 alt="CarMiDev Logo"
-                className="h-[19px] w-auto object-contain opacity-100 invert dark:invert-0 transition-opacity duration-300 group-hover/logo:opacity-0"
+                className="h-[19px] w-auto object-contain opacity-100 transition-opacity duration-300 group-hover/logo:opacity-0"
               />
               {/* Logo cyan eléctrico superpuesto */}
               <img
@@ -153,12 +155,12 @@ export default function Footer() {
 
           <div className="flex gap-6 mt-4 md:mt-0 font-medium">
             {/* @ts-ignore */}
-            <Link href={`/${lang}/privacy`} className="transition-colors hover:text-primary dark:hover:text-secondary">
+            <Link href={`/${lang}/privacy`} className="transition-colors hover:text-[#d95858]">
               {/* @ts-ignore */}
               {t("footer.privacy")}
             </Link>
             {/* @ts-ignore */}
-            <Link href={`/${lang}/terms`} className="transition-colors hover:text-primary dark:hover:text-secondary">
+            <Link href={`/${lang}/terms`} className="transition-colors hover:text-[#d95858]">
               {/* @ts-ignore */}
               {t("footer.terms")}
             </Link>

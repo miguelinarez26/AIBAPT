@@ -390,7 +390,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           
           {isLoggedIn ? (
             <button
-              onClick={() => window.location.href = `/${lang}/dashboard?tramite=solicitud_membresia`}
+              onClick={() => window.location.href = `/${lang}/afiliacion`}
               className="bg-primary text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
             >
               {lang === "es" ? "Solicitar Membresía" : "Solicitar Membresia"}

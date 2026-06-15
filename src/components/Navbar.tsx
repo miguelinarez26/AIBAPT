@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from "@/components/providers/AuthProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -12,10 +12,18 @@ import { LogOut } from "lucide-react";
 
 export default function Navbar() {
   const [mounted, setMounted] = useState(false);
+  const [forceHide, setForceHide] = useState(false);
   
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setForceHide(true);
+  }, [pathname, searchParams]);
 
   const { lang, setLang, t } = useLanguage();
   const router = useRouter();
@@ -95,7 +103,10 @@ export default function Navbar() {
           </div>
           
           {/* Desarrollo Profesional with Mega Menu */}
-          <div className="group relative">
+          <div 
+            className="group relative"
+            onMouseLeave={() => setForceHide(false)}
+          >
             <Link href={`/${lang}/formaciones`} className="flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-highlight transition-all duration-300 whitespace-nowrap">
               {/* @ts-ignore */}
               {t("nav.development")} 
@@ -103,7 +114,9 @@ export default function Navbar() {
             </Link>
             
             {/* Mega Menu Dropdown */}
-            <div className="absolute top-[calc(100%+16px)] left-1/2 -translate-x-[40%] w-[650px] h-[450px] bg-background-light rounded-[32px] shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 grid grid-cols-2 overflow-hidden z-50">
+            <div className={`absolute top-[calc(100%+16px)] left-1/2 -translate-x-[40%] w-[650px] h-[450px] bg-background-light rounded-[32px] shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 grid grid-cols-2 overflow-hidden z-50 ${
+              forceHide ? "!hidden" : ""
+            }`}>
               {/* Mega Menu Image Side */}
               <div className="relative w-full h-full bg-gray-200">
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/desarrollo-profesional.jpg')" }}></div>
