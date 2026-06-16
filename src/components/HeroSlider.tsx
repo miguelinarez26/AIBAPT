@@ -65,20 +65,24 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
         { text: t.s3_l1, bg: "bg-accent" },
         { text: t.s3_l2, ml: "ml-8 md:ml-20" }
       ],
-      button: { text: lang === 'pt' ? "Saber Mais" : "Más Información", href: `/${lang}/formaciones` },
+      button: { text: lang === 'pt' ? "Saber Mais" : "Más Información", href: `/${lang}/formaciones?tab=accreditation` },
       align: "left"
     }
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+      nextSlide();
+    }, 6000);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [activeSlide, lang]);
 
-  const nextSlide = () => setActiveSlide((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  const nextSlide = () => {
+    setActiveSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  };
+  const prevSlide = () => {
+    setActiveSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  };
 
   return (
     <section className="w-full h-[calc(100vh-96px)] relative overflow-hidden group bg-black">
@@ -100,38 +104,45 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
       <div className="relative z-10 w-full h-full flex flex-col justify-center px-4 sm:px-12 lg:px-[140px]">
         {/* We use key={activeSlide} to force re-render and re-trigger animations */}
         <div key={activeSlide} className={`flex flex-col gap-4 ${slides[activeSlide].align === 'right' ? 'items-end' : 'items-start'}`}>
-          {slides[activeSlide].lines.map((line: any, i) => (
-            <div key={i} className={`relative inline-block w-fit ${line.ml || ''} ${line.mr || ''}`}>
-              {line.bg && (
-                <div 
-                  className={`absolute inset-0 ${line.bg} -left-6 -right-6 -top-2 -bottom-2 z-0 origin-left animate-reveal-bg`} 
-                  style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}
-                ></div>
-              )}
-              <h1 
-                className="relative z-10 text-white font-serif text-[60px] md:text-[100px] leading-[0.9] tracking-tight font-semibold animate-fade-in-up drop-shadow-2xl" 
-                style={{ animationDelay: `${i * 150 + 200}ms`, animationFillMode: 'both' }}
-              >
-                {line.text}
-              </h1>
-            </div>
-          ))}
-          
-          {/* Call to Action Button */}
-          {slides[activeSlide].button && (
-            <div 
-              className={`mt-10 animate-fade-in-up ${slides[activeSlide].lines[slides[activeSlide].lines.length - 1].ml || ''} ${slides[activeSlide].lines[slides[activeSlide].lines.length - 1].mr || ''}`} 
-              style={{ animationDelay: `${slides[activeSlide].lines.length * 150 + 300}ms`, animationFillMode: 'both' }}
-            >
-              <Link 
-                href={slides[activeSlide].button.href} 
-                className="bg-accent text-white font-serif text-xl md:text-2xl px-12 py-4 rounded-full shadow-xl hover:bg-white hover:text-accent hover:-translate-y-1 hover:scale-105 transition-all duration-300 inline-flex items-center gap-4 group"
-              >
-                {slides[activeSlide].button.text}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-300 group-hover:translate-x-2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </Link>
-            </div>
-          )}
+          {slides[activeSlide].lines.map((line: any, i: number) => {
+            const isLastLine = i === slides[activeSlide].lines.length - 1;
+            return (
+              <div key={i} className={`flex flex-col w-fit ${line.ml || ''} ${line.mr || ''} ${isLastLine ? 'items-end' : ''}`}>
+                <div className="relative inline-block w-fit">
+                  {line.bg && (
+                    <div 
+                      className={`absolute inset-0 ${line.bg} -left-6 -right-6 -top-2 -bottom-2 z-0 origin-left animate-reveal-bg`} 
+                      style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}
+                    ></div>
+                  )}
+                  <h1 
+                    className="relative z-10 text-white font-serif text-[60px] md:text-[100px] leading-[0.9] tracking-tight font-semibold animate-fade-in-up drop-shadow-2xl" 
+                    style={{ animationDelay: `${i * 150 + 200}ms`, animationFillMode: 'both' }}
+                  >
+                    {line.text}
+                  </h1>
+                </div>
+                
+                {/* Call to Action Button inside the last line to align with its right edge (last word) */}
+                {isLastLine && slides[activeSlide].button && (
+                  <div 
+                    className="mt-12 animate-fade-in-up" 
+                    style={{ animationDelay: `${slides[activeSlide].lines.length * 150 + 300}ms`, animationFillMode: 'both' }}
+                  >
+                    <Link 
+                      href={slides[activeSlide].button.href} 
+                      className="group/btn bg-accent text-white pl-8 pr-2 py-2 rounded-full font-serif text-xl transition-all duration-300 hover:bg-accent-light shadow-xl hover:shadow-2xl hover:-translate-y-1 inline-flex items-center gap-4"
+                    >
+                      {slides[activeSlide].button.text}
+                      <span className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover/btn:translate-x-1">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      </span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
