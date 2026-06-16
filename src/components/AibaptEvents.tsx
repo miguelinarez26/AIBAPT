@@ -95,7 +95,7 @@ export default function AibaptEvents({ events = [] }: AibaptEventsProps) {
            {mappedEvents.map((ev: any, i: number) => {
              const isLogo = ev.image?.includes("aibapt_logo");
              return (
-               <div key={i} className="group cursor-pointer flex flex-col h-full bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-primary/40 transition-all duration-500 hover:-translate-y-2">
+               <div key={i} className="group cursor-pointer flex flex-col h-full bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 hover:bg-primary/5 hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
                   <div className="w-full h-[280px] rounded-[24px] overflow-hidden mb-6 relative bg-transparent shrink-0">
                      <div 
                        className={`absolute inset-0 transition-transform duration-700 group-hover:scale-110 ${
