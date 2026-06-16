@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Profile } from "@/types/database";
 import { translations } from "@/i18n/translations";
 import { Search, UserCog, Shield, User, Save, CheckCircle2, AlertCircle } from "lucide-react";
@@ -19,6 +19,48 @@ export default function UserManagementClient({ initialUsers, lang }: UserManagem
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     
     const t = translations[lang];
+
+    const [loading, setLoading] = useState(true);
+
+    const loadUsers = async () => {
+        setLoading(true);
+        const supabase = createBrowserSupabaseClient();
+        
+        // 0. Verificar autorización
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            window.location.href = `/${lang}/login`;
+            return;
+        }
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        const userProfile = profile as { role: string } | null;
+
+        if (!userProfile || userProfile.role !== 'admin') {
+            window.location.href = `/${lang}/dashboard`;
+            return;
+        }
+
+        // 1. Obtener usuarios
+        const { data: usersData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (!error && usersData) {
+            setUsers(usersData);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        loadUsers();
+    }, []);
 
     const filteredUsers = useMemo(() => {
         return users.filter(u => {
