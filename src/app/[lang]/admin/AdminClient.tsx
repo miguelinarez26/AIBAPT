@@ -57,8 +57,28 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
 
   const loadApplications = async () => {
     setLoading(true);
-    console.log("🔍 [AdminClient] Cargando solicitudes desde Supabase...");
+    console.log("🔍 [AdminClient] Verificando autorización y cargando solicitudes...");
     
+    // 0. Verificar autorización de administrador
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      window.location.href = `/${lang}/login?redirectTo=/${lang}/admin`;
+      return;
+    }
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const profile = data as { role: string } | null;
+
+    if (!profile || profile.role !== 'admin') {
+      window.location.href = `/${lang}/dashboard`;
+      return;
+    }
+
     // 1. Obtener aplicaciones
     const { data: appsData, error: appsError } = await supabase
       .from('applications')
