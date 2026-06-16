@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 import MemberProfileClient from "./MemberProfileClient";
 import { translations } from "@/i18n/translations";
 import { ArrowLeft, UserX } from "lucide-react";
@@ -15,7 +15,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id: rawId } = await params;
     const id = decodeURIComponent(rawId);
-    const supabase = await createServerSupabaseClient();
+    const supabase = supabaseAdmin;
     
     const { data: member } = await supabase
         .from('profiles')
@@ -34,6 +34,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
 }
 
+export async function generateStaticParams() {
+    const supabase = supabaseAdmin;
+    const { data: members } = await supabase
+        .from('profiles')
+        .select('member_number')
+        .eq('is_public', true)
+        .eq('is_member', true);
+
+    if (!members) return [];
+
+    return members.map((m: any) => ({
+        id: encodeURIComponent(m.member_number),
+    }));
+}
+
 export default async function MemberProfilePage({ params }: Props) {
     const { lang, id: rawId } = await params;
     const id = decodeURIComponent(rawId);
@@ -41,7 +56,7 @@ export default async function MemberProfilePage({ params }: Props) {
     
     console.log('[Perfil Público] Buscando matrícula:', id);
 
-    const supabase = await createServerSupabaseClient();
+    const supabase = supabaseAdmin;
 
     // Buscar al miembro por su número de matrícula (member_number)
     const { data: member, error } = await supabase
