@@ -73,7 +73,7 @@ export default function AibaptEvents({ events = [] }: AibaptEventsProps) {
   }) : fallbackEvents;
 
   return (
-    <section className="w-full py-24 bg-gradient-to-b from-white to-primary/5 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
+    <section className="w-full pt-12 pb-24 bg-gradient-to-b from-white to-primary/5 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
       <div className="max-w-[1280px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
            <div className="max-w-2xl">

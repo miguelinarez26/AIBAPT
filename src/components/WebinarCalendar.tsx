@@ -449,12 +449,6 @@ export default function WebinarCalendar({ lang: propLang }: { lang?: 'es' | 'pt'
           </div>
         )}
 
-        <div className="mt-14">
-          <Link href={`/${lang}/formaciones`} className="text-primary font-medium hover:text-secondary flex items-center gap-2 transition-colors w-fit group">
-            {t.viewAll} 
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:translate-x-1"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </Link>
-        </div>
       </div>
     </section>
   );
