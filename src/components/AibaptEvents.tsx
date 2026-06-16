@@ -95,7 +95,7 @@ export default function AibaptEvents({ events = [] }: AibaptEventsProps) {
            {mappedEvents.map((ev: any, i: number) => {
              const isLogo = ev.image?.includes("aibapt_logo");
              return (
-               <div key={i} className="group cursor-pointer flex flex-col h-full bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 hover:bg-gradient-to-br hover:from-primary/10 hover:to-secondary/10 hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+               <div key={i} className="group cursor-pointer flex flex-col h-full bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 hover:bg-gradient-to-br hover:from-primary hover:to-secondary hover:shadow-2xl hover:shadow-primary/40 hover:border-transparent transition-all duration-500 hover:-translate-y-2">
                   <div className="w-full h-[280px] rounded-[24px] overflow-hidden mb-6 relative bg-transparent shrink-0">
                      <div 
                        className={`absolute inset-0 transition-transform duration-700 group-hover:scale-110 ${
@@ -108,7 +108,7 @@ export default function AibaptEvents({ events = [] }: AibaptEventsProps) {
                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                       <div className="absolute top-5 left-5 flex flex-wrap gap-2 max-w-[90%]">
                          {ev.category && (
-                           <span className="bg-primary/95 backdrop-blur-sm text-white text-[10px] font-bold tracking-[0.15em] px-4 py-2 rounded-full shadow-lg uppercase leading-none border border-white/10">
+                           <span className="bg-primary/95 backdrop-blur-sm text-white text-[10px] font-bold tracking-[0.15em] px-4 py-2 rounded-full shadow-lg uppercase leading-none border border-white/10 group-hover:bg-white/20">
                              {ev.category}
                            </span>
                          )}
@@ -119,10 +119,10 @@ export default function AibaptEvents({ events = [] }: AibaptEventsProps) {
                          )}
                       </div>
                   </div>
-                  <h3 className="text-[24px] font-serif text-text-light group-hover:text-accent transition-colors leading-[1.3] mb-6 pr-4 grow">{ev.title}</h3>
-                  <Link href={ev.route} className="mt-auto group/btn inline-flex items-center gap-3 bg-accent text-white pl-6 pr-2 py-2 rounded-full text-sm font-bold transition-all duration-300 hover:bg-accent-light hover:shadow-lg w-fit justify-between">
+                  <h3 className="text-[24px] font-serif text-text-light group-hover:text-white transition-colors leading-[1.3] mb-6 pr-4 grow">{ev.title}</h3>
+                  <Link href={ev.route} className="mt-auto group/btn inline-flex items-center gap-3 bg-accent text-white pl-6 pr-2 py-2 rounded-full text-sm font-bold transition-all duration-300 group-hover:bg-white group-hover:text-accent group-hover:shadow-lg w-fit justify-between">
                      <span>{localT.viewDetails}</span>
-                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-1 group-hover/btn:bg-white/30">
+                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-1 group-hover/btn:bg-accent/10">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                      </div>
                   </Link>
