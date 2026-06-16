@@ -153,6 +153,7 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
         const eventsData = useMemo(() => initialEvents.map((e: any) => {
         const isOfficial = e.is_official || e.category_label?.toLowerCase().includes("oficial");
         return {
+            id: e.id,
             img: isOfficial ? logoAibapt : (e.thumbnail_url || placeholderImg),
             badge: e.event_date ? (() => {
                 const [year, month, day] = e.event_date.split('-').map(Number);
@@ -277,24 +278,32 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
         return accreditedData.filter(a => a.title.toLowerCase().includes(term) || a.instructor.toLowerCase().includes(term));
     }, [searchTerm, accreditedData]);
 
-    // Handle incoming ?id URL parametr
+    // Handle incoming ?id URL parameter
     useEffect(() => {
         const idStr = searchParams.get("id");
         if (idStr !== null) {
-            const index = parseInt(idStr, 10);
-            if (!isNaN(index)) {
-                let sourceData: any[] = [];
-                const tab = searchParams.get("tab");
-                if (tab === "events") {
-                    sourceData = [...webinarsData, ...eventsData];
-                } else if (tab === "recordings") {
-                    sourceData = recordingsData;
-                }
+            let sourceData: any[] = [];
+            const tab = searchParams.get("tab");
+            if (tab === "events") {
+                sourceData = [...webinarsData, ...eventsData];
+            } else if (tab === "recordings") {
+                sourceData = recordingsData;
+            }
 
-                if (index >= 0 && index < sourceData.length) {
-                    // Slight delay to ensure UI renders first
-                    setTimeout(() => setSelectedCourse(sourceData[index]), 100);
+            // Buscar primero por ID exacto (UUID o número)
+            let found = sourceData.find(item => item && String(item.id) === idStr);
+
+            // Retrocompatibilidad con índice posicional
+            if (!found) {
+                const index = parseInt(idStr, 10);
+                if (!isNaN(index) && index >= 0 && index < sourceData.length) {
+                    found = sourceData[index];
                 }
+            }
+
+            if (found) {
+                // Slight delay to ensure UI renders first
+                setTimeout(() => setSelectedCourse(found), 100);
             }
         }
     }, [searchParams, webinarsData, eventsData, recordingsData, activeTab]);

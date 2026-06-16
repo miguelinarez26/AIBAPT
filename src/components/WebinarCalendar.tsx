@@ -249,7 +249,7 @@ export default function WebinarCalendar({ lang: propLang }: { lang?: 'es' | 'pt'
     es: {
       months: ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'],
       days: ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'],
-      nextEvents: "Próximos Eventos",
+      nextEvents: "Calendario de Eventos",
       enrollNow: "Inscribirse Ahora",
       selectDate: "Selecciona una fecha",
       selectDateDesc: "Haz clic en una fecha destacada en el calendario para ver los detalles del evento y registrarte en nuestras próximas sesiones.",
@@ -259,7 +259,7 @@ export default function WebinarCalendar({ lang: propLang }: { lang?: 'es' | 'pt'
     pt: {
       months: ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAYO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'],
       days: ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'],
-      nextEvents: "Próximos Eventos",
+      nextEvents: "Calendário de Eventos",
       enrollNow: "Inscreva-se Agora",
       selectDate: "Selecione uma data",
       selectDateDesc: "Clique em uma data destacada no calendário para ver os detalhes do evento e se registrar em nossas próximas sessões.",

@@ -8,7 +8,7 @@ export default function AibaptFAQ() {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
   const { t } = useLanguage();
 
-  const faqs = Array.from({ length: 9 }).map((_, i) => {
+  const faqs = Array.from({ length: 17 }).map((_, i) => {
     const num = i + 1;
     return {
       question: t(`faq.q${num}` as LangKeys),

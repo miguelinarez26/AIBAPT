@@ -38,9 +38,9 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
       id: 1,
       image: "/images/1.jpg",
       lines: [
-        { text: t.s1_l1, bg: "bg-accent" },
+        { text: t.s1_l1 },
         { text: t.s1_l2, bg: "bg-accent", ml: "ml-12 md:ml-32" },
-        { text: t.s1_l3, bg: "bg-accent-light", ml: "ml-6 md:ml-16" }
+        { text: t.s1_l3, ml: "ml-6 md:ml-16" }
       ],
       align: "left"
     },
@@ -48,9 +48,9 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
       id: 2,
       image: "/images/2.jpg",
       lines: [
-        { text: t.s2_l1, bg: "bg-accent-light" },
-        { text: t.s2_l2, bg: "bg-accent", mr: "mr-8 md:mr-20" },
-        { text: t.s2_l3, bg: "bg-accent-light", mr: "mr-4 md:mr-10" }
+        { text: t.s2_l1 },
+        { text: t.s2_l2, mr: "mr-8 md:mr-20" },
+        { text: t.s2_l3, bg: "bg-accent", mr: "mr-4 md:mr-10" }
       ],
       align: "right"
     },
@@ -59,7 +59,7 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
       image: "/images/3.jpg",
       lines: [
         { text: t.s3_l1, bg: "bg-accent" },
-        { text: t.s3_l2, bg: "bg-accent-light", ml: "ml-8 md:ml-20" }
+        { text: t.s3_l2, ml: "ml-8 md:ml-20" }
       ],
       align: "left"
     }
@@ -77,7 +77,7 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
 
   return (
     <section className="w-full h-[calc(100vh-96px)] relative overflow-hidden group bg-black">
-      {/* Background Images */}
+      {/* Background Images with Dark Overlay */}
       {slides.map((slide, index) => (
         <div
           key={slide.id}
@@ -85,7 +85,10 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
             index === activeSlide ? "opacity-100 z-0" : "opacity-0 z-0"
           }`}
           style={{ backgroundImage: `url('${slide.image}')` }}
-        ></div>
+        >
+          {/* Subtle dark overlay for readability */}
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
       ))}
 
       {/* Content Container */}
@@ -94,12 +97,14 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
         <div key={activeSlide} className={`flex flex-col gap-4 ${slides[activeSlide].align === 'right' ? 'items-end' : 'items-start'}`}>
           {slides[activeSlide].lines.map((line: any, i) => (
             <div key={i} className={`relative inline-block w-fit ${line.ml || ''} ${line.mr || ''}`}>
-              <div 
-                className={`absolute inset-0 ${line.bg} -left-6 -right-6 -top-2 -bottom-2 z-0 origin-left animate-reveal-bg`} 
-                style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}
-              ></div>
+              {line.bg && (
+                <div 
+                  className={`absolute inset-0 ${line.bg} -left-6 -right-6 -top-2 -bottom-2 z-0 origin-left animate-reveal-bg`} 
+                  style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}
+                ></div>
+              )}
               <h1 
-                className="relative z-10 text-white font-serif text-[60px] md:text-[100px] leading-[0.9] tracking-tight font-semibold animate-fade-in-up" 
+                className="relative z-10 text-white font-serif text-[60px] md:text-[100px] leading-[0.9] tracking-tight font-semibold animate-fade-in-up drop-shadow-2xl" 
                 style={{ animationDelay: `${i * 150 + 200}ms`, animationFillMode: 'both' }}
               >
                 {line.text}
@@ -124,7 +129,7 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
             key={idx}
             onClick={() => setActiveSlide(idx)}
             className={`w-2.5 h-2.5 rounded-full cursor-pointer transition-colors ${
-              idx === activeSlide ? "bg-accent" : "bg-white/50 hover:bg-white"
+              idx === activeSlide ? "bg-primary" : "bg-white/50 hover:bg-white"
             }`}
           ></div>
         ))}
