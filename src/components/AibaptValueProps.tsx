@@ -31,24 +31,28 @@ export default function AibaptValueProps() {
   ];
 
   return (
-    <section className="w-full py-24 bg-white px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1280px] mx-auto">
+    <section className="w-full py-24 bg-primary px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Orbs */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[150px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+
+      <div className="max-w-[1280px] mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-20">
           {/* @ts-ignore */}
-          <p className="text-accent text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">{t("benefits.badge")}</p>
-          <h2 className="text-4xl md:text-[56px] font-serif text-text-light leading-[1.1] mb-6">
+          <p className="text-white/80 text-[13px] font-bold tracking-[0.2em] uppercase mb-4">{t("benefits.badge")}</p>
+          <h2 className="text-4xl md:text-[56px] font-serif text-white leading-[1.1] mb-6">
             {/* @ts-ignore */}
             {t("benefits.title")}
           </h2>
           {/* @ts-ignore */}
-          <p className="text-text-dark text-lg">{t("benefits.desc")}</p>
+          <p className="text-white/90 text-lg">{t("benefits.desc")}</p>
         </div>
         
         <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
           {/* Flecha Izquierda */}
           <button 
             onClick={scrollLeft} 
-            className="absolute left-0 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full border border-gray-200 bg-white flex items-center justify-center text-text-light hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-lg hidden md:flex"
+            className="absolute left-0 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full border border-white/20 bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-primary transition-colors shadow-lg hidden md:flex"
           >
              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
@@ -59,16 +63,16 @@ export default function AibaptValueProps() {
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
              {props.map((p, i) => (
-               <div key={i} className="group shrink-0 w-[calc(100vw-2rem)] md:w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)] snap-start bg-gray-50 hover:bg-primary transition-colors duration-500 rounded-2xl p-10 flex flex-col items-center text-center shadow-sm hover:shadow-2xl">
-                  <div className="w-20 h-20 bg-white group-hover:bg-secondary rounded-full flex items-center justify-center mb-8 transition-colors duration-500 shadow-sm shrink-0">
-                     <svg className="w-10 h-10 text-primary group-hover:text-white transition-colors duration-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+               <div key={i} className="group shrink-0 w-[calc(100vw-2rem)] md:w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)] snap-start bg-white/10 backdrop-blur-lg border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-500 rounded-2xl p-10 flex flex-col items-center text-center shadow-lg hover:shadow-2xl">
+                  <div className="w-20 h-20 bg-white/20 group-hover:bg-secondary rounded-full flex items-center justify-center mb-8 transition-colors duration-500 shadow-sm shrink-0 backdrop-blur-md">
+                     <svg className="w-10 h-10 text-white transition-colors duration-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d={p.icon} />
                      </svg>
                   </div>
                   {/* @ts-ignore */}
-                  <h3 className="text-[22px] font-serif text-text-light group-hover:text-white mb-4 transition-colors duration-500 leading-snug">{t(`${p.key}.title` as LangKeys)}</h3>
+                  <h3 className="text-[22px] font-serif text-white mb-4 transition-colors duration-500 leading-snug">{t(`${p.key}.title` as LangKeys)}</h3>
                   {/* @ts-ignore */}
-                  <p className="text-text-dark group-hover:text-white/80 text-[15px] leading-relaxed transition-colors duration-500">{t(`${p.key}.desc` as LangKeys)}</p>
+                  <p className="text-white/80 group-hover:text-white text-[15px] leading-relaxed transition-colors duration-500">{t(`${p.key}.desc` as LangKeys)}</p>
                </div>
             ))}
           </div>
@@ -76,14 +80,14 @@ export default function AibaptValueProps() {
           {/* Flecha Derecha */}
           <button 
             onClick={scrollRight} 
-            className="absolute right-0 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full border border-gray-200 bg-white flex items-center justify-center text-text-light hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-lg hidden md:flex"
+            className="absolute right-0 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full border border-white/20 bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-primary transition-colors shadow-lg hidden md:flex"
           >
              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
         
         <div className="mt-12 text-center">
-           <Link href={`/${lang}/afiliacion`} className="bg-accent text-white pl-8 pr-3 py-3 rounded-full font-medium hover:bg-accent-light transition-colors shadow-sm text-[15px] inline-flex items-center gap-4 group hover:-translate-y-1 transform duration-300">
+           <Link href={`/${lang}/afiliacion`} className="bg-secondary text-white pl-8 pr-3 py-3 rounded-full font-bold hover:bg-accent transition-colors shadow-sm text-[15px] inline-flex items-center gap-4 group hover:-translate-y-1 transform duration-300">
               {/* @ts-ignore */}
               {t("benefits.btn")} 
               <span className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover:translate-x-1">
@@ -101,3 +105,4 @@ export default function AibaptValueProps() {
     </section>
   );
 }
+

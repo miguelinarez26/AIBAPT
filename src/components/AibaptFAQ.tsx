@@ -24,8 +24,12 @@ export default function AibaptFAQ() {
   const visibleFaqs = isExpanded ? faqs : faqs.slice(0, 5);
 
   return (
-    <section className="w-full py-24 bg-background-light px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1000px] mx-auto">
+    <section className="w-full py-24 bg-white px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Organic Background Blobs */}
+      <div className="absolute top-20 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-x-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-20 right-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] translate-x-1/3 pointer-events-none"></div>
+
+      <div className="max-w-[1000px] mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
           {/* @ts-ignore */}
           <p className="text-accent text-[13px] font-semibold tracking-[0.2em] uppercase mb-4">{t("faq.badge")}</p>
@@ -44,7 +48,7 @@ export default function AibaptFAQ() {
             return (
               <div 
                 key={index} 
-                className={`w-full rounded-[24px] overflow-hidden transition-all duration-300 cursor-pointer ${isActive ? 'bg-highlight' : 'bg-white hover:bg-white/90 shadow-sm'}`}
+                className={`w-full rounded-[24px] overflow-hidden transition-all duration-300 cursor-pointer border ${isActive ? 'bg-highlight border-transparent shadow-md' : 'bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg shadow-sm'}`}
                 onClick={() => toggleFAQ(index)}
               >
                 <div className="px-8 py-6 md:py-8 flex justify-between items-center">
