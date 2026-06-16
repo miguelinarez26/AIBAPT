@@ -6,7 +6,8 @@ import { LangKeys } from "@/i18n/translations";
 
 export default function AibaptFAQ() {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
-  const { t } = useLanguage();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { t, lang } = useLanguage();
 
   const faqs = Array.from({ length: 17 }).map((_, i) => {
     const num = i + 1;
@@ -19,6 +20,8 @@ export default function AibaptFAQ() {
   const toggleFAQ = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
   };
+
+  const visibleFaqs = isExpanded ? faqs : faqs.slice(0, 5);
 
   return (
     <section className="w-full py-24 bg-background-light px-4 sm:px-6 lg:px-8">
@@ -35,17 +38,17 @@ export default function AibaptFAQ() {
         </div>
         
         <div className="flex flex-col gap-4">
-          {faqs.map((faq, index) => {
+          {visibleFaqs.map((faq, index) => {
             const isActive = activeIndex === index;
             
             return (
               <div 
                 key={index} 
-                className={`w-full rounded-[24px] overflow-hidden transition-all duration-300 cursor-pointer ${isActive ? 'bg-highlight' : 'bg-white hover:bg-white/90'}`}
+                className={`w-full rounded-[24px] overflow-hidden transition-all duration-300 cursor-pointer ${isActive ? 'bg-highlight' : 'bg-white hover:bg-white/90 shadow-sm'}`}
                 onClick={() => toggleFAQ(index)}
               >
                 <div className="px-8 py-6 md:py-8 flex justify-between items-center">
-                  <h3 className="text-[22px] md:text-[26px] font-serif text-text-light pr-4">
+                  <h3 className="text-[20px] md:text-[24px] font-serif text-text-light pr-4">
                     {faq.question}
                   </h3>
                   <div className="shrink-0 text-text-light">
@@ -68,6 +71,27 @@ export default function AibaptFAQ() {
             );
           })}
         </div>
+
+        {/* Ver más / Ver menos Button */}
+        {faqs.length > 5 && (
+          <div className="mt-12 flex justify-center">
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="bg-white border-2 border-primary/20 hover:border-primary text-primary hover:bg-primary hover:text-white font-bold py-3.5 px-8 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group"
+            >
+              {isExpanded 
+                ? (lang === 'pt' ? 'Ver menos' : 'Ver menos')
+                : (lang === 'pt' ? 'Ver mais perguntas' : 'Ver más preguntas')
+              }
+              <svg 
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'group-hover:translate-y-1'}`}
+              >
+                <path d="M5 9l7 7 7-7"/>
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
