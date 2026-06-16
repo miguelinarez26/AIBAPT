@@ -8,6 +8,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { assetPath } from "@/lib/assets";
 
 function RegistroContent() {
     const { lang } = useLanguage();
@@ -90,7 +91,7 @@ function RegistroContent() {
                     <div className="relative z-10">
                         <Link href="/" className="mb-12 block w-fit">
                             <Image 
-                                src="/images/logo_corto_en_blanco.png" 
+                                src={assetPath("/images/logo_corto_en_blanco.png")}
                                 alt="AIBAPT Logo" 
                                 width={240} 
                                 height={80} 

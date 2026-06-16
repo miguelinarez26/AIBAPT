@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { WEBINARS_DATA } from "@/data/webinars";
+import { assetPath } from "@/lib/assets";
 
 // Simulamos una base de datos local para los slugs
 const getCourseData = (slug: string) => {
@@ -217,7 +218,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
 
                         {/* Trust */}
                         <div className="p-8 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[40px] flex flex-col items-center gap-6 text-center">
-                            <Image src="/images/logo_aibapt.png" alt="AIBAPT Logo" width={60} height={60} className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+                            <Image src={assetPath("/images/logo_aibapt.png")} alt="AIBAPT Logo" width={60} height={60} className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
                             <p className="text-[10px] font-bold text-text-muted tracking-widest leading-relaxed uppercase px-2">
                                 {lang === "pt" 
                                     ? "Qualidade educativa respaldada pelo comitê científico da AIBAPT Internacional" 

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Toaster } from "sonner";
+import { assetPath } from "@/lib/assets";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,9 +21,9 @@ export const metadata: Metadata = {
   title: "AIBAPT | Asociación Iberoamericana de Psicotrauma",
   description: "Asociación Iberoamericana de Psicotrauma. Uniendo profesionales en Iberoamérica para avanzar en el estudio, prevención y tratamiento del trauma psicológico con un enfoque orgánico y humano.",
   icons: {
-    icon: "/images/favicon_official.png",
-    shortcut: "/images/favicon_official.png",
-    apple: "/images/favicon_official.png",
+    icon: assetPath("/images/favicon_official.png"),
+    shortcut: assetPath("/images/favicon_official.png"),
+    apple: assetPath("/images/favicon_official.png"),
   }
 };
 

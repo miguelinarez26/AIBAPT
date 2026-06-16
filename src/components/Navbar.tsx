@@ -8,6 +8,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from "@/components/providers/AuthProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { assetPath } from "@/lib/assets";
 import { LogOut } from "lucide-react";
 
 export default function Navbar() {
@@ -50,7 +51,7 @@ export default function Navbar() {
         <div className="flex-1 flex justify-start items-center gap-2">
           <Link href={`/${lang}`}>
             <Image 
-              src="/images/logo_aibapt.png" 
+              src={assetPath("/images/logo_aibapt.png")}
               alt="AIBAPT Logo" 
               width={240} 
               height={80} 

@@ -22,7 +22,7 @@ export default function Footer() {
             <div className="flex flex-col items-center -mt-7">
               <Link href={`/${lang}`} className="inline-block transition-transform hover:scale-[1.02]">
                 <Image 
-                  src="/images/aibapt_logo_transparent_seal.png" 
+                  src={assetPath("/images/aibapt_logo_transparent_seal.png")}
                   alt="AIBAPT Logo" 
                   width={96} 
                   height={96} 

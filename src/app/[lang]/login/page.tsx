@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { assetPath } from "@/lib/assets";
 
 function LoginContent() {
     const { t, lang } = useLanguage();
@@ -92,7 +93,7 @@ function LoginContent() {
                     <div className="relative z-10">
                         <Link href="/" className="mb-12 block w-fit">
                             <Image 
-                                src="/images/logo_corto_en_blanco.png" 
+                                src={assetPath("/images/logo_corto_en_blanco.png")}
                                 alt="AIBAPT Logo" 
                                 width={240} 
                                 height={80} 
