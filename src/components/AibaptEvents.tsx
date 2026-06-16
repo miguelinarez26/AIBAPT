@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { assetPath } from "@/lib/assets";
 
 interface AibaptEventsProps {
   events?: any[];
@@ -102,7 +103,7 @@ export default function AibaptEvents({ events = [] }: AibaptEventsProps) {
                            ? "bg-contain bg-center bg-no-repeat bg-gradient-to-br from-primary/10 to-secondary/5 origin-center scale-[0.8] group-hover:scale-[0.83]" 
                            : "bg-cover bg-center"
                        }`} 
-                       style={{ backgroundImage: `url('${ev.image}')` }}
+                       style={{ backgroundImage: `url('${assetPath(ev.image)}')` }}
                      ></div>
                      <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-500"></div>
                       <div className="absolute top-5 left-5 flex flex-wrap gap-2 max-w-[90%]">

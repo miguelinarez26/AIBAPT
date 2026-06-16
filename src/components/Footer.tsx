@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { FiFacebook, FiInstagram, FiYoutube } from 'react-icons/fi';
+import { assetPath } from '@/lib/assets';
 
 export default function Footer() {
   const { lang, t } = useLanguage();
@@ -140,13 +141,13 @@ export default function Footer() {
               `}</style>
               {/* Logo base invertido en modo claro (negro) y original en modo oscuro */}
               <img
-                src="/images/logo-carmidev.png"
+                src={assetPath("/images/logo-carmidev.png")}
                 alt="CarMiDev Logo"
                 className="h-[19px] w-auto object-contain opacity-100 transition-opacity duration-300 group-hover/logo:opacity-0"
               />
               {/* Logo cyan eléctrico superpuesto */}
               <img
-                src="/images/logo-carmidev.png"
+                src={assetPath("/images/logo-carmidev.png")}
                 alt="CarMiDev Hover"
                 className="carmidev-logo-hover absolute inset-0 w-full h-full object-contain opacity-0 transition-opacity duration-300 group-hover/logo:opacity-100"
               />

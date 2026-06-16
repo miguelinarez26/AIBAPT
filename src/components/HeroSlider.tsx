@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { assetPath } from "@/lib/assets";
 
 export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -84,7 +85,7 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
           className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
             index === activeSlide ? "opacity-100 z-0" : "opacity-0 z-0"
           }`}
-          style={{ backgroundImage: `url('${slide.image}')` }}
+          style={{ backgroundImage: `url('${assetPath(slide.image)}')` }}
         >
           {/* Subtle dark overlay for readability */}
           <div className="absolute inset-0 bg-black/40"></div>

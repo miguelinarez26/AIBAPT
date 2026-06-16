@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiMail, FiX } from "react-icons/fi";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { assetPath } from "@/lib/assets";
 
 interface SubComite {
     id: string;
@@ -213,14 +214,14 @@ export const FunctionalStructure = () => {
                                 {member.img ? (
                                     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl translate-y-12 shrink-0">
                                         <img
-                                            src={member.img}
+                                            src={assetPath(member.img)}
                                             alt={member.nombre}
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
                                         />
                                     </div>
                                 ) : (
                                     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl translate-y-12 shrink-0 bg-white">
-                                        <img src="/images/aibapt_logo_transparent_seal.png" alt="AIBAPT" className="w-full h-full object-contain p-1" />
+                                        <img src={assetPath("/images/aibapt_logo_transparent_seal.png")} alt="AIBAPT" className="w-full h-full object-contain p-1" />
                                     </div>
                                 )}
                             </div>
@@ -289,11 +290,11 @@ export const FunctionalStructure = () => {
                                 <div className="flex justify-center -mt-10 shrink-0 relative z-10">
                                     {activeMember.img ? (
                                         <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl">
-                                            <img src={activeMember.img} alt={activeMember.nombre} className="w-full h-full object-cover" />
+                                            <img src={assetPath(activeMember.img)} alt={activeMember.nombre} className="w-full h-full object-cover" />
                                         </div>
                                     ) : (
                                         <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white">
-                                            <img src="/images/aibapt_logo_transparent_seal.png" alt="AIBAPT" className="w-full h-full object-contain p-1" />
+                                            <img src={assetPath("/images/aibapt_logo_transparent_seal.png")} alt="AIBAPT" className="w-full h-full object-contain p-1" />
                                         </div>
                                     )}
                                 </div>
