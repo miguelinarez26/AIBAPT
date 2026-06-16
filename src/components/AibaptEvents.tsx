@@ -95,12 +95,12 @@ export default function AibaptEvents({ events = [] }: AibaptEventsProps) {
            {mappedEvents.map((ev: any, i: number) => {
              const isLogo = ev.image?.includes("aibapt_logo");
              return (
-               <div key={i} className="group cursor-pointer flex flex-col h-full bg-gradient-to-br from-primary/20 via-white to-white rounded-[32px] p-6 shadow-sm border border-primary/20 hover:shadow-xl hover:border-primary/40 transition-all duration-500 hover:-translate-y-2">
-                  <div className="w-full h-[280px] rounded-[24px] overflow-hidden mb-6 relative shadow-inner bg-gradient-to-br from-primary/15 to-secondary/15 shrink-0">
+               <div key={i} className="group cursor-pointer flex flex-col h-full bg-gradient-to-br from-primary/15 to-secondary/10 rounded-[32px] p-6 shadow-sm border border-white/50 hover:shadow-xl hover:border-primary/40 transition-all duration-500 hover:-translate-y-2">
+                  <div className="w-full h-[280px] rounded-[24px] overflow-hidden mb-6 relative bg-transparent shrink-0">
                      <div 
                        className={`absolute inset-0 transition-transform duration-700 group-hover:scale-110 ${
                          isLogo 
-                           ? "bg-contain bg-center bg-no-repeat bg-gradient-to-br from-primary/10 to-secondary/5 origin-center scale-[0.8] group-hover:scale-[0.83]" 
+                           ? "bg-contain bg-center bg-no-repeat origin-center scale-[0.8] group-hover:scale-[0.83]" 
                            : "bg-cover bg-center"
                        }`} 
                        style={{ backgroundImage: `url('${assetPath(ev.image)}')` }}
