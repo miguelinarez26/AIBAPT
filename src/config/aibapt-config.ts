@@ -116,30 +116,6 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
         ]
       },
       { 
-        id: 'otros', 
-        label: { es: 'Otras Categorías', pt: 'Outras Categorias' }, 
-        monto: 45, 
-        description: { es: 'Estudiantes, Jubilados o Simpatizantes.', pt: 'Estudantes, Aposentados ou Simpatizantes.' },
-        subProfiles: [
-          { 
-            id: 'otros_estudiante', 
-            label: { es: 'Estudiante', pt: 'Estudante' },
-            requirements: {
-              es: ['Comprobante de estudios vigente', 'Solicitud firmada'],
-              pt: ['Comprovante de estudos vigente', 'Solicitação assinada']
-            }
-          },
-          { 
-            id: 'otros_jubilado', 
-            label: { es: 'Jubilado', pt: 'Aposentado' },
-            requirements: {
-              es: ['Comprobante de jubilación', 'Solicitud firmada'],
-              pt: ['Comprovante de aposentadoria', 'Solicitação assinada']
-            }
-          }
-        ]
-      },
-      { 
         id: 'institucional', 
         label: { es: 'Miembro Institucional', pt: 'Membro Institucional' }, 
         monto: 60, 
@@ -148,6 +124,20 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
           es: ['Estatutos de la institución', 'Solicitud institucional'],
           pt: ['Estatutos da instituição', 'Solicitação institucional']
         }
+      },
+      {
+        id: 'bienhechor',
+        label: { es: 'Miembro Bienhechor', pt: 'Membro Benfeitor' },
+        monto: 0,
+        description: { es: 'Apoya nuestra labor de forma activa y altruista.', pt: 'Apoie nosso trabalho de forma ativa e altruísta.' },
+        isContactForm: true
+      },
+      {
+        id: 'simpatizante',
+        label: { es: 'Miembro Simpatizante', pt: 'Membro Simpatizante' },
+        monto: 0,
+        description: { es: 'Para interesados en el área de trauma sin práctica clínica.', pt: 'Para interessados na área do trauma sem prática clínica.' },
+        isContactForm: true
       }
     ],
     instrucciones_leer: {
@@ -155,17 +145,18 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
       pt: ["Prepare sua documentação em PDF", "O pagamento é feito ao final via PayPal", "Sua solicitação será revisada em 48-72h"]
     },
     descargas: [
-      { label_es: "Hoja de Inscripción", label_pt: "Folha de Inscrição", url_es: "#", url_pt: "#" },
-      { label_es: "Solicitud de Ingreso", label_pt: "Solicitação de Ingresso", url_es: "#", url_pt: "#" },
-      { label_es: "Carta de Recomendación", label_pt: "Carta de Recomendação", url_es: "#", url_pt: "#" }
+      { label_es: "file.hoja_inscripcion", label_pt: "file.hoja_inscripcion", url_es: "#", url_pt: "#", dependsOnEscenario: ['pleno_salud_mental', 'pleno_agente_social'] },
+      { label_es: "file.hoja_inscripcion_juridica", label_pt: "file.hoja_inscripcion_juridica", url_es: "#", url_pt: "#", dependsOnEscenario: ['institucional'] },
+      { label_es: "file.solicitud_ingreso", label_pt: "file.solicitud_ingreso", url_es: "#", url_pt: "#", dependsOnEscenario: ['pleno_salud_mental', 'pleno_agente_social', 'institucional'] },
+      { label_es: "file.modelo_recomendacion", label_pt: "file.modelo_recomendacion", url_es: "#", url_pt: "#", dependsOnEscenario: ['pleno_salud_mental', 'pleno_agente_social', 'institucional'] }
     ],
     fields: [
-      { name: "hoja_inscripcion", label: { es: "Hoja de Inscripción", pt: "Folha de Inscrição" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "solicitud_ingreso", label: { es: "Solicitud de Ingreso", pt: "Solicitação de Ingresso" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "carta_recomendacion", label: { es: "Carta de Recomendación", pt: "Carta de Recomendação" }, typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno'] },
-      { name: "comprobante_estudios", label: { es: "Comprobante de Estudios", pt: "Comprovante de Estudos" }, typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['otros_estudiante'] },
-      { name: "comprobante_jubilacion", label: { es: "Comprobante de Jubilación", pt: "Comprovante de Aposentadoria" }, typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['otros_jubilado'] },
-      { name: "estatutos_institucion", label: { es: "Estatutos de la Institución", pt: "Estatutos da Instituição" }, typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['institucional'] }
+      { name: "hoja_inscripcion_firmada", label: { es: "file.hoja_inscripcion_firmada", pt: "file.hoja_inscripcion_firmada" }, typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno_salud_mental', 'pleno_agente_social', 'institucional'] },
+      { name: "solicitud_ingreso_firmada", label: { es: "file.solicitud_ingreso_firmada", pt: "file.solicitud_ingreso_firmada" }, typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno_salud_mental', 'pleno_agente_social', 'institucional'] },
+      { name: "carta_recomendacion_1", label: { es: "file.carta_recomendacion", pt: "file.carta_recomendacion" }, typeLabel: "PDF", validator: FileValidators.pdf, dependsOnEscenario: ['pleno_salud_mental', 'pleno_agente_social'] },
+      { name: "comprobante_formacion_psicotrauma", label: { es: "file.comprobante_formacion_psicotrauma", pt: "file.comprobante_formacion_psicotrauma" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage, dependsOnEscenario: ['pleno_salud_mental', 'pleno_agente_social'] },
+      { name: "cartas_recomendacion_institucional", label: { es: "file.cartas_recomendacion_institucional", pt: "file.cartas_recomendacion_institucional" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip, dependsOnEscenario: ['institucional'] },
+      { name: "registro_legal_institucion", label: { es: "file.registro_legal_institucion", pt: "file.registro_legal_institucion" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage, dependsOnEscenario: ['institucional'] }
     ]
   },
   "acreditacion_cca": {
@@ -177,6 +168,7 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
       { id: 'cca_miembro', label: { es: 'Alumno Miembro de AIBAPT', pt: 'Aluno Membro da AIBAPT' }, monto: 10, description: { es: 'Para estudiantes con membresía anual al día (10 € por bloque de 12 créditos).', pt: 'Para estudantes com anuidade de membro em dia (10 € por bloco de 12 créditos).' } },
       { id: 'cca_no_miembro', label: { es: 'Alumno No Miembro', pt: 'Aluno Não Membro' }, monto: 15, description: { es: 'Público general sin membresía anual (15 € por bloque de 12 créditos).', pt: 'Público geral sem anuidade de membro (15 € por bloco de 12 créditos).' } }
     ],
+    requiresMembership: true,
     accreditationTypeKey: "Emision_CCA",
     instrucciones_leer: {
       es: [
@@ -190,13 +182,45 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
         "As tarifas são aplicadas a cada bloco de 12 créditos CCA."
       ]
     },
+    descargas: [],
+    fields: [
+      { name: "certificado_formacion_basica", label: { es: "file.certificado_formacion_basica_cca", pt: "file.certificado_formacion_basica_cca" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "certificado_curso_avanzado", label: { es: "file.diploma_curso_docente", pt: "file.diploma_curso_docente" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+    ]
+  },
+  "acreditacion_curso_docente": {
+    id: "acreditacion_curso_docente",
+    categoria: { es: "Desarrollo Profesional", pt: "Desenvolvimento Profissional" },
+    title: { es: "Acreditación de Curso (CCA - Para Docentes)", pt: "Acreditação de Curso (CCA - Para Docentes)" },
+    description: { es: "Certifica tus propios cursos para otorgar créditos oficiales CCA AIBAPT.", pt: "Certifique seus próprios cursos para conceder créditos oficiais CCA AIBAPT." },
+    monto: [
+      { id: 'cca_docente_default', label: { es: 'Acreditación de Curso', pt: 'Acreditação de Curso' }, monto: 0, description: { es: 'Evaluación y registro de curso para docentes. Exento de pago.', pt: 'Avaliação e registro de curso para docentes. Isento de pagamento.' } }
+    ],
+    requiresMembership: true,
+    accreditationTypeKey: "Psicotrauma_Programa",
+    instrucciones_leer: {
+      es: [
+        "Completa el formulario de solicitud CCA y la Ficha Técnica con el cronograma.",
+        "Prepara el material didáctico del curso en formato ZIP.",
+        "Una vez aprobado, podrás emitir créditos oficiales a tus alumnos."
+      ],
+      pt: [
+        "Preencha o formulário de solicitação CCA e a Ficha Técnica com o cronograma.",
+        "Prepare o material didático do curso em formato ZIP.",
+        "Uma vez aprovado, você poderá emitir créditos oficiais aos seus alunos."
+      ]
+    },
     descargas: [
-      { label_es: "Declaración de Evaluación (Instructor - Opcional)", label_pt: "Declaração de Avaliação (Instrutor - Opcional)", url_es: "#", url_pt: "#" }
+      { label_es: "file.formulario_solicitud_cca", label_pt: "file.formulario_solicitud_cca", url_es: "#", url_pt: "#" },
+      { label_es: "file.ficha_tecnica_cronograma", label_pt: "file.ficha_tecnica_cronograma", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "certificado_formacion_basica", label: { es: "Certificado de Formación Básica", pt: "Certificado de Formação Básica" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "certificado_curso_avanzado", label: { es: "Diploma del Curso", pt: "Diploma do Curso" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago", pt: "Comprovante de Pagamento" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "cv_instructor", label: { es: "file.cv_instructor", pt: "file.cv_instructor" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "ficha_tecnica_llena", label: { es: "file.ficha_tecnica_llena", pt: "file.ficha_tecnica_llena" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "material_didactico", label: { es: "file.material_didactico_zip", pt: "file.material_didactico_zip" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
+      { name: "plantilla_lista_asistencia", label: { es: "file.plantilla_lista_asistencia", pt: "file.plantilla_lista_asistencia" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "cuestionario_evaluacion", label: { es: "file.cuestionario_evaluacion", pt: "file.cuestionario_evaluacion" }, typeLabel: "PDF", validator: FileValidators.pdf }
     ]
   },
   // ── EMDR: Vía Psicoterapeuta ─────────────────────────────────────────────
@@ -214,22 +238,20 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
       es: [
         "Requisito: Haber completado la Formación Básica EMDR (Nivel 1 y Nivel 2) con instructor acreditado.",
         "Requisito: Colegiación profesional activa o licencia habilitante vigente.",
-        "Este trámite es gratuito — No requiere comprobante de pago.",
-        "Una vez validado, podrás acceder al siguiente nivel: Psicoterapeuta Certificado."
+        "Este trámite es gratuito — No requiere comprobante de pago."
       ],
       pt: [
         "Requisito: Ter concluído a Formação Básica EMDR (Nível 1 e Nível 2) com instrutor credenciado.",
         "Requisito: Inscrição profissional ativa ou licença habilitante vigente.",
-        "Este trâmite é gratuito — Não requer comprovante de pagamento.",
-        "Uma vez validado, você poderá acessar o próximo nível: Psicoterapeuta Certificado."
+        "Este trâmite é gratuito — Não requer comprovante de pagamento."
       ]
     },
     descargas: [
-      { label_es: "Formulario de Solicitud Inicial EMDR", label_pt: "Formulário de Solicitação Inicial EMDR", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_inicial_emdr", label_pt: "file.solicitud_inicial_emdr", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "certificado_formacion_basica", label: { es: "Certificado de Formación Básica EMDR (Nivel 1 y 2)", pt: "Certificado de Formação Básica EMDR (Nível 1 e 2)" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
-      { name: "licencia_colegiado", label: { es: "Comprobante de Colegiado / Licencia Profesional Activa", pt: "Comprovante de Registro Profissional / Licença Ativa" }, typeLabel: "PDF", validator: FileValidators.pdf }
+      { name: "certificado_formacion_basica", label: { es: "file.certificado_formacion_basica", pt: "file.certificado_formacion_basica" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
+      { name: "licencia_colegiado", label: { es: "file.licencia_colegiado", pt: "file.licencia_colegiado" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "emdr_psico_certificado": {
@@ -261,15 +283,16 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
       ]
     },
     descargas: [
-      { label_es: "Formulario de Solicitud de Certificación", label_pt: "Formulário de Solicitação de Certificação", url_es: "#", url_pt: "#" },
-      { label_es: "Modelo de Carta de Recomendación (Peer Review)", label_pt: "Modelo de Carta de Recomendação (Peer Review)", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_certificacion", label_pt: "file.solicitud_certificacion", url_es: "#", url_pt: "#" },
+      { label_es: "file.modelo_carta_recomendacion_peer", label_pt: "file.modelo_carta_recomendacion_peer", url_es: "#", url_pt: "#" },
+      { label_es: "file.declaracion_atendimientos", label_pt: "file.declaracion_atendimientos", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "cartas_recomendacion", label: { es: "2 Cartas de Recomendación de Colegas", pt: "2 Cartas de Recomendação de Colegas" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
-      { name: "registro_50_sesiones", label: { es: "Registro de 50 Sesiones (mín. 25 pacientes)", pt: "Registro de 50 Sessões (mín. 25 pacientes)" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "aval_supervision_20h", label: { es: "Aval de 20h de Supervisión", pt: "Aval de 20h de Supervisão" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "portafolio_12_creditos", label: { es: "Portafolio de 12 Créditos CCA", pt: "Portfólio de 12 Créditos CCA" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago (20 €)", pt: "Comprovante de Pagamento (20 €)" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "cartas_recomendacion", label: { es: "file.recomendaciones_colegas", pt: "file.recomendaciones_colegas" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
+      { name: "aval_supervision_20h", label: { es: "file.aval_supervision_20h", pt: "file.aval_supervision_20h" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "registro_50_sesiones", label: { es: "file.registro_50_sesiones", pt: "file.registro_50_sesiones" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "portafolio_12_creditos", label: { es: "file.portafolio_cca", pt: "file.portafolio_cca" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "emdr_psico_senior": {
@@ -285,31 +308,32 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
     instrucciones_leer: {
       es: [
         "Requisito: Certificado vigente de Psicoterapeuta EMDR Certificado AIBAPT.",
-        "Requisito: Transcripción literal o link de sesión EMDR avalada por supervisor.",
-        "Requisito: Aval de 50h de supervisión especializada.",
-        "Requisito: Registro acumulado de 250h de atención clínica en EMDR.",
-        "Requisito: Constancia de 20h de psicoterapia personal.",
-        "Pago previo: 40 € vía PayPal a financiero@aibapt.org — Adjunta el comprobante en el Paso 2."
+        "Requisito: Transcripción de sesión EMDR.",
+        "Requisito: Aval de 50h de supervisión.",
+        "Requisito: Registro acumulado de 250h de atención clínica.",
+        "Requisito: Constancia de terapia personal.",
+        "Pago previo: 40 € vía PayPal a financiero@aibapt.org."
       ],
       pt: [
         "Requisito: Certificado vigente de Psicoterapeuta EMDR Certificado AIBAPT.",
-        "Requisito: Transcrição literal ou link de sessão EMDR avalada por supervisor.",
-        "Requisito: Aval de 50h de supervisão especializada.",
-        "Requisito: Registro acumulado de 250h de atendimento clínico em EMDR.",
-        "Requisito: Constância de 20h de psicoterapia pessoal.",
-        "Pagamento prévio: 40 € via PayPal a financiero@aibapt.org — Anexe o comprovante no Passo 2."
+        "Requisito: Transcrição de sessão EMDR.",
+        "Requisito: Aval de 50h de supervisão.",
+        "Requisito: Registro acumulado de 250h de atendimento clínico.",
+        "Requisito: Constância de terapia pessoal.",
+        "Pagamento prévio: 40 € via PayPal a financiero@aibapt.org."
       ]
     },
     descargas: [
-      { label_es: "Formulario de Solicitud de Nivel Sénior", label_pt: "Formulário de Solicitação de Nível Sênior", url_es: "#", url_pt: "#" },
-      { label_es: "Guía de Transcripción de Sesión EMDR", label_pt: "Guia de Transcrição de Sessão EMDR", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_nivel_superior", label_pt: "file.solicitud_nivel_superior", url_es: "#", url_pt: "#" },
+      { label_es: "file.guia_transcripcion", label_pt: "file.guia_transcripcion", url_es: "#", url_pt: "#" },
+      { label_es: "file.registro_terapia_personal", label_pt: "file.registro_terapia_personal", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "transcripcion_sesion", label: { es: "Transcripción / Link de Sesión EMDR", pt: "Transcrição / Link de Sessão EMDR" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "aval_supervision_50h", label: { es: "Aval de 50h de Supervisión", pt: "Aval de 50h de Supervisão" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "registro_250h_atencion", label: { es: "Registro de 250h de Atención Clínica", pt: "Registro de 250h de Atendimento Clínico" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "constancia_psicoterapia_20h", label: { es: "Constancia de 20h de Psicoterapia Personal", pt: "Constância de 20h de Psicoterapia Pessoal" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago (40 €)", pt: "Comprovante de Pagamento (40 €)" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "transcripcion_sesion", label: { es: "file.transcripcion_grabacion_sesion", pt: "file.transcripcion_grabacion_sesion" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "aval_supervision_50h", label: { es: "file.aval_supervision_50h", pt: "file.aval_supervision_50h" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "registro_atencion", label: { es: "file.registro_atencion", pt: "file.registro_atencion" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "constancia_psicoterapia_20h", label: { es: "file.constancia_terapia_personal", pt: "file.constancia_terapia_personal" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "emdr_psico_master": {
@@ -325,24 +349,32 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
     instrucciones_leer: {
       es: [
         "Requisito: Certificado vigente de Psicoterapeuta EMDR Sénior AIBAPT.",
-        "Requisito: Aval firmado acumulando 500 fichas de sesiones de EMDR.",
+        "Requisito: Transcripción de sesión EMDR.",
+        "Requisito: Aval de 50h de supervisión.",
+        "Requisito: Registro acumulado de 500h de atención clínica.",
         "Requisito: Constancia de 40h totales de psicoterapia personal.",
-        "Pago previo: 50 € vía PayPal a financiero@aibapt.org — Adjunta el comprobante en el Paso 2."
+        "Pago previo: 50 € vía PayPal a financiero@aibapt.org."
       ],
       pt: [
         "Requisito: Certificado vigente de Psicoterapeuta EMDR Sênior AIBAPT.",
-        "Requisito: Aval assinado acumulando 500 fichas de sessões de EMDR.",
+        "Requisito: Transcrição de sessão EMDR.",
+        "Requisito: Aval de 50h de supervisão.",
+        "Requisito: Registro acumulado de 500h de atendimento clínico.",
         "Requisito: Constância de 40h totais de psicoterapia pessoal.",
-        "Pagamento prévio: 50 € via PayPal a financiero@aibapt.org — Anexe o comprovante no Passo 2."
+        "Pagamento prévio: 50 € via PayPal a financiero@aibapt.org."
       ]
     },
     descargas: [
-      { label_es: "Formulario de Solicitud de Nivel Máster", label_pt: "Formulário de Solicitação de Nível Mestre", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_nivel_superior", label_pt: "file.solicitud_nivel_superior", url_es: "#", url_pt: "#" },
+      { label_es: "file.guia_transcripcion", label_pt: "file.guia_transcripcion", url_es: "#", url_pt: "#" },
+      { label_es: "file.registro_terapia_personal", label_pt: "file.registro_terapia_personal", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "aval_500_fichas", label: { es: "Aval de 500 Fichas de Sesiones EMDR", pt: "Aval de 500 Fichas de Sessões EMDR" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "constancia_psicoterapia_40h", label: { es: "Constancia de 40h de Psicoterapia Personal", pt: "Constância de 40h de Psicoterapia Pessoal" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago (50 €)", pt: "Comprovante de Pagamento (50 €)" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "transcripcion_sesion", label: { es: "file.transcripcion_grabacion_sesion", pt: "file.transcripcion_grabacion_sesion" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "aval_supervision_50h", label: { es: "file.aval_supervision_50h", pt: "file.aval_supervision_50h" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "registro_atencion", label: { es: "file.registro_atencion", pt: "file.registro_atencion" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "constancia_psicoterapia_40h", label: { es: "file.constancia_terapia_personal", pt: "file.constancia_terapia_personal" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   // ── EMDR: Vía Supervisor ──────────────────────────────────────────────────
@@ -360,26 +392,24 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
       es: [
         "Requisito: Certificado de Psicoterapeuta EMDR Certificado (o Sénior) vigente de AIBAPT.",
         "Requisito: Certificado de aprobación de Examen Teórico de Supervisión.",
-        "Requisito: Registro de 300 fichas de sesiones de EMDR.",
-        "Requisito: Registro de 20h de 'supervisión de la supervisión' con Trainer o Supervisor Sénior AIBAPT.",
-        "Pago previo: 40 € vía PayPal a financiero@aibapt.org — Adjunta el comprobante en el Paso 2."
+        "Requisito: Registro de 300 sesiones propias.",
+        "Pago previo: 40 € vía PayPal a financiero@aibapt.org."
       ],
       pt: [
         "Requisito: Certificado de Psicoterapeuta EMDR Certificado (ou Sênior) vigente da AIBAPT.",
         "Requisito: Certificado de aprovação do Exame Teórico de Supervisão.",
-        "Requisito: Registro de 300 fichas de sessões de EMDR.",
-        "Requisito: Registro de 20h de 'supervisão da supervisão' com Trainer ou Supervisor Sênior AIBAPT.",
-        "Pagamento prévio: 40 € via PayPal a financiero@aibapt.org — Anexe o comprovante no Passo 2."
+        "Requisito: Registro de 300 sessões próprias.",
+        "Pagamento prévio: 40 € via PayPal a financiero@aibapt.org."
       ]
     },
     descargas: [
-      { label_es: "Formulario de Solicitud de Supervisor EMDR", label_pt: "Formulário de Solicitação de Supervisor EMDR", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_supervisor", label_pt: "file.solicitud_supervisor", url_es: "#", url_pt: "#" },
+      { label_es: "file.registro_horas_supervision", label_pt: "file.registro_horas_supervision", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "cert_examen_teorico", label: { es: "Certificado de Aprobación del Examen Teórico", pt: "Certificado de Aprovação do Exame Teórico" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "registro_300_fichas", label: { es: "Registro de 300 Fichas de Sesiones", pt: "Registro de 300 Fichas de Sessões" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "registro_sup_supervision_20h", label: { es: "Registro de 20h de Supervisión de la Supervisión", pt: "Registro de 20h de Supervisão da Supervisão" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago (40 €)", pt: "Comprovante de Pagamento (40 €)" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "cert_examen_teorico", label: { es: "file.certificado_examen_teorico", pt: "file.certificado_examen_teorico" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "registro_300_sesiones", label: { es: "file.registro_300_sesiones", pt: "file.registro_300_sesiones" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "emdr_sup_senior": {
@@ -395,25 +425,26 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
     instrucciones_leer: {
       es: [
         "Requisito: Certificado vigente de Supervisor EMDR Certificado AIBAPT.",
-        "Requisito: Registro de mínimo 100h de supervisión efectiva dadas a otros terapeutas.",
-        "Requisito: 3 casos de orientación por escrito completamente supervisados.",
-        "Pago previo: 50 € vía PayPal a financiero@aibapt.org — Adjunta el comprobante en el Paso 2."
+        "Requisito: Registro de 300 sesiones propias.",
+        "Requisito: Registro de 100h de supervisión dadas a otros (Sénior).",
+        "Pago previo: 50 € vía PayPal a financiero@aibapt.org."
       ],
       pt: [
         "Requisito: Certificado vigente de Supervisor EMDR Certificado AIBAPT.",
-        "Requisito: Registro de mínimo 100h de supervisão efetiva realizadas a outros terapeutas.",
-        "Requisito: 3 casos de orientação por escrito completamente supervisionados.",
-        "Pagamento prévio: 50 € via PayPal a financiero@aibapt.org — Anexe o comprovante no Passo 2."
+        "Requisito: Registro de 300 sessões próprias.",
+        "Requisito: Registro de 100h de supervisão realizadas a outros (Sênior).",
+        "Pagamento prévio: 50 € via PayPal a financiero@aibapt.org."
       ]
     },
     descargas: [
-      { label_es: "Formulario de Solicitud de Supervisor Sénior", label_pt: "Formulário de Solicitação de Supervisor Sênior", url_es: "#", url_pt: "#" },
-      { label_es: "Plantilla de Registro de Supervisados", label_pt: "Modelo de Registro de Supervisionados", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_supervisor", label_pt: "file.solicitud_supervisor", url_es: "#", url_pt: "#" },
+      { label_es: "file.registro_horas_supervision", label_pt: "file.registro_horas_supervision", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "registro_100h_supervision", label: { es: "Registro de 100h de Supervisión Dadas", pt: "Registro de 100h de Supervisão Realizadas" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "casos_orientacion_escrito", label: { es: "3 Casos de Orientación por Escrito", pt: "3 Casos de Orientação por Escrito" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago (50 €)", pt: "Comprovante de Pagamento (50 €)" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "cert_examen_teorico", label: { es: "file.certificado_examen_teorico", pt: "file.certificado_examen_teorico" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "registro_300_sesiones", label: { es: "file.registro_300_sesiones", pt: "file.registro_300_sesiones" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "registro_100h_supervision_dadas", label: { es: "file.registro_100h_supervision_dadas", pt: "file.registro_100h_supervision_dadas" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "renovacion_cert_emdr": {
@@ -440,13 +471,13 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
       ]
     },
     descargas: [
-      { label_es: "Formulario de Renovación de Certificación EMDR", label_pt: "Formulário de Renovação de Certificação EMDR", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_certificacion", label_pt: "file.solicitud_certificacion", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "formulario_solicitud", label: { es: "Formulario de Renovación", pt: "Formulário de Renovação" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "portafolio_creditos", label: { es: "Portafolio de Créditos (Diplomas de 12 créditos)", pt: "Portfólio de Créditos (Diplomas de 12 créditos)" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
-      { name: "declaracion_etica", label: { es: "Declaración Ética (No tener sanciones)", pt: "Declaração Ética (Não ter sanções)" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago", pt: "Comprovante de Pagamento" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "formulario_solicitud", label: { es: "file.solicitud_certificacion", pt: "file.solicitud_certificacion" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "portafolio_creditos", label: { es: "file.portafolio_cca", pt: "file.portafolio_cca" }, typeLabel: "PDF o ZIP", validator: FileValidators.pdfOrZip },
+      { name: "declaracion_etica", label: { es: "tramite.trauma.field.etica", pt: "tramite.trauma.field.etica" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "equivalencia_cert_emdr": {
@@ -463,23 +494,20 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
     instrucciones_leer: {
       es: [
         "Acreditar el cumplimiento de normas de validación de credenciales externas de AIBAPT.",
-        "Presentar copia vigente del certificado por la otra asociación (ej. EMDRIA, EMDR Iberoamérica).",
-        "Disponer del aval de membresía de AIBAPT."
+        "Presentar copia de la certificación externa y aval de membresía."
       ],
       pt: [
         "Acreditar o cumprimento das normas de validação de credenciais externas da AIBAPT.",
-        "Apresentar cópia vigente do certificado pela outra associação (ex. EMDRIA, EMDR Iberoamérica).",
-        "Ter o aval de membro da AIBAPT."
+        "Apresentar cópia da certificação externa e aval de membro."
       ]
     },
     descargas: [
-      { label_es: "Formulario de Solicitud de Equivalencia de Certificación", label_pt: "Formulário de Solicitação de Equivalência de Certificação", url_es: "#", url_pt: "#" }
+      { label_es: "file.solicitud_certificacion", label_pt: "file.solicitud_certificacion", url_es: "#", url_pt: "#" }
     ],
     fields: [
-      { name: "formulario_solicitud", label: { es: "Formulario de Equivalencia", pt: "Formulário de Equivalência" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "certificado_externo", label: { es: "Copia de Certificado de otra asociación", pt: "Cópia do Certificado de outra associação" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "aval_membresia", label: { es: "Aval de membresía de AIBAPT", pt: "Aval de membro da AIBAPT" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago", pt: "Comprovante de Pagamento" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "formulario_solicitud", label: { es: "file.solicitud_certificacion", pt: "file.solicitud_certificacion" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "certificado_externo", label: { es: "tramite.emdr.field.cert_ext", pt: "tramite.emdr.field.cert_ext" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "cert_psicotrauma": {
@@ -490,15 +518,16 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
     monto: [
       { id: 'trauma_default', label: { es: "Certificación Individual", pt: "Certificação Individual" }, monto: 20, description: { es: "Evaluación de caso clínico.", pt: "Avaliação de caso clínico." } }
     ],
+    requiresMembership: true,
     instrucciones_leer: {
       es: ["Caso Clínico (Máx 20 págs)", "Declaración de Ética"],
       pt: ["Caso Clínico (Máx 20 págs)", "Declaração de Ética"]
     },
     descargas: [],
     fields: [
-      { name: "caso_clinico", label: { es: "Caso Clínico", pt: "Caso Clínico" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "declaracion_etico", label: { es: "Declaración de Ética", pt: "Declaração de Ética" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago", pt: "Comprovante de Pagamento" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "caso_clinico", label: { es: "tramite.trauma.field.caso", pt: "tramite.trauma.field.caso" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "declaracion_etico", label: { es: "tramite.trauma.field.etica", pt: "tramite.trauma.field.etica" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   },
   "equivalencia_basica": {
@@ -507,18 +536,19 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
     title: { es: "Equivalencia Básica", pt: "Equivalência Básica" },
     description: { es: "Convalidación de cursos externos.", pt: "Convalidação de cursos externos." },
     monto: [
-      { id: 'equiv_alumno', label: { es: "Equivalencia Alumno", pt: "Equivalência Aluno" }, monto: 20, description: { es: "Convalidación para alumnos.", pt: "Convalidação para alunos." } },
+      { id: 'equiv_alumno', label: { es: "Equivalencia Alumno", pt: "Equivalência Aluno" }, monto: 20, description: { es: "Convalidación para alumnos.", pt: "Convalidação para alumnos." } },
       { id: 'equiv_formador', label: { es: "Equivalencia Formador", pt: "Equivalência Formador" }, monto: 50, description: { es: "Convalidación para formadores.", pt: "Convalidação para formadores." } }
     ],
+    requiresMembership: true,
     instrucciones_leer: {
       es: ["Programa del curso externo", "Evidencia de duración"],
       pt: ["Programa do curso externo", "Evidência de duração"]
     },
     descargas: [],
     fields: [
-      { name: "programa_curso", label: { es: "Programa del Curso", pt: "Programa do Curso" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "evidencia_duracion", label: { es: "Evidencia de Duración", pt: "Evidência de Duração" }, typeLabel: "PDF", validator: FileValidators.pdf },
-      { name: "comprobante_pago", label: { es: "Comprobante de Pago", pt: "Comprovante de Pagamento" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
+      { name: "programa_curso", label: { es: "tramite.equiv_basica.field.programa", pt: "tramite.equiv_basica.field.programa" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "evidencia_duracion", label: { es: "tramite.equiv_basica.field.duracion", pt: "tramite.equiv_basica.field.duracion" }, typeLabel: "PDF", validator: FileValidators.pdf },
+      { name: "comprobante_pago", label: { es: "tramite.emdr.field.pago", pt: "tramite.emdr.field.pago" }, typeLabel: "PDF o Imagen", validator: FileValidators.pdfOrImage }
     ]
   }
 };

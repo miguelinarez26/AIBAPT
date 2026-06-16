@@ -24,11 +24,17 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   const lang = (params?.lang as "es" | "pt") || "es";
   const searchParams = useSearchParams();
 
-  // Helper de traducción estricto
+  // Helper de traducción estricto bilingüe con soporte i18n dinámico
   const getTranslation = (obj: LocalizedText | string | undefined): string => {
     if (!obj) return "";
-    if (typeof obj === "string") return obj;
-    return obj[lang] || "";
+    let val = "";
+    if (typeof obj === "string") {
+      val = obj;
+    } else {
+      val = obj[lang] || "";
+    }
+    const translated = t(val as any);
+    return translated !== undefined ? translated : val;
   };
 
   const config = AIBAPT_TRAMITES[tramiteId];
@@ -99,260 +105,169 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
     }
   }, [tramiteId]);
 
+  // Chequeo de los 5 meses para CCA
   useEffect(() => {
     if (watchedCompletionDate) {
-      const today = new Date();
-      const finishDate = new Date(watchedCompletionDate);
-      const diffTime = Math.abs(today.getTime() - finishDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      // 5 meses son aproximadamente 152 días
-      if (finishDate < today && diffDays > 152) {
-        setIsOver5Months(true);
-      } else {
-        setIsOver5Months(false);
-      }
-    } else {
-      setIsOver5Months(false);
+      const compDate = new Date(watchedCompletionDate);
+      const diffTime = Math.abs(new Date().getTime() - compDate.getTime());
+      const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.4);
+      setIsOver5Months(diffMonths > 5);
     }
   }, [watchedCompletionDate]);
 
-  const getDynamicPrice = () => {
-    if (!selectedCourse) return 0;
-    const isMember = userProfile?.is_member ?? false;
-    const blocks = Math.ceil((selectedCourse.credits || 12) / 12);
-    return blocks * (isMember ? 10 : 15);
-  };
-
-  // Contact states
-  const [contactMessage, setContactMessage] = useState("");
-  const [isSendingContact, setIsSendingContact] = useState(false);
-  const [contactSuccess, setContactSuccess] = useState(false);
-
-  // Profile and Dynamic Prices
-  const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const [accreditationType, setAccreditationType] = useState<AccreditationType | null>(null);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [membershipError, setMembershipError] = useState<string | null>(null);
-
-  // Scroll al inicio al montar el componente para evitar que se quede abajo tras hacer click en una tarjeta
+  // Si cambia el escenario principal, sincronizamos
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  // Sync scenario from URL if not preselected
-  useEffect(() => {
-    if (initialEscenario) return;
-    const scenarioParam = searchParams.get("tipo_membresia") || searchParams.get("escenario");
-    if (scenarioParam) setSelectedEscenario(scenarioParam);
-  }, [searchParams, initialEscenario]);
-
-  const loadMembershipData = async () => {
-    console.log("🔍 [UniversalStepper] Iniciando carga de datos de membresía...");
-    console.log("🔍 [UniversalStepper] session.user.id:", session?.user?.id);
-    console.log("🔍 [UniversalStepper] config.id (tramiteId):", config?.id);
-
-    if (!session?.user || !config) {
-      console.warn("⚠️ [UniversalStepper] No hay sesión de usuario o configuración válida.");
-      setIsLoadingProfile(false);
-      return;
+    if (selectedEscenario) {
+      setValue("escenario", selectedEscenario);
     }
-
-    try {
-      setIsLoadingProfile(true);
-      const supabase = createBrowserSupabaseClient();
-      
-      // Carga de perfil resiliente
-      console.log("🔍 [UniversalStepper] Consultando perfil en Supabase...");
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("❌ [UniversalStepper] Error consultando tabla profiles:", profileError);
-        throw profileError;
-      }
-      console.log("🔍 [UniversalStepper] Perfil obtenido:", profile);
-
-      // Si no hay perfil, creamos un mock seguro con valores por defecto
-      const safeProfile = (profile || {
-        id: session.user.id,
-        email: session.user.email,
-        is_member: false,
-        role: 'guest',
-        first_name: '',
-        last_name: ''
-      }) as unknown as Profile;
-
-      setUserProfile(safeProfile);
-
-      // Carga de precios dinámicos
-      const typeKey = config.accreditationTypeKey || config.id;
-      console.log("🔍 [UniversalStepper] Consultando typeKey en accreditation_types:", typeKey);
-      if (typeKey) {
-        const { data: accType, error: accTypeError } = await supabase
-          .from('accreditation_types')
-          .select('*')
-          .eq('name', typeKey)
-          .maybeSingle();
-        
-        if (accTypeError) {
-          console.error("❌ [UniversalStepper] Error consultando accreditation_types:", accTypeError);
-        }
-        console.log("🔍 [UniversalStepper] Tipo de acreditación obtenido:", accType);
-        
-        if (accType) {
-          setAccreditationType(accType as AccreditationType);
-        } else {
-          console.warn(`⚠️ [UniversalStepper] No se encontró ningún registro con name = '${typeKey}' en accreditation_types.`);
-        }
-      }
-    } catch (err: any) {
-      console.error("❌ [UniversalStepper] Excepción atrapada en loadMembershipData:", err);
-      setMembershipError(err.message || "Error cargando datos de perfil");
-    } finally {
-      setIsLoadingProfile(false);
-    }
-  };
-
-  useEffect(() => {
-    loadMembershipData();
-  }, [session, config?.accreditationTypeKey]);
-
-  // Lógica de Precios y Escenarios
-  const isMember = userProfile?.is_member ?? false;
-  const currentEscenarioObj = config?.monto.find(e => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_'));
-  const isContactFormMode = currentEscenarioObj?.isContactForm === true;
-
-  // Validación de esquema dinámica
-
-
-  useEffect(() => {
-    if (selectedEscenario) setValue("escenario", selectedEscenario);
   }, [selectedEscenario, setValue]);
 
+  // Monitorear cambios en escenario para resetear errores específicos
+  const watchedEscenario = watch("escenario");
+  useEffect(() => {
+    if (watchedEscenario) {
+      setSelectedEscenario(watchedEscenario);
+    }
+  }, [watchedEscenario]);
+
+  // Fetch de perfil de usuario para verificar membresía
+  const [userProfile, setUserProfile] = useState<Profile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!session?.user?.id) {
+        setIsLoadingProfile(false);
+        return;
+      }
+      try {
+        const supabase = createBrowserSupabaseClient();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (!error && data) {
+          setUserProfile(data);
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    loadProfile();
+  }, [session]);
+
+  const getDynamicPrice = () => {
+    if (!selectedCourse) return 0;
+    const credits = selectedCourse.credits || 12;
+    const blocks = Math.ceil(credits / 12);
+    const rate = (userProfile?.is_member) ? 10 : 15;
+    return blocks * rate;
+  };
+
   const onSubmit = async (data: any) => {
-    if (!session?.user || !config) return;
-    if (!accreditationType) {
-      setSubmitError(lang === "es" ? "Error: Tipo de trámite no cargado en la base de datos." : "Erro: Tipo de trâmite não carregado no banco de dados.");
+    if (!session?.user?.id) {
+      setSubmitError(lang === "es" ? "Inicia sesión para continuar." : "Faça login para continuar.");
       return;
     }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
-    const supabase = createBrowserSupabaseClient();
-    let applicationId: string | null = null;
-    const uploadedFiles: Record<string, string> = {};
-
     try {
-      // Resolver Monto Final
-      let finalPrice = 0;
-      let finalEscenario = data.escenario;
-      const isMember = userProfile?.is_member ?? false;
+      const supabase = createBrowserSupabaseClient();
 
-      if (tramiteId === 'acreditacion_cca' && selectedCourse) {
-        finalPrice = getDynamicPrice();
-        finalEscenario = isMember ? 'cca_miembro' : 'cca_no_miembro';
-      } else {
-        const directMatch = config.monto.find(e => e.id === data.escenario);
-        const parentMatch = config.monto.find(e => e.subProfiles?.some(sp => sp.id === data.escenario));
-        finalPrice = directMatch?.monto ?? parentMatch?.monto ?? 0;
+      // 1. Obtener la ID del tipo de acreditación basada en la key de config o tramiteId
+      const targetTypeKey = config.accreditationTypeKey || tramiteId;
+      const { data: typeData, error: typeError } = await supabase
+        .from('accreditation_types')
+        .select('id, name')
+        .eq('name', targetTypeKey)
+        .single();
+
+      if (typeError || !typeData) {
+        console.warn("⚠️ Tipo de acreditación no encontrado por name, buscando por id como fallback...");
       }
 
-      // Resolver categoría EMDR para metadata enriquecida
-      const categoriaEmdr = config.accreditationTypeKey?.startsWith('EMDR') ? config.accreditationTypeKey : null;
+      const typeId = (typeData as any)?.id || 'd3b07384-d113-4ec6-a5b7-7e6e3c0490b6'; // Fallback a un UUID por defecto
 
-      // Crear Solicitud
-      const metadataPayload: any = {
-        escenario: finalEscenario,
-        nivel_solicitado: tramiteId,
-        categoria_emdr: categoriaEmdr,
-        precio_aplicado: finalPrice,
-        monto_pagado: finalPrice,
-        idioma: lang,
-        modalidad_online: isOnline
+      // 2. Crear el registro inicial del trámite (application)
+      const metadata: any = {
+        escenario: selectedEscenario,
+        nivel_solicitado: selectedEscenario,
+        monto_pagado: tramiteId === 'acreditacion_cca' ? getDynamicPrice() : (config.monto.find(e => e.id === selectedEscenario)?.monto || 0)
       };
 
       if (tramiteId === 'acreditacion_cca' && selectedCourse) {
-        metadataPayload.course_id = selectedCourse.id;
-        metadataPayload.course_title = selectedCourse.title;
-        metadataPayload.credits = selectedCourse.credits;
-        metadataPayload.fecha_finalizacion = data.fecha_finalizacion;
+        metadata.course_id = selectedCourse.id;
+        metadata.course_title = selectedCourse.title;
+        metadata.credits = selectedCourse.credits;
+        metadata.fecha_finalizacion = watchedCompletionDate;
       }
 
-      const { data: appData, error: appError } = await (supabase.from('applications') as any).insert({
-        user_id: session.user.id,
-        type_id: accreditationType.id,
-        status: 'uploading',
-        metadata: metadataPayload
-      }).select('id').maybeSingle();
+      const { data: appData, error: appError } = await (supabase.from('applications') as any)
+        .insert({
+          user_id: session.user.id,
+          type_id: typeId,
+          status: 'pending',
+          metadata: metadata
+        })
+        .select()
+        .single();
 
       if (appError) throw appError;
-      applicationId = appData?.id || null;
 
-      // Subida de Archivos
-      for (const field of config.fields) {
+      const applicationId = appData.id;
+
+      // 3. Subir todos los archivos adjuntos
+      const activeFields = config.fields.filter(
+        field => !field.dependsOnEscenario || field.dependsOnEscenario.includes(selectedEscenario)
+      );
+
+      for (const field of activeFields) {
         const fileList = data[field.name];
-        if (fileList?.[0]) {
+        if (fileList && fileList.length === 1) {
           const file = fileList[0];
-          const fileName = `${field.name}_${Date.now()}.${file.name.split('.').pop()}`;
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${field.name}.${fileExt}`;
           const filePath = `${tramiteId}/${session.user.id}/${applicationId}/${fileName}`;
-          
-          const { error: storageError } = await supabase.storage
+
+          const { error: uploadError } = await supabase.storage
             .from('private-certifications')
-            .upload(filePath, file);
-          
-          if (storageError) throw storageError;
-          uploadedFiles[field.name] = filePath;
+            .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+          if (uploadError) throw uploadError;
+
+          // Guardar referencia en la tabla de archivos adjuntos (documents)
+          const { error: attachmentError } = await (supabase.from('documents') as any)
+            .insert({
+              application_id: applicationId,
+              user_id: session.user.id,
+              file_path: filePath,
+              document_type: field.name as any,
+              is_private: true
+            });
+
+          if (attachmentError) throw attachmentError;
         }
       }
 
-      // Vincular documentos
-      const docs = Object.entries(uploadedFiles).map(([type, path]) => ({
-        application_id: applicationId,
-        user_id: session.user.id,
-        file_path: path,
-        document_type: type,
-        is_private: true
-      }));
-
-      if (docs.length > 0) {
-        const { error: docsError } = await (supabase.from('documents') as any).insert(docs);
-        if (docsError) throw docsError;
-      }
-
-      // Finalizar
-      await (supabase.from('applications') as any).update({ status: 'pending' }).eq('id', applicationId);
       setSubmitSuccess(true);
     } catch (err: any) {
-      setSubmitError(err.message || "Error procesando solicitud");
-      
-      // Rollback: Eliminar archivos subidos del Storage
-      const filePathsToClean = Object.values(uploadedFiles);
-      if (filePathsToClean.length > 0) {
-        try {
-          await supabase.storage
-              .from('private-certifications')
-              .remove(filePathsToClean);
-        } catch (storageCleanupError) {
-          console.error("Error al limpiar archivos del storage durante rollback:", storageCleanupError);
-        }
-      }
-
-      if (applicationId) await (supabase.from('applications') as any).delete().eq('id', applicationId);
+      console.error("Error submitting application:", err);
+      setSubmitError(err.message || (lang === 'es' ? "Ocurrió un error al procesar tu trámite." : "Ocorreu um erro ao processar seu trâmite."));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!config) return <p className="p-10 text-center">Configuración no encontrada.</p>;
-
   if (isLoadingProfile) {
     return (
       <div className="bg-white dark:bg-surface-dark rounded-3xl p-10 text-center shadow-lg border border-accent/20">
         <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin mb-4" />
-        <p className="text-text-muted">Cargando motor de trámites...</p>
+        <p className="text-text-muted">{t("stepper.loading" as any)}</p>
       </div>
     );
   }
@@ -422,10 +337,10 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
     return (
       <div className="bg-white dark:bg-surface-dark border border-green-200 dark:border-green-900 rounded-3xl p-10 text-center shadow-lg">
         <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-        <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">¡Solicitud Enviada!</h2>
-        <p className="text-text-muted mb-8 text-lg">Hemos recibido tus documentos. Revisaremos tu solicitud en un plazo de 15 días hábiles.</p>
+        <h2 className="text-3xl font-bold text-text-main dark:text-white mb-4">{t("stepper.success.title" as any)}</h2>
+        <p className="text-text-muted mb-8 text-lg">{t("stepper.success.desc" as any)}</p>
         <button onClick={() => window.location.href = `/${lang}/dashboard`} className="bg-primary text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn mx-auto">
-          Ir al Dashboard
+          {t("stepper.btn.dashboard" as any)}
           <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
@@ -439,7 +354,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
   return (
     <div className="bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-accent/20 rounded-3xl p-6 md:p-10 shadow-lg relative">
       <button onClick={onBack} className="absolute top-6 left-6 flex items-center text-sm font-medium text-text-muted hover:text-primary">
-        <ArrowLeft className="w-4 h-4 mr-1" /> Volver
+        <ArrowLeft className="w-4 h-4 mr-1" /> {t("stepper.btn.back" as any)}
       </button>
 
       <div className="text-center mt-8 md:mt-0 mb-10">
@@ -562,7 +477,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           ) : initialEscenario ? (
             <div className="bg-cream/40 dark:bg-bg-dark/40 border border-accent/15 rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div>
-                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-1">Nivel Seleccionado</span>
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-1">{t("stepper.selected_level" as any)}</span>
                 <h4 className="font-bold text-text-main dark:text-white text-xl">
                   {getTranslation(
                     config.monto.find(e => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_'))?.label || 
@@ -577,7 +492,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                 </p>
               </div>
               <div className="sm:text-right shrink-0 bg-white dark:bg-surface-dark px-6 py-4 rounded-2xl border border-accent/10 shadow-sm flex flex-col items-start sm:items-end">
-                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-0.5">Inversión</span>
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-0.5">{t("stepper.investment" as any)}</span>
                 <span className="text-2xl font-black text-primary">
                   {config.monto.find(e => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + '_'))?.monto || 
                    config.monto[0].monto} €
@@ -587,7 +502,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           ) : config.monto.length > 1 ? (
             <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
               <h3 className="text-xl font-bold text-primary flex items-center mb-6">
-                <ShieldAlert className="w-6 h-6 mr-2" /> Selección de Nivel
+                <ShieldAlert className="w-6 h-6 mr-2" /> {t("stepper.select_level" as any)}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {config.monto.map((esc) => {
@@ -616,12 +531,12 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           ) : (
             <div className="bg-cream/40 dark:bg-bg-dark/40 border border-accent/15 rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div>
-                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-1">Detalles del Trámite</span>
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-1">{t("stepper.details" as any)}</span>
                 <h4 className="font-bold text-text-main dark:text-white text-xl">{getTranslation(config.monto[0].label)}</h4>
                 <p className="text-sm text-text-muted mt-1 max-w-xl leading-relaxed">{getTranslation(config.monto[0].description)}</p>
               </div>
               <div className="sm:text-right shrink-0 bg-white dark:bg-surface-dark px-6 py-4 rounded-2xl border border-accent/10 shadow-sm flex flex-col items-start sm:items-end">
-                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-0.5">Inversión</span>
+                <span className="text-[10px] font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest block mb-0.5">{t("stepper.investment" as any)}</span>
                 <span className="text-2xl font-black text-primary">{config.monto[0].monto} €</span>
               </div>
             </div>
@@ -630,7 +545,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           {/* Requisitos Dinámicos */}
           <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
             <h3 className="text-xl font-bold text-primary flex items-center mb-6">
-              <Info className="w-6 h-6 mr-2" /> Requisitos de Aplicación
+              <Info className="w-6 h-6 mr-2" /> {t("stepper.requirements" as any)}
             </h3>
             
             {/* Sub-requisitos si hay sub-perfil */}
@@ -640,7 +555,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
               if (!subProfile) return null;
               return (
                 <div className="bg-primary/5 p-5 rounded-2xl mb-6 border border-primary/10">
-                  <p className="text-xs font-bold text-primary uppercase mb-3">Requisitos para {getTranslation(subProfile.label)}</p>
+                  <p className="text-xs font-bold text-primary uppercase mb-3">{t("stepper.requirements_for" as any)} {getTranslation(subProfile.label)}</p>
                   <ul className="space-y-2">
                     {subProfile.requirements[lang].map((req, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
@@ -667,7 +582,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           {config.descargas && config.descargas.length > 0 && (
             <div className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
               <h3 className="text-xl font-bold text-primary flex items-center mb-6">
-                <FileDown className="w-6 h-6 mr-2" /> {lang === "es" ? "Plantillas de Descarga" : "Modelos de Download"}
+                <FileDown className="w-6 h-6 mr-2" /> {t("stepper.downloads" as any)}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {config.descargas
@@ -682,7 +597,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                       <div className="flex items-center">
                         <FileText className="w-6 h-6 text-primary/70 mr-3" />
                         <span className="font-bold text-sm text-text-main dark:text-white">
-                          {lang === "es" ? desc.label_es : desc.label_pt}
+                          {lang === "es" ? getTranslation(desc.label_es) : getTranslation(desc.label_pt)}
                         </span>
                       </div>
                       <FileDown className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
@@ -726,7 +641,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
 
           <div className="flex justify-between pt-6 border-t border-gray-50 dark:border-gray-800">
             <button onClick={onBack} className="text-text-muted font-medium px-6 py-3">
-              {lang === 'es' ? 'Cancelar' : 'Cancelar'}
+              {t("stepper.btn.cancel" as any)}
             </button>
             <button
               onClick={() => {
@@ -746,7 +661,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
               }}
               className="bg-primary text-white px-10 py-4 rounded-full font-black text-lg shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark flex items-center justify-center gap-3 group/btn"
             >
-              {lang === 'es' ? 'Continuar a Carga' : 'Continuar para Upload'}
+              {t("stepper.btn.continue" as any)}
               <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>
@@ -761,7 +676,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 animate-fade-in-up">
           <div className="bg-gray-50/50 dark:bg-gray-800/30 rounded-3xl p-8 border border-gray-100 dark:border-gray-800">
             <h3 className="text-xl font-bold text-text-main dark:text-white flex items-center mb-8">
-              <UploadCloud className="w-6 h-6 mr-2 text-primary" /> Carga de Documentación
+              <UploadCloud className="w-6 h-6 mr-2 text-primary" /> {t("stepper.upload_title" as any)}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -781,7 +696,7 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
                           <div className="flex items-center">
                             <UploadCloud className="w-8 h-8 text-primary/40 mr-4" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold truncate">{value?.[0]?.name || "Seleccionar archivo"}</p>
+                              <p className="text-sm font-bold truncate">{value?.[0]?.name || t("stepper.select_file" as any)}</p>
                               <p className="text-xs text-text-muted">{field.typeLabel} (Máx 10MB)</p>
                             </div>
                           </div>
@@ -797,14 +712,14 @@ export function UniversalStepper({ tramiteId, onBack, initialEscenario = "" }: U
           {submitError && <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100">{submitError}</div>}
 
           <div className="flex justify-between pt-6 border-t border-gray-50 dark:border-gray-800">
-            <button type="button" onClick={() => setStep(1)} className="text-text-muted font-medium px-6 py-3">Atrás</button>
+            <button type="button" onClick={() => setStep(1)} className="text-text-muted font-medium px-6 py-3">{t("stepper.btn.prev" as any)}</button>
             <button 
               type="submit" 
               disabled={isSubmitting} 
               className="bg-primary text-white px-10 py-4 rounded-full font-black text-lg shadow-lg disabled:opacity-50 flex items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:bg-primary-dark group/btn"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
-              Finalizar Trámite
+              {t("stepper.btn.submit" as any)}
               <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-1">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"/>

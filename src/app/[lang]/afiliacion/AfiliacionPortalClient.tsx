@@ -64,6 +64,15 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
     }
     setError(null);
 
+    // Redireccionar si es formulario de contacto (Miembro Bienhechor / Simpatizante)
+    const selectedScenarioObj = config?.monto.find(
+      (e) => e.id === selectedEscenario || selectedEscenario.startsWith(e.id + "_")
+    );
+    if (selectedScenarioObj?.isContactForm) {
+      router.push(`/${lang}/contacto`);
+      return;
+    }
+
     if (!session) {
       const redirectPath = `/${lang}/afiliacion`;
       router.push(`/${lang}/registro?redirectTo=${encodeURIComponent(redirectPath)}`);
