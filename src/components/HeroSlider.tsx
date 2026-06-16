@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { assetPath } from "@/lib/assets";
 
@@ -43,6 +44,7 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
         { text: t.s1_l2, bg: "bg-accent", ml: "ml-12 md:ml-32" },
         { text: t.s1_l3, ml: "ml-6 md:ml-16" }
       ],
+      button: { text: lang === 'pt' ? "Afilie-se Agora" : "Afíliate Ahora", href: `/${lang}/afiliacion` },
       align: "left"
     },
     {
@@ -53,6 +55,7 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
         { text: t.s2_l2, mr: "mr-8 md:mr-20" },
         { text: t.s2_l3, bg: "bg-accent", mr: "mr-4 md:mr-10" }
       ],
+      button: { text: lang === 'pt' ? "Ver Cursos" : "Ver Formaciones", href: `/${lang}/formaciones` },
       align: "right"
     },
     {
@@ -62,6 +65,7 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
         { text: t.s3_l1, bg: "bg-accent" },
         { text: t.s3_l2, ml: "ml-8 md:ml-20" }
       ],
+      button: { text: lang === 'pt' ? "Saber Mais" : "Más Información", href: `/${lang}/formaciones` },
       align: "left"
     }
   ];
@@ -112,6 +116,22 @@ export default function HeroSlider({ lang: propLang }: { lang?: 'es' | 'pt' }) {
               </h1>
             </div>
           ))}
+          
+          {/* Call to Action Button */}
+          {slides[activeSlide].button && (
+            <div 
+              className={`mt-10 animate-fade-in-up ${slides[activeSlide].align === 'right' ? 'mr-4 md:mr-10' : 'ml-6 md:ml-16'}`} 
+              style={{ animationDelay: `${slides[activeSlide].lines.length * 150 + 300}ms`, animationFillMode: 'both' }}
+            >
+              <Link 
+                href={slides[activeSlide].button.href} 
+                className="bg-accent text-white font-serif text-xl md:text-2xl px-12 py-4 rounded-full shadow-[0_10px_30px_rgba(217,88,88,0.4)] hover:bg-white hover:text-accent hover:-translate-y-1 hover:scale-105 transition-all duration-300 inline-flex items-center gap-4 group"
+              >
+                {slides[activeSlide].button.text}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-300 group-hover:translate-x-2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
