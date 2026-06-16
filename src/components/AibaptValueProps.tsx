@@ -39,7 +39,7 @@ export default function AibaptValueProps() {
       <div className="max-w-[1280px] mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-20">
           {/* @ts-ignore */}
-          <p className="text-white/80 text-[13px] font-bold tracking-[0.2em] uppercase mb-4">{t("benefits.badge")}</p>
+          <p className="text-accent text-[13px] font-bold tracking-[0.2em] uppercase mb-4">{t("benefits.badge")}</p>
           <h2 className="text-4xl md:text-[56px] font-serif text-white leading-[1.1] mb-6">
             {/* @ts-ignore */}
             {t("benefits.title")}
