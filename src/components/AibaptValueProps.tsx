@@ -87,7 +87,7 @@ export default function AibaptValueProps() {
         </div>
         
         <div className="mt-12 text-center">
-           <Link href={`/${lang}/afiliacion`} className="bg-secondary text-white pl-8 pr-3 py-3 rounded-full font-bold hover:bg-accent transition-colors shadow-sm text-[15px] inline-flex items-center gap-4 group hover:-translate-y-1 transform duration-300">
+           <Link href={`/${lang}/afiliacion`} className="bg-accent text-white pl-8 pr-3 py-3 rounded-full font-bold hover:bg-accent-light transition-all duration-300 shadow-md hover:shadow-lg text-[15px] inline-flex items-center gap-4 group hover:-translate-y-1 transform">
               {/* @ts-ignore */}
               {t("benefits.btn")} 
               <span className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover:translate-x-1">
