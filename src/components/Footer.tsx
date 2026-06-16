@@ -31,13 +31,13 @@ export default function Footer() {
               </Link>
               {/* Social Media Links */}
               <div className="flex gap-3.5 mt-8">
-                <a href="https://www.facebook.com/AIBAPT/" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white border border-accent hover:bg-white hover:text-accent transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="Facebook" translate="no">
+                <a href="https://www.facebook.com/AIBAPT/" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white hover:bg-accent-light hover:scale-110 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/30 transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="Facebook" translate="no">
                   <FiFacebook className="w-4.5 h-4.5" />
                 </a>
-                <a href="https://www.instagram.com/aibapt" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white border border-accent hover:bg-white hover:text-accent transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="Instagram" translate="no">
+                <a href="https://www.instagram.com/aibapt" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white hover:bg-accent-light hover:scale-110 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/30 transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="Instagram" translate="no">
                   <FiInstagram className="w-4.5 h-4.5" />
                 </a>
-                <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white border border-accent hover:bg-white hover:text-accent transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="YouTube" translate="no">
+                <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" className="notranslate bg-accent text-white hover:bg-accent-light hover:scale-110 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/30 transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center" aria-label="YouTube" translate="no">
                   <FiYoutube className="w-4.5 h-4.5" />
                 </a>
               </div>
