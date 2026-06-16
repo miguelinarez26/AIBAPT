@@ -19,34 +19,73 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export default function DashboardClient({ profile, applications = [], lang }: any) {
+export default function DashboardClient({ profile: initialProfile, applications: initialApplications = [], lang }: any) {
   const { user } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const t = translations[lang as 'es' | 'pt'] as Record<string, string>;
   const [credits, setCredits] = useState<any[]>([]);
   const [isLoadingCredits, setIsLoadingCredits] = useState(true);
+  const [profile, setProfile] = useState<any>(initialProfile);
+  const [applications, setApplications] = useState<any[]>(initialApplications);
 
   useEffect(() => {
     setMounted(true);
-    const fetchCredits = async () => {
-      try {
-        const { createBrowserSupabaseClient } = await import('@/lib/supabase/client');
-        const supabase = createBrowserSupabaseClient();
-        const { data, error } = await supabase
-          .from('user_credits')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (!error && data) {
-          setCredits(data);
-        }
-      } catch (err) {
-        console.error("Error fetching credits:", err);
-      } finally {
-        setIsLoadingCredits(false);
+
+    const loadData = async () => {
+      const { createBrowserSupabaseClient } = await import('@/lib/supabase/client');
+      const supabase = createBrowserSupabaseClient();
+
+      // Auth guard
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !currentUser) {
+        router.push(`/${lang}/login?redirectTo=/${lang}/dashboard`);
+        return;
       }
+
+      // Fetch profile
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      const profileData = data as any;
+
+      if (!profileData || !profileData.first_name?.trim()) {
+        router.push(`/${lang}/onboarding`);
+        return;
+      }
+      setProfile(profileData);
+
+      // Fetch applications
+      const { data: appsData } = await supabase
+        .from('applications')
+        .select('*, accreditation_types(name)')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (appsData) {
+        const mapped = appsData.map((app: any) => ({
+          ...app,
+          accreditation_type_name: app.accreditation_types?.name || 'Desconocido',
+        }));
+        setApplications(mapped);
+      }
+
+      // Fetch credits
+      const { data: creditsData, error: creditsError } = await supabase
+        .from('user_credits')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!creditsError && creditsData) {
+        setCredits(creditsData);
+      }
+      setIsLoadingCredits(false);
     };
-    fetchCredits();
+
+    loadData();
   }, []);
 
   const bags = useMemo(() => {

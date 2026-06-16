@@ -18,7 +18,7 @@ interface ProfileClientProps {
 
 type Tab = 'personal' | 'profesional' | 'security';
 
-export default function ProfileClient({ profile, lang }: ProfileClientProps) {
+export default function ProfileClient({ profile: initialProfile, lang }: ProfileClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -29,16 +29,44 @@ export default function ProfileClient({ profile, lang }: ProfileClientProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(initialProfile);
 
   // Estados del Formulario
-  const [firstName, setFirstName] = useState(profile?.first_name || '');
-  const [lastName, setLastName] = useState(profile?.last_name || '');
-  const [phone, setPhone] = useState((profile as any)?.phone || '');
-  const [bio, setBio] = useState((profile as any)?.bio || '');
-  const [isPublic, setIsPublic] = useState((profile as any)?.is_public ?? false);
-  const [avatarUrl, setAvatarUrl] = useState((profile as any)?.avatar_url || '');
-  const [cvUrl, setCvUrl] = useState((profile as any)?.cv_url || '');
-  const [languagePreference, setLanguagePreference] = useState(profile?.language_preference || lang);
+  const [firstName, setFirstName] = useState(initialProfile?.first_name || '');
+  const [lastName, setLastName] = useState(initialProfile?.last_name || '');
+  const [phone, setPhone] = useState((initialProfile as any)?.phone || '');
+  const [bio, setBio] = useState((initialProfile as any)?.bio || '');
+  const [isPublic, setIsPublic] = useState((initialProfile as any)?.is_public ?? false);
+  const [avatarUrl, setAvatarUrl] = useState((initialProfile as any)?.avatar_url || '');
+  const [cvUrl, setCvUrl] = useState((initialProfile as any)?.cv_url || '');
+  const [languagePreference, setLanguagePreference] = useState(initialProfile?.language_preference || lang);
+
+  // Cargar perfil desde el cliente
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error || !user) {
+        router.push(`/${lang}/login?redirectTo=/${lang}/dashboard/perfil`);
+        return;
+      }
+      supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data: rawData }) => {
+        const data = rawData as any;
+        if (!data || !data.first_name?.trim()) {
+          router.push(`/${lang}/onboarding`);
+          return;
+        }
+        setProfile(data);
+        setFirstName(data.first_name || '');
+        setLastName(data.last_name || '');
+        setPhone((data as any).phone || '');
+        setBio((data as any).bio || '');
+        setIsPublic((data as any).is_public ?? false);
+        setAvatarUrl((data as any).avatar_url || '');
+        setCvUrl((data as any).cv_url || '');
+        setLanguagePreference(data.language_preference || lang);
+      });
+    });
+  }, []);
 
   // Estados de Seguridad
   const [currentPassword, setCurrentPassword] = useState('');
