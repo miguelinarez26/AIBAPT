@@ -119,7 +119,7 @@ export default function Navbar() {
             }`}>
               {/* Mega Menu Image Side */}
               <div className="relative w-full h-full bg-gray-200">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/desarrollo-profesional.jpg')" }}></div>
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/desarrollo-profesional.jpg')` }}></div>
                 {/* Contact Us Pill floating over image */}
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center">
                   <Link href={`/${lang}/formaciones?tab=events`} className="group/btn flex items-center gap-3 bg-highlight text-text-light pl-6 pr-2 py-1.5 rounded-full font-medium transition-all duration-300 hover:-translate-y-1 hover:brightness-95 shadow-md">
