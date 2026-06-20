@@ -138,3 +138,8 @@ Para garantizar la mejor experiencia de usuario (UX) en AIBAPT, se aplicará el 
   </div>
   ```
 - **Flujo de Error:** Las validaciones deben interrumpir el envío a la base de datos (función `onSubmit`) estableciendo un estado de error (`setError('Mensaje descriptivo')`) que renderice la alerta diseñada anteriormente, indicando exactamente qué campo falta o qué acción requiere el usuario.
+
+### 5. Alertas y Confirmaciones (Regla de Cero Alertas Nativas)
+- **Prohibido el uso de alertas del navegador:** Queda terminantemente prohibido el uso de `window.alert()`, `window.confirm()` o `window.prompt()`. Estas interfaces nativas del navegador rompen la inmersión y van en contra de la estética premium.
+- **Notificaciones de Éxito o Error:** Para mensajes rápidos, se debe utilizar obligatoriamente la librería de notificaciones (ej. `toast` de `sonner`).
+- **Confirmaciones (Modales):** Si es necesario que el usuario confirme una acción destructiva o irreversible, se debe construir una interfaz de confirmación integrada dentro del mismo componente (ej. expandiendo un área de decisión) o mediante un Modal estilizado con Tailwind CSS que respete el branding, pero jamás lanzando una ventana nativa de JavaScript.

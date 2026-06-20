@@ -6,7 +6,7 @@ import { ApplicationStatusBadge } from '@/components/dashboard/ApplicationStatus
 import { ApplicationStatus } from '@/types/database';
 import { useLanguage } from '@/contexts/LanguageContext';
 import AdminDetailModal from './AdminDetailModal';
-import { Eye, RotateCw } from 'lucide-react';
+import { Eye, RotateCw, Search, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface ApplicationRow {
@@ -50,6 +50,7 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   
@@ -153,8 +154,24 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
   }, []);
 
   const filteredApps = applications.filter(app => {
-    if (statusFilter === 'all') return true;
-    return app.status === statusFilter;
+    if (statusFilter !== 'all' && app.status !== statusFilter) return false;
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const applicantName = (app.profiles?.first_name ? `${app.profiles.first_name} ${app.profiles.last_name}`.trim() : app.profiles?.full_name || '').toLowerCase();
+      const applicantEmail = (app.profiles?.email || '').toLowerCase();
+      const memberNumber = (app.profiles?.member_number || '').toLowerCase();
+      const tramiteName = humanizeTramiteName(app.accreditation_types?.name).toLowerCase();
+      
+      if (!applicantName.includes(query) && 
+          !applicantEmail.includes(query) && 
+          !memberNumber.includes(query) && 
+          !tramiteName.includes(query)) {
+        return false;
+      }
+    }
+    
+    return true;
   });
 
   return (
@@ -177,7 +194,7 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
         </Link>
       </div>
 
-      <div className="bg-white dark:bg-surface-dark rounded-[32px] border border-secondary/20 dark:border-gray-800 shadow-[0_8px_40px_rgba(0,0,0,0.08)] border-t-4 border-t-primary overflow-hidden mb-6 relative">
+      <div className="bg-white dark:bg-surface-dark rounded-[32px] border border-secondary/20 dark:border-gray-800 shadow-[0_8px_40px_rgba(0,0,0,0.08)] border-t-4 border-t-primary overflow-hidden mb-6 relative min-h-[400px] flex flex-col">
         <div className="px-8 py-6 border-b border-secondary/20 dark:border-gray-800 flex flex-wrap gap-4 items-center justify-between bg-gray-50/50 dark:bg-white/5 backdrop-blur-sm relative z-10">
           <div className="flex items-center gap-3 relative">
             <span className="text-[11px] font-black text-primary dark:text-primary uppercase tracking-widest">{t("admin.filter.status") || "Filtro de Estado"}</span>
@@ -217,6 +234,29 @@ export default function AdminClient({ lang }: { lang: 'es' | 'pt' }) {
               )}
             </div>
           </div>
+
+          <div className="flex-1 min-w-[280px] max-w-md relative group">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-text-muted dark:text-gray-500 group-focus-within:text-primary transition-colors">
+              <Search size={18} />
+            </div>
+            <input 
+              type="text" 
+              placeholder={lang === 'es' ? 'Buscar por nombre, email o trámite...' : 'Buscar por nome, email ou trâmite...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur border border-gray-200 dark:border-gray-700 rounded-full pl-11 pr-10 py-2.5 text-sm font-medium text-text-light dark:text-white outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm hover:border-gray-300 dark:hover:border-gray-600"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-3 flex items-center justify-center text-text-muted hover:text-accent transition-colors"
+                title={lang === 'es' ? 'Borrar búsqueda' : 'Limpar pesquisa'}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
           <button 
             onClick={loadApplications} 
             className="p-3 text-primary bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/40 transition-all group shadow-sm hover:shadow-md"

@@ -178,6 +178,18 @@ export async function POST(request: Request) {
           console.error('Error actualizando perfil para membresía:', profileUpdateError);
         }
       }
+    } else if (newStatus === 'rejected') {
+      if (finalActionType === 'Membresia') {
+        const { error: profileRevertError } = await (supabaseAdmin.from('profiles') as any)
+          .update({
+            is_member: false,
+          })
+          .eq('id', (appData as any).user_id);
+          
+        if (profileRevertError) {
+          console.error('Error al revertir membresía en perfil:', profileRevertError);
+        }
+      }
     }
 
     return NextResponse.json({ success: true });

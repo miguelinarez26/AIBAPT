@@ -3,7 +3,7 @@
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { translations } from '@/i18n/translations';
 import { MembershipBadge } from '@/components/dashboard/MembershipBadge';
@@ -358,22 +358,37 @@ export default function DashboardClient({ profile: initialProfile, applications:
                     </thead>
                     <tbody className="divide-y divide-secondary/10 dark:divide-gray-800">
                       {applications.slice(0, 5).map((app: any) => (
-                        <tr key={app.id} className="hover:bg-primary/5 dark:hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => router.push(`/${lang}/dashboard/tramites/${app.id}`)}>
-                          <td className="py-5 px-8 font-mono text-sm font-bold text-primary">
-                            #{app.id.substring(0, 8)}
-                          </td>
-                          <td className="py-5 px-4">
-                            <span className="font-medium text-text-light dark:text-gray-200">
-                              {formatTypeName(app.accreditation_type_name)}
-                            </span>
-                          </td>
-                          <td className="py-5 px-4 text-text-dark dark:text-gray-400 hidden md:table-cell font-medium text-sm">
-                            {formatDate(app.created_at)}
-                          </td>
-                          <td className="py-5 px-4">
-                            <ApplicationStatusBadge status={app.status} />
-                          </td>
-                        </tr>
+                        <React.Fragment key={app.id}>
+                          <tr className="hover:bg-primary/5 dark:hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => router.push(`/${lang}/dashboard/tramites/${app.id}`)}>
+                            <td className="py-5 px-8 font-mono text-sm font-bold text-primary">
+                              #{app.id.substring(0, 8)}
+                            </td>
+                            <td className="py-5 px-4">
+                              <span className="font-medium text-text-light dark:text-gray-200">
+                                {formatTypeName(app.accreditation_type_name)}
+                              </span>
+                            </td>
+                            <td className="py-5 px-4 text-text-dark dark:text-gray-400 hidden md:table-cell font-medium text-sm">
+                              {formatDate(app.created_at)}
+                            </td>
+                            <td className="py-5 px-4">
+                              <ApplicationStatusBadge status={app.status} />
+                            </td>
+                          </tr>
+                          {app.status === 'rejected' && app.admin_notes && (
+                            <tr>
+                              <td colSpan={4} className="px-8 pb-5 pt-0 border-b border-secondary/10 dark:border-gray-800">
+                                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 p-4 rounded-2xl flex gap-3 items-start shadow-sm">
+                                  <span className="material-icons-round text-accent text-xl mt-0.5">info</span>
+                                  <div>
+                                    <p className="text-xs font-black text-accent mb-1 uppercase tracking-wider">{t["dashboard.rejection_note"] || "Nota del Administrador"}</p>
+                                    <p className="text-sm text-text-main dark:text-gray-200 font-medium leading-relaxed">{app.admin_notes}</p>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>

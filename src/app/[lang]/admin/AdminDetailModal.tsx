@@ -5,7 +5,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ApplicationStatusBadge } from '@/components/dashboard/ApplicationStatusBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Document } from '@/types/database';
-
+import { toast } from 'sonner';
 interface AdminDetailModalProps {
   applicationId: string;
   lang: 'es' | 'pt';
@@ -19,10 +19,10 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
   const [submitting, setSubmitting] = useState(false);
   const [appData, setAppData] = useState<any>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [action, setAction] = useState<'approve' | 'reject' | null>(null);
+  const [action, setAction] = useState<'approve' | 'reject' | 'review' | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
-
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const supabase = createBrowserSupabaseClient();
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
 
   const handleProcess = async (newStatus: 'approved' | 'rejected') => {
     if (newStatus === 'rejected' && !adminNotes.trim()) {
-      setError(t("admin.modal.error.notes"));
+      setError(t("admin.modal.error.notes") || "Debes incluir una nota para rechazar.");
       return;
     }
 
@@ -133,6 +133,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
         throw new Error(errorData.error || 'Error procesando solicitud');
       }
 
+      toast.success(`¡Solicitud ${newStatus === 'approved' ? 'aprobada' : 'rechazada'} exitosamente!`);
       onUpdate();
       onClose();
     } catch (err: any) {
@@ -151,7 +152,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
       if (error) throw error;
       window.open(data.signedUrl, '_blank');
     } catch (err: any) {
-      alert(t("admin.modal.error.file"));
+      toast.error(t("admin.modal.error.file") || "Error al abrir el archivo.");
     }
   };
 
@@ -477,32 +478,41 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
           </div>
 
           {/* Decision Area */}
-          {(appData.status === 'pending' || appData.status === 'under_review') && (
+          {(appData.status === 'pending' || appData.status === 'under_review' || appData.status === 'rejected') && (
             <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800/80">
               <h3 className="text-md font-bold text-text-light dark:text-white mb-4">Resolución del trámite</h3>
               
               {!action ? (
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button 
                     onClick={() => setAction('approve')} 
-                    className="flex-1 bg-primary hover:bg-primary/95 text-white font-medium py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20 active:translate-y-0"
+                    className="flex-1 bg-primary hover:bg-primary/95 text-white font-medium py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20 active:translate-y-0"
                   >
                     <span className="material-icons-round text-lg">check_circle</span>
-                    {t("admin.modal.approve_btn")}
+                    {t("admin.modal.approve_btn") || "Aprobar"}
                   </button>
                   <button 
                     onClick={() => setAction('reject')} 
-                    className="flex-1 bg-accent hover:bg-accent/95 text-white font-medium py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/20 active:translate-y-0"
+                    className="flex-1 bg-accent hover:bg-accent/95 text-white font-medium py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/20 active:translate-y-0"
                   >
                     <span className="material-icons-round text-lg">cancel</span>
-                    {t("admin.modal.reject_btn")}
+                    {t("admin.modal.reject_btn") || "Rechazar"}
                   </button>
+                  {appData.status === 'pending' && (
+                    <button 
+                      onClick={() => setAction('review')} 
+                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/20 active:translate-y-0"
+                    >
+                      <span className="material-icons-round text-lg">schedule</span>
+                      {lang === 'es' ? 'En Revisión' : 'Em Revisão'}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="bg-zinc-50/50 dark:bg-zinc-800/30 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800/50">
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-light dark:text-zinc-300 mb-2">
-                      {action === 'approve' ? t("admin.modal.notes_approve") : t("admin.modal.notes_reject")}
+                      {action === 'approve' ? t("admin.modal.notes_approve") : action === 'reject' ? t("admin.modal.notes_reject") : (lang === 'es' ? 'Notas de revisión (opcional)' : 'Notas de revisão (opcional)')}
                     </label>
                     <textarea
                       value={adminNotes}
@@ -519,6 +529,8 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                     </div>
                   )}
 
+
+
                   <div className="flex gap-3 justify-end">
                     <button 
                       onClick={() => setAction(null)} 
@@ -528,19 +540,28 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                     </button>
                     <button 
                       disabled={submitting}
-                      onClick={() => handleProcess(action === 'approve' ? 'approved' : 'rejected')}
+                      onClick={() => {
+                        if (action === 'reject' && !adminNotes.trim()) {
+                          setError(t("admin.modal.error.notes") || "Debes incluir una nota para rechazar.");
+                          return;
+                        }
+                        setError(null);
+                        setShowConfirmModal(true);
+                      }}
                       className={`px-6 py-2.5 text-white rounded-full font-medium flex items-center gap-2 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 ${
                         action === 'approve' 
                           ? 'bg-primary hover:shadow-lg hover:shadow-primary/20' 
-                          : 'bg-accent hover:shadow-lg hover:shadow-accent/20'
+                          : action === 'reject'
+                            ? 'bg-accent hover:shadow-lg hover:shadow-accent/20'
+                            : 'bg-amber-500 hover:shadow-lg hover:shadow-amber-500/20'
                       }`}
                     >
                       {submitting ? (
                         <span className="material-icons-round animate-spin text-lg">refresh</span>
                       ) : (
-                        <span className="material-icons-round text-lg">gavel</span>
+                        <span className="material-icons-round text-lg">{action === 'review' ? 'schedule' : 'gavel'}</span>
                       )}
-                      {t("admin.modal.confirm")} {action === 'approve' ? t("admin.filter.approved") : t("admin.filter.rejected")}
+                      {action === 'approve' ? (lang === 'es' ? 'Confirmar Aprobación' : 'Confirmar Aprovação') : action === 'reject' ? (lang === 'es' ? 'Confirmar Rechazo' : 'Confirmar Rejeição') : (lang === 'es' ? 'Confirmar Estado' : 'Confirmar Status')}
                     </button>
                   </div>
                 </div>
@@ -560,6 +581,46 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
           </button>
         </div>
       </div>
+
+      {/* Confirm Modal Overlay */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowConfirmModal(false)}>
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] border border-secondary/20 shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${action === 'approve' ? 'bg-primary/10 text-primary' : action === 'reject' ? 'bg-accent/10 text-accent' : 'bg-amber-500/10 text-amber-500'}`}>
+                <span className="material-icons-round text-2xl">{action === 'approve' ? 'info' : action === 'reject' ? 'warning_amber' : 'schedule'}</span>
+              </div>
+              <h3 className="text-lg font-bold text-text-light dark:text-white mb-2">
+                {lang === 'es' ? 'Confirmación requerida' : 'Confirmação necessária'}
+              </h3>
+              <p className="text-sm text-text-dark dark:text-zinc-400 mb-6">
+                {lang === 'es' 
+                  ? `¿Estás seguro de que deseas ${action === 'approve' ? 'aprobar' : action === 'reject' ? 'rechazar' : 'marcar en revisión'} esta solicitud?`
+                  : `Tem certeza de que deseja ${action === 'approve' ? 'aprovar' : action === 'reject' ? 'rejeitar' : 'marcar em revisão'} esta solicitação?`}
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button 
+                  disabled={submitting}
+                  onClick={() => setShowConfirmModal(false)}
+                  className="px-4 py-2 text-text-dark hover:text-text-light hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full font-medium transition-all text-sm"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  disabled={submitting}
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    handleProcess(action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'under_review');
+                  }}
+                  className={`px-5 py-2 text-white rounded-full font-medium flex items-center gap-2 transition-all text-sm ${action === 'approve' ? 'bg-primary hover:bg-primary/90' : action === 'reject' ? 'bg-accent hover:bg-accent/90' : 'bg-amber-500 hover:bg-amber-600'}`}
+                >
+                  {action === 'approve' ? (lang === 'es' ? 'Confirmar Aprobación' : 'Confirmar Aprovação') : action === 'reject' ? (lang === 'es' ? 'Confirmar Rechazo' : 'Confirmar Rejeição') : (lang === 'es' ? 'Marcar en Revisión' : 'Marcar em Revisão')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
