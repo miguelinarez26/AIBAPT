@@ -100,7 +100,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
     loadDetail();
   }, [applicationId]);
 
-  const handleProcess = async (newStatus: 'approved' | 'rejected') => {
+  const handleProcess = async (newStatus: 'approved' | 'rejected' | 'under_review') => {
     if (newStatus === 'rejected' && !adminNotes.trim()) {
       setError(t("admin.modal.error.notes") || "Debes incluir una nota para rechazar.");
       return;
@@ -133,7 +133,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
         throw new Error(errorData.error || 'Error procesando solicitud');
       }
 
-      toast.success(`¡Solicitud ${newStatus === 'approved' ? 'aprobada' : 'rechazada'} exitosamente!`);
+      toast.success(`¡Solicitud ${newStatus === 'approved' ? 'aprobada' : newStatus === 'rejected' ? 'rechazada' : 'marcada en revisión'} exitosamente!`);
       onUpdate();
       onClose();
     } catch (err: any) {
