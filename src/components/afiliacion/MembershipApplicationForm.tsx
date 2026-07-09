@@ -110,7 +110,7 @@ export default function MembershipApplicationForm({
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       person_type: (selectedEscenario === "pleno" ? "pleno_salud_mental" : selectedEscenario) as any,
       is_public_directory: "yes",
