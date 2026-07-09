@@ -11,9 +11,10 @@ export default async function FormacionesPage(props: { params: Promise<{ lang: s
 
     let events: any[] = [];
     let accredited: any[] = [];
+    let videoteca: any[] = [];
 
     try {
-        const [eventsRes, accreditedRes] = await Promise.all([
+        const [eventsRes, accreditedRes, videotecaRes] = await Promise.all([
             supabaseAdmin
                 .from('proximos_eventos')
                 .select('*')
@@ -22,7 +23,11 @@ export default async function FormacionesPage(props: { params: Promise<{ lang: s
                 .from('courses_accredited')
                 .select('*')
                 .eq('is_public', true)
-                .order('title', { ascending: true })
+                .order('title', { ascending: true }),
+            supabaseAdmin
+                .from('videoteca_webinars')
+                .select('*')
+                .order('event_date', { ascending: false })
         ]);
 
         if (eventsRes?.error) {
@@ -36,6 +41,12 @@ export default async function FormacionesPage(props: { params: Promise<{ lang: s
         } else {
             accredited = accreditedRes?.data || [];
         }
+
+        if (videotecaRes?.error) {
+            console.warn("⚠️ La tabla 'videoteca_webinars' no está lista o no tiene acceso:", videotecaRes.error);
+        } else {
+            videoteca = videotecaRes?.data || [];
+        }
     } catch (error) {
         console.warn("🚨 Error al conectar con Supabase en formaciones:", error);
     }
@@ -45,6 +56,7 @@ export default async function FormacionesPage(props: { params: Promise<{ lang: s
             <FormacionesClient 
                 initialEvents={events}
                 initialAccredited={accredited}
+                initialVideoteca={videoteca}
                 currentLang={lang}
             />
         </Suspense>

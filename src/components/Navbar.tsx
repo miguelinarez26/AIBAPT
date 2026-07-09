@@ -195,9 +195,9 @@ export default function Navbar() {
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("nav.portal")}</p>
                       <p className="text-sm font-medium truncate text-[#333333]">{displayName}</p>
                   </div>
-                  <Link href={userMeta?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-[#333333] hover:bg-primary/5 hover:text-primary transition-colors">
+                  <Link href={`/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-[#333333] hover:bg-primary/5 hover:text-primary transition-colors">
                       <span className="material-icons-round text-[18px] mr-2 text-primary">dashboard</span>
-                      {userMeta?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
+                      Dashboard
                   </Link>
                   <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
                     <LogOut className="w-4 h-4 mr-2" />

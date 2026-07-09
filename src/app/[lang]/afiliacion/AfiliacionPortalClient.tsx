@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { AIBAPT_TRAMITES, EscenarioEvento, LocalizedText } from "@/config/aibapt-config";
-import { UniversalStepper } from "@/components/acreditaciones/UniversalStepper";
+import MembershipApplicationForm from "@/components/afiliacion/MembershipApplicationForm";
 import { motion } from "framer-motion";
 import {
   CheckCircle,
@@ -47,13 +47,8 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
       selectedEscenario === e.id || selectedEscenario.startsWith(e.id + "_")
   );
 
-  // La selección es válida sólo si no hay sub-perfiles pendientes de elegir
-  const isSelectionValid =
-    selectedEscenario &&
-    (!currentEscenarioObj?.subProfiles ||
-      currentEscenarioObj.subProfiles.some(
-        (sp: { id: string }) => sp.id === selectedEscenario
-      ));
+  // La selección es válida si hay un escenario seleccionado (la selección de subperfil ahora se hace en el formulario)
+  const isSelectionValid = !!selectedEscenario;
 
   const [error, setError] = useState<string | null>(null);
 
@@ -94,19 +89,60 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
     }
   };
 
-  if (showStepper) {
+  if (showStepper && session?.user) {
     return (
-      <div className="w-full min-h-screen bg-background-light relative overflow-hidden py-12">
+      <div className="w-full min-h-screen bg-background-light relative overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
           <div className="absolute top-[-10%] sm:top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[100px] animate-pulse"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-secondary/10 rounded-full blur-[120px] animation-delay-2000"></div>
         </div>
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <UniversalStepper
-            tramiteId="solicitud_membresia"
-            initialEscenario={selectedEscenario}
-            onBack={() => setShowStepper(false)}
+        <div className="pb-16 px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-[1280px] mx-auto relative">
+            <button 
+              onClick={() => setShowStepper(false)}
+              className="absolute top-0 left-0 z-50 cursor-pointer text-primary hover:text-primary-dark text-sm font-medium flex items-center gap-1 transition-colors hidden md:flex"
+            >
+              <ChevronRight className="w-4 h-4 rotate-180" /> 
+              {lang === "es" ? "Volver a opciones" : "Voltar às opções"}
+            </button>
+            
+            <div className="md:hidden mb-6 relative z-50">
+              <button 
+                onClick={() => setShowStepper(false)}
+                className="cursor-pointer text-primary hover:text-primary-dark text-sm font-medium flex items-center gap-1 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 rotate-180" /> 
+                {lang === "es" ? "Volver a opciones" : "Voltar às opções"}
+              </button>
+            </div>
+            
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              className="text-center mb-10 max-w-4xl mx-auto"
+            >
+              <div className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs mb-3 uppercase tracking-wider">
+                {typeof config.categoria === 'string' ? config.categoria : config.categoria[lang]}
+              </div>
+              <h1 className="text-4xl md:text-5xl font-serif text-text-light mb-4 leading-[1.1]">
+                {lang === "es" 
+                  ? `Ficha de Solicitud de Ingreso como ${getTranslation(currentEscenarioObj?.label)} de la AIBAPT` 
+                  : `Ficha de Solicitação de Ingresso como ${getTranslation(currentEscenarioObj?.label)} da AIBAPT`}
+              </h1>
+              <p className="text-sm md:text-base text-text-dark leading-relaxed max-w-2xl mx-auto">
+                {lang === "es" ? "Por favor completa todos tus datos para solicitar el ingreso." : "Por favor, preencha todos os seus dados para solicitar o ingresso."}
+              </p>
+            </motion.div>
+          </div>
+          
+          <MembershipApplicationForm
+            selectedEscenario={selectedEscenario}
+            currentEscenarioObj={currentEscenarioObj}
+            lang={lang}
+            userId={session.user.id}
           />
         </div>
       </div>
@@ -176,11 +212,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                 <div
                   onClick={() => {
                     setError(null);
-                    if (esc.subProfiles && esc.subProfiles.length > 0) {
-                      if (!isSelected) setSelectedEscenario(esc.subProfiles[0].id);
-                    } else {
-                      setSelectedEscenario(esc.id);
-                    }
+                    setSelectedEscenario(esc.id);
                   }}
                   className={`flex-1 flex flex-col cursor-pointer transition-all duration-500 rounded-[32px] border relative overflow-hidden h-full ${
                     isSelected
@@ -233,6 +265,19 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                       </p>
                     )}
 
+                    <div className="mt-4">
+                      <Link
+                        href={`/${lang}/requisitos`}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`inline-flex items-center gap-1 text-sm font-semibold transition-colors duration-500 hover:underline ${
+                          isSelected ? "text-white" : "text-primary hover:text-primary-dark group-hover:text-white"
+                        }`}
+                      >
+                        {lang === "es" ? "Ver requisitos" : "Ver requisitos"}
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+
                     {isSelected && !esc.subProfiles && !esc.isContactForm && (
                       <div className="mt-auto pt-6 flex items-center justify-center gap-2 text-white text-sm font-bold animate-fade-in-up">
                         <CheckCircle className="w-5 h-5" />
@@ -248,64 +293,6 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                     )}
                   </div>
 
-                  {esc.subProfiles && isSelected && (
-                    <div
-                      className="bg-white/10 p-6 backdrop-blur-sm animate-fade-in-up relative z-10 flex-1 border-t border-white/20"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <p className="text-sm font-bold text-white mb-4 text-center">
-                        {lang === "es" ? "Elige tu perfil:" : "Escolha seu perfil:"}
-                      </p>
-                      <div className="flex flex-col gap-3">
-                        {esc.subProfiles.map((sp) => {
-                          const spSelected = selectedEscenario === sp.id;
-                          return (
-                            <label
-                              key={sp.id}
-                              className={`cursor-pointer rounded-2xl border-2 p-4 transition-all duration-300 ${
-                                spSelected
-                                  ? "border-white bg-white shadow-lg shadow-black/10 scale-[1.02]"
-                                  : "border-white/30 hover:border-white/60 hover:bg-white/10"
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="subprofile"
-                                value={sp.id}
-                                checked={spSelected}
-                                onChange={() => setSelectedEscenario(sp.id)}
-                                className="sr-only"
-                              />
-                              <div className="flex items-center gap-2 mb-1">
-                                <div
-                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                                    spSelected
-                                      ? "border-primary bg-primary"
-                                      : "border-white/60"
-                                  }`}
-                                >
-                                  {spSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                                </div>
-                                <span
-                                  className={`font-bold text-sm ${
-                                    spSelected ? "text-primary" : "text-white"
-                                  }`}
-                                >
-                                  {getTranslation(sp.label)}
-                                </span>
-                              </div>
-
-                              {sp.examples && (
-                                <p className={`text-xs italic ml-6 ${spSelected ? "text-gray-500" : "text-white/70"}`}>
-                                  {getTranslation(sp.examples)}
-                                </p>
-                              )}
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </motion.div>
             );

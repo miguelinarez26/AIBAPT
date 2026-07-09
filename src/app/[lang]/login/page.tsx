@@ -65,7 +65,7 @@ function LoginContent() {
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
                 const role = (profile as any)?.role || 'member';
-                const defaultRoute = role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`;
+                const defaultRoute = `/${lang}/dashboard`;
                 
                 const redirectTo = searchParams.get("redirectTo");
                 router.push(role === 'admin' ? defaultRoute : (redirectTo || defaultRoute));

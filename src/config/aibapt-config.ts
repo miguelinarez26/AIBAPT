@@ -98,19 +98,39 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
           { 
             id: 'pleno_salud_mental', 
             label: { es: 'Profesional de Salud Mental', pt: 'Profissional de Saúde Mental' },
-            examples: { es: 'Psicólogos, Psicoterapeutas, Psiquiatras y médicos.', pt: 'Psicólogos, Psicoterapeutas, Psiquiatras e médicos.' },
+            examples: { es: 'Psicólogos, Psicoterapeutas, Psiquiatras y médicos con formación en trauma.', pt: 'Psicólogos, Psicoterapeutas, Psiquiatras e médicos com formação em trauma.' },
             requirements: {
-              es: ['Diploma de especialidad', 'Solicitud firmada', '1 Carta de Recomendación'],
-              pt: ['Diploma de especialidade', 'Solicitação assinada', '1 Carta de Recomendação']
+              es: [
+                'Datos de contacto y dirección',
+                'Currículum (PDF)',
+                'Comprobante de formación en tratamiento del trauma reconocida por la AIBAPT (PDF)',
+                'Carta de Recomendación o realizar la solicitud a la AIBAPT'
+              ],
+              pt: [
+                'Dados de contato e endereço',
+                'Currículo (PDF)',
+                'Comprovante de formação em tratamento do trauma reconhecida pela AIBAPT (PDF)',
+                'Carta de Recomendação ou realizar a solicitação à AIBAPT'
+              ]
             }
           },
           { 
             id: 'pleno_agente_social', 
             label: { es: 'Agente de Intervención Social', pt: 'Agente de Intervenção Social' },
-            examples: { es: 'Trabajadores Sociales, Enfermeros, Socorristas.', pt: 'Assistentes Sociais, Enfermeiros, Socorristas.' },
+            examples: { es: 'Trabajadores Sociales, Enfermeros, Socorristas con formación en trauma.', pt: 'Assistentes Sociais, Enfermeiros, Socorristas com formação em trauma.' },
             requirements: {
-              es: ['Taller de 10h sobre Trauma', 'Solicitud firmada', '1 Carta de Recomendación'],
-              pt: ['Oficina de 10h sobre Trauma', 'Solicitação assinada', '1 Carta de Recomendação']
+              es: [
+                'Datos de contacto y dirección',
+                'Currículum (PDF)',
+                'Comprobante de formación en tratamiento del trauma reconocida por la AIBAPT (PDF)',
+                'Carta de Recomendación o realizar la solicitud a la AIBAPT'
+              ],
+              pt: [
+                'Dados de contato e endereço',
+                'Currículo (PDF)',
+                'Comprovante de formação em tratamento do trauma reconhecida pela AIBAPT (PDF)',
+                'Carta de Recomendação ou realizar a solicitação à AIBAPT'
+              ]
             }
           }
         ]
@@ -121,23 +141,51 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
         monto: 60, 
         description: { es: 'Para universidades, clínicas o centros.', pt: 'Para universidades, clínicas ou centros.' },
         requirements: {
-          es: ['Estatutos de la institución', 'Solicitud institucional'],
-          pt: ['Estatutos da instituição', 'Solicitação institucional']
+          es: [
+            'Datos de contacto y dirección',
+            'Currículum (PDF)',
+            'Comprobante de formación en tratamiento del trauma reconocida por la AIBAPT (PDF)',
+            'Carta de Recomendación o realizar la solicitud a la AIBAPT'
+          ],
+          pt: [
+            'Dados de contato e endereço',
+            'Currículo (PDF)',
+            'Comprovante de formação em tratamento do trauma reconhecida pela AIBAPT (PDF)',
+            'Carta de Recomendação ou realizar a solicitação à AIBAPT'
+          ]
         }
       },
       {
         id: 'bienhechor',
         label: { es: 'Miembro Bienhechor', pt: 'Membro Benfeitor' },
-        monto: 0,
+        monto: 45,
         description: { es: 'Apoya nuestra labor de forma activa y altruista.', pt: 'Apoie nosso trabalho de forma ativa e altruísta.' },
-        isContactForm: true
+        requirements: {
+          es: [
+            'Datos de contacto y dirección',
+            'Carta de Recomendación o realizar la solicitud a la AIBAPT'
+          ],
+          pt: [
+            'Dados de contato e endereço',
+            'Carta de Recomendação ou realizar a solicitação à AIBAPT'
+          ]
+        }
       },
       {
         id: 'simpatizante',
         label: { es: 'Miembro Simpatizante', pt: 'Membro Simpatizante' },
-        monto: 0,
+        monto: 45,
         description: { es: 'Para interesados en el área de trauma sin práctica clínica.', pt: 'Para interessados na área do trauma sem prática clínica.' },
-        isContactForm: true
+        requirements: {
+          es: [
+            'Datos de contacto y dirección',
+            'Carta de Recomendación o realizar la solicitud a la AIBAPT'
+          ],
+          pt: [
+            'Dados de contato e endereço',
+            'Carta de Recomendação ou realizar a solicitação à AIBAPT'
+          ]
+        }
       }
     ],
     instrucciones_leer: {

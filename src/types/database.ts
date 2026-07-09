@@ -14,7 +14,7 @@ export type Json =
 // --- Enums como union types ---
 export type UserRole = 'member' | 'admin'
 export type ApplicationStatus = 'draft' | 'uploading' | 'pending' | 'under_review' | 'approved' | 'rejected' | 'cancelled'
-export type DocumentType = 'cv' | 'formulario' | 'caso_clinico' | 'pago'
+export type DocumentType = 'cv' | 'formulario' | 'caso_clinico' | 'pago' | 'carta_recomendacion' | 'comprobante_formacion'
 export type SupportedLanguage = 'es' | 'pt'
 
 // --- Interfaz principal de la base de datos ---
@@ -35,6 +35,19 @@ export interface Database {
           role: UserRole
           language_preference: SupportedLanguage
           created_at: string
+          person_type: string | null
+          cpf_document: string | null
+          address: string | null
+          neighborhood: string | null
+          city: string | null
+          state: string | null
+          country: string | null
+          zip_code: string | null
+          phone_mobile: string | null
+          phone_commercial: string | null
+          professional_register: string | null
+          training_background: Json | null
+          is_public_directory: boolean | null
         }
         Insert: {
           id: string
@@ -49,6 +62,19 @@ export interface Database {
           role?: UserRole
           language_preference?: SupportedLanguage
           created_at?: string
+          person_type?: string | null
+          cpf_document?: string | null
+          address?: string | null
+          neighborhood?: string | null
+          city?: string | null
+          state?: string | null
+          country?: string | null
+          zip_code?: string | null
+          phone_mobile?: string | null
+          phone_commercial?: string | null
+          professional_register?: string | null
+          training_background?: Json | null
+          is_public_directory?: boolean | null
         }
         Update: {
           id?: string
@@ -63,6 +89,19 @@ export interface Database {
           role?: UserRole
           language_preference?: SupportedLanguage
           created_at?: string
+          person_type?: string | null
+          cpf_document?: string | null
+          address?: string | null
+          neighborhood?: string | null
+          city?: string | null
+          state?: string | null
+          country?: string | null
+          zip_code?: string | null
+          phone_mobile?: string | null
+          phone_commercial?: string | null
+          professional_register?: string | null
+          training_background?: Json | null
+          is_public_directory?: boolean | null
         }
       }
       accreditation_types: {
@@ -267,6 +306,71 @@ export interface Database {
           created_at?: string
         }
       }
+      videoteca_webinars: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          video_url: string | null
+          thumbnail_url: string | null
+          language: string | null
+          created_at: string
+          slug: string | null
+          instructor_img: string | null
+          category: string | null
+          price: string | null
+          duration: string | null
+          instructor_name: string | null
+          event_date: string | null
+          desc_long: string | null
+          price_public: number
+          price_member_past: number
+          credits_num: number
+          includes: any | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          video_url?: string | null
+          thumbnail_url?: string | null
+          language?: string | null
+          created_at?: string
+          slug?: string | null
+          instructor_img?: string | null
+          category?: string | null
+          price?: string | null
+          duration?: string | null
+          instructor_name?: string | null
+          event_date?: string | null
+          desc_long?: string | null
+          price_public?: number
+          price_member_past?: number
+          credits_num?: number
+          includes?: any | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          video_url?: string | null
+          thumbnail_url?: string | null
+          language?: string | null
+          created_at?: string
+          slug?: string | null
+          instructor_img?: string | null
+          category?: string | null
+          price?: string | null
+          duration?: string | null
+          instructor_name?: string | null
+          event_date?: string | null
+          desc_long?: string | null
+          price_public?: number
+          price_member_past?: number
+          credits_num?: number
+          includes?: any | null
+        }
+      }
     }
     Functions: {
       generate_member_number: {
@@ -287,3 +391,4 @@ export type Application = Database['public']['Tables']['applications']['Row']
 export type Document = Database['public']['Tables']['documents']['Row']
 export type CourseAccredited = Database['public']['Tables']['courses_accredited']['Row']
 export type UserCredit = Database['public']['Tables']['user_credits']['Row']
+export type VideotecaWebinar = Database['public']['Tables']['videoteca_webinars']['Row']

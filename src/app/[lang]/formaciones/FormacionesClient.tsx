@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { WEBINARS_DATA } from "@/data/webinars";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { UniversalStepper } from "@/components/acreditaciones/UniversalStepper";
@@ -22,10 +21,11 @@ import logoAibapt from "../../../../public/images/aibapt_logo_transparent_seal.p
 interface FormacionesClientProps {
     initialEvents: any[];
     initialAccredited?: any[];
+    initialVideoteca?: any[];
     currentLang: string;
 }
 
-function FormacionesContent({ initialEvents, initialAccredited = [], currentLang }: FormacionesClientProps) {
+function FormacionesContent({ initialEvents, initialAccredited = [], initialVideoteca = [], currentLang }: FormacionesClientProps) {
     const { t, lang } = useLanguage();
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
@@ -154,6 +154,7 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
         const isOfficial = e.is_official || e.category_label?.toLowerCase().includes("oficial");
         return {
             id: e.id,
+            slug: e.slug,
             img: isOfficial ? logoAibapt : (e.thumbnail_url || placeholderImg),
             badge: e.event_date ? (() => {
                 const [year, month, day] = e.event_date.split('-').map(Number);
@@ -177,25 +178,34 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
         };
     }), [initialEvents, currentLang]);
 
-    const recordingsData = useMemo(() => WEBINARS_DATA
-        .filter(w => w?.badge === "VOD / Grabación")
-        .map(w => ({
-            img: w?.img || placeholderImg,
-            badge: lang === "pt" ? "Gravações" : "Grabaciones",
-            badgeIcon: w?.badgeIcon || "play_circle",
-            badgeStyle: w?.badgeStyle || "text-secondary",
-            category: w?.category === "Seminarios Internacionales" ? (lang === "pt" ? "Seminários Internacionais" : "Seminarios Internacionales") : (w?.category || "Webinar"),
-            title: w?.title || "Sin título",
-            desc: w?.descLong?.length > 100 ? w.descLong.substring(0, 100) + "..." : (w?.descLong || w?.desc || ""),
-            instructorImg: "",
-            instructorName: w?.instructorName || "AIBAPT",
-            route: `/formaciones/${w?.slug || ""}`,
-            price: w?.price || (lang === "pt" ? "Consultar" : "Consultar"),
-            isOfficial: w?.isOfficial !== undefined ? w.isOfficial : true,
-            duration: w?.duration 
-                ? w.duration.replace("Horas de Formación", lang === "pt" ? "Horas de Formação" : "Horas de Formación")
-                : (lang === "pt" ? "1 Crédito AIBAPT" : "1 Crédito AIBAPT")
-        })), [lang]);
+    const videotecaData = useMemo(() => {
+        return initialVideoteca.map((w: any) => {
+            const isMissingDate = !w.event_date || w.event_date === '2000-01-01' || w.event_date === '2020-01-01';
+            
+            return {
+                id: w.id,
+                slug: w.slug || `webinar-${w.id}`,
+                title: w.title,
+                instructorName: w.instructor_name || 'AIBAPT',
+                instructorImg: w.instructor_img || '',
+                price: w.price_public ? `${w.price_public} €` : (w.price || '10 €'),
+                img: w.thumbnail_url || w.video_url || placeholderImg,
+                desc: w.description || '',
+                descLong: w.desc_long || w.description || '',
+                duration: w.credits_num ? `${w.credits_num} Crédito AIBAPT` : (w.duration || '1 Crédito AIBAPT'),
+                badge: isMissingDate ? 'VOD / Grabación' : (() => {
+                    const [year, month, day] = w.event_date.split('-').map(Number);
+                    return new Date(year, month - 1, day).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                })(),
+                badgeIcon: isMissingDate ? 'play_circle' : 'calendar_today',
+                badgeStyle: isMissingDate ? 'text-accent' : 'text-primary',
+                category: w.category || 'Trauma Webinars',
+                includes: w.includes || ["Acceso a la grabación", "Certificado de participación", "Material de apoyo"],
+                isOfficial: true,
+                route: `/${lang}/formaciones/${w.slug || w.id}/buy`
+            };
+        });
+    }, [initialVideoteca, lang]);
 
     // DATA FOR "CURSOS ACREDITADOS"
     const accreditedData = useMemo(() => {
@@ -212,7 +222,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                 linkTitle: c.link_title ? (c.link_title.startsWith("edu.btn") ? t(c.link_title as any) : c.link_title) : null
             }));
         }
-        // Fallback defensivo para no romper el frontend si la base de datos está vacía o falla
         return [
             { title: "Acompañar pérdidas y procesos de duelo", instructor: "Belén Romá y Santiago Jácome", hours: "04 horas", contact: "mailto:belenromaromero@gmail.com" },
             { title: "Aleces: Introducción a la Comprensión y Curación del Trauma", instructor: "C. Cuenca, C. Melo y M. Salvador", hours: "28 horas", contact: "https://www.aleces.com", linkTitle: t("edu.btn.website" as any) },
@@ -229,9 +238,9 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
 
 
     // Select active data for list/grid view
-        const currentData = useMemo(() => {
+    const currentData = useMemo(() => {
         if (activeTab === "events") return eventsData;
-        if (activeTab === "recordings") return recordingsData;
+        if (activeTab === "recordings") return videotecaData;
         if (activeTab === "accredited") return accreditedData.map((item: any) => ({
             ...item,
             img: logoAibapt,
@@ -246,19 +255,17 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
             desc: item.instructor
         }));
         return [];
-    }, [activeTab, webinarsData, eventsData, recordingsData, accreditedData, lang]);
+    }, [activeTab, eventsData, videotecaData, accreditedData, lang]);
 
     const filteredData = useMemo(() => {
         let result: any[] = currentData;
 
-        // Apply type filter
         if (filterType === "official") {
             result = result.filter(c => c.isOfficial === true);
         } else if (filterType === "external") {
             result = result.filter(c => c.isOfficial === false);
         }
 
-        // Apply search filter
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             result = result.filter(
@@ -272,28 +279,19 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
         return result;
     }, [searchTerm, currentData, filterType]);
 
-    const filteredAccredited = useMemo(() => {
-        if (!searchTerm) return accreditedData;
-        const term = searchTerm.toLowerCase();
-        return accreditedData.filter(a => a.title.toLowerCase().includes(term) || a.instructor.toLowerCase().includes(term));
-    }, [searchTerm, accreditedData]);
-
-    // Handle incoming ?id URL parameter
     useEffect(() => {
         const idStr = searchParams.get("id");
         if (idStr !== null) {
             let sourceData: any[] = [];
             const tab = searchParams.get("tab");
             if (tab === "events") {
-                sourceData = [...webinarsData, ...eventsData];
+                sourceData = eventsData;
             } else if (tab === "recordings") {
-                sourceData = recordingsData;
+                sourceData = videotecaData;
             }
 
-            // Buscar primero por ID exacto (UUID o número)
             let found = sourceData.find(item => item && String(item.id) === idStr);
 
-            // Retrocompatibilidad con índice posicional
             if (!found) {
                 const index = parseInt(idStr, 10);
                 if (!isNaN(index) && index >= 0 && index < sourceData.length) {
@@ -302,22 +300,19 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
             }
 
             if (found) {
-                // Slight delay to ensure UI renders first
                 setTimeout(() => setSelectedCourse(found), 100);
             }
         }
-    }, [searchParams, webinarsData, eventsData, recordingsData, activeTab]);
+    }, [searchParams, eventsData, videotecaData, activeTab]);
 
     return (
         <div className="pt-10 md:pt-12 bg-background-light min-h-screen pb-24 relative overflow-hidden">
-            {/* Ambient Backgrounds */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
                 <div className="absolute top-[10%] sm:top-[0%] left-[-5%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px] animate-pulse-slow"></div>
                 <div className="absolute bottom-[0%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 rounded-full blur-[120px] animation-delay-2000"></div>
             </div>
 
             <main className="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 relative z-10">
-                {/* Header Area Centered (Socios Standard) */}
                 <div className="text-center mb-10 max-w-4xl mx-auto flex flex-col items-center">
                     <span className="inline-block bg-primary/10 text-primary font-bold text-xs px-4 py-1.5 rounded-full mb-3 uppercase tracking-wider">
                         {lang === "es" ? "Desarrollo Profesional" : "Desenvolvimento Profissional"}
@@ -348,14 +343,10 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                     >
                         {(activeTab === "events" || activeTab === "recordings" || activeTab === "accredited") && (
                             <div className="flex-1">
-                                {/* Filtros de Búsqueda - Variante Socios */}
                                 <div className="relative max-w-5xl mx-auto mb-10 z-10">
-                                    {/* Resplandor de fondo sutil */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/10 to-primary/20 blur-2xl -z-10 rounded-full" />
                                     
                                     <div className="flex flex-col md:flex-row items-center gap-2 p-2.5 rounded-3xl md:rounded-full bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgba(33,150,83,0.08)] transition-all">
-                                        
-                                        {/* Barra de Búsqueda Principal */}
                                         <div className="flex items-center flex-1 w-full md:w-auto px-4 py-2">
                                             <span className="material-icons-round text-primary mr-3">search</span>
                                             <input 
@@ -375,10 +366,8 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                             )}
                                         </div>
 
-                                        {/* Separador Desktop */}
                                         <div className="hidden md:block w-px h-8 bg-gray-200 mx-1"></div>
 
-                                        {/* Controles de Filtrado Integrados */}
                                         <div className="flex items-center gap-2 w-full md:w-auto px-1 pb-1 md:pb-0 justify-between md:justify-end flex-wrap md:flex-nowrap">
                                             {(activeTab === "events") && (
                                                 <div className="flex flex-wrap md:flex-nowrap items-center gap-1 w-full md:w-auto overflow-x-auto hide-scrollbar">
@@ -406,7 +395,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                     </div>
                                 </div>
 
-                                {/* Controles de Vista y Resultados Reales */}
                                 {activeTab !== "accredited" && (
                                     <div className="flex items-center justify-end mb-6">
                                         <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200 shadow-sm">
@@ -434,7 +422,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                 }>
                                     {filteredData.map((course, idx) => (
                                         (viewMode === "grid" && activeTab !== "accredited") ? (
-                                            /* GRID VIEW CARD - PREMIUM */
                                             <article key={idx} className="group flex flex-col bg-white rounded-3xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500 hover:-translate-y-1">
                                                 <div className="relative h-48 overflow-hidden bg-gray-50">
                                                     <Image fill alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" src={course.img || placeholderImg} />
@@ -519,7 +506,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                                 </div>
                                             </article>
                                         ) : (
-                                            /* LIST VIEW ROW - PREMIUM */
                                             <article key={idx} className="group flex flex-col md:flex-row items-center bg-white rounded-3xl p-3 border border-gray-100 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 gap-5 hover:-translate-y-0.5">
                                                 <div className="relative w-full md:w-48 h-40 md:h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50">
                                                     <Image fill alt={course.title} className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" src={course.img || placeholderImg} />
@@ -598,8 +584,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                             </div>
                         )}
 
-                        
-
                         {activeTab === "accreditation" && (
                             <div className="max-w-4xl mx-auto pb-4">
                                 {!selectedTramiteId ? (
@@ -613,7 +597,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                 </AnimatePresence>
             </main>
 
-            {/* Premium Webinar Detail Modal */}
             <AnimatePresence>
                 {selectedCourse && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
@@ -637,7 +620,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                 <span className="material-icons-round">close</span>
                             </button>
 
-                            {/* Left: Image & Quick Info */}
                             <div className="w-full md:w-5/12 relative h-64 md:h-auto bg-gray-50">
                                 <Image
                                     fill
@@ -654,9 +636,8 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                 </div>
                             </div>
 
-                            {/* Right: Details & Checkout */}
                             <div className="w-full md:w-7/12 p-8 md:p-12 overflow-y-auto flex flex-col">
-                                                <div className="mb-8 flex-1">
+                                <div className="mb-8 flex-1">
                                     <span className="inline-block bg-primary/10 text-primary px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
                                         {selectedCourse.category}
                                     </span>
@@ -677,7 +658,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                     </div>
                                 </div>
 
-                                {/* Payment Area */}
                                 <div className="pt-6 border-t border-gray-100 mt-auto">
                                     <h5 className="text-sm font-bold text-text-light mb-4 flex items-center gap-2">
                                         <span className="material-icons-round text-primary">payments</span>
@@ -685,13 +665,13 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                     </h5>
                                     
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <button className="flex items-center justify-between p-4 bg-white border-2 border-primary rounded-2xl hover:bg-primary/5 transition-all group">
+                                        <Link href={`/${lang}/formaciones/${selectedCourse.slug || selectedCourse.id}/buy`} className="flex items-center justify-between p-4 bg-white border-2 border-primary rounded-2xl hover:bg-primary/5 transition-all group">
                                             <div className="flex flex-col items-start gap-0.5">
                                                 <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{lang === "pt" ? "Inscrever-se com" : "Inscribirse con"}</span>
-                                                <span className="text-sm font-semibold text-text-light">{lang === "pt" ? "Pagamento Direto" : "Pago Directo"}</span>
+                                                <span className="text-sm font-semibold text-text-light">{lang === "pt" ? "Pagamento Direto" : "Pago Directo / Paypal"}</span>
                                             </div>
                                             <span className="material-icons-round text-primary group-hover:translate-x-1 transition-transform">credit_card</span>
-                                        </button>
+                                        </Link>
 
                                         <button className="flex items-center justify-between p-4 bg-primary text-white rounded-2xl hover:bg-primary-dark transition-all shadow-md hover:-translate-y-0.5 group">
                                             <div className="flex flex-col items-start gap-0.5">
@@ -713,7 +693,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                 )}
             </AnimatePresence>
 
-            {/* Contact Modal (Premium UX Option A) */}
             <AnimatePresence>
                 {selectedContactCourse && (() => {
                     const rawEmail = selectedContactCourse.route.replace("mailto:", "");
@@ -767,7 +746,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                 </div>
 
                                 <div className="flex flex-col gap-3">
-                                    {/* Gmail Web */}
                                     <a
                                         href={gmailUrl}
                                         target="_blank"
@@ -782,7 +760,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                         <span className="material-icons-round text-gray-400 group-hover:translate-x-1 transition-transform text-sm">open_in_new</span>
                                     </a>
 
-                                    {/* Outlook Web */}
                                     <a
                                         href={outlookUrl}
                                         target="_blank"
@@ -797,7 +774,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                         <span className="material-icons-round text-gray-400 group-hover:translate-x-1 transition-transform text-sm">open_in_new</span>
                                     </a>
 
-                                    {/* Copiar Correo */}
                                     <button
                                         onClick={handleCopyEmail}
                                         className="flex items-center justify-between p-4 bg-gray-50 hover:bg-primary/5 border border-gray-100 rounded-2xl transition-all group w-full text-left"
@@ -811,7 +787,6 @@ function FormacionesContent({ initialEvents, initialAccredited = [], currentLang
                                         <span className="material-icons-round text-gray-400 group-hover:translate-x-1 transition-transform text-sm">content_copy</span>
                                     </button>
 
-                                    {/* Mailto local */}
                                     <a
                                         href={selectedContactCourse.route}
                                         onClick={() => setSelectedContactCourse(null)}

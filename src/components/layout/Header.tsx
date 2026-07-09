@@ -136,9 +136,9 @@ export const Header = () => {
                                         <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("nav.portal")}</p>
                                         <p className="text-sm font-medium truncate text-text-main dark:text-white">{displayName}</p>
                                     </div>
-                                    <Link href={profile?.role === 'admin' ? `/${lang}/admin` : `/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary transition-colors">
+                                    <Link href={`/${lang}/dashboard`} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-primary/5 hover:text-primary transition-colors">
                                         <span className="material-icons-round text-[18px] mr-2 text-primary">dashboard</span>
-                                        {profile?.role === 'admin' ? 'Panel Administrativo' : 'Dashboard'}
+                                        Dashboard
                                     </Link>
                                     <button onClick={handleSignOut} className="w-full text-left flex items-center px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
                                         <LogOut className="w-4 h-4 mr-2" />

@@ -121,7 +121,7 @@ export default function Footer() {
           <div className="flex items-center gap-2 text-white/40 font-bold text-[9px] uppercase tracking-widest">
             <span>Desarrollado y Diseñado por</span>
             <a 
-              href="https://wa.me/message/R76OMSCAFXNTG1"
+              href="https://carmidev.com"
               target="_blank"
               rel="noopener noreferrer"
               className="relative h-[19px] w-[90px] group/logo cursor-pointer shrink-0 block"
