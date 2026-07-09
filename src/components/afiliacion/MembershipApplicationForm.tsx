@@ -59,7 +59,7 @@ const formSchema = z.object({
   carta_option: z.enum(["request", "upload"]),
   carta_file: z.any().optional(),
   terms_accepted: z.literal(true, {
-    errorMap: () => ({ message: "Debes aceptar los objetivos y términos de AIBAPT" }),
+    message: "Debes aceptar los objetivos y términos de AIBAPT"
   }),
 }).refine(data => {
   if (data.carta_option === 'upload' && (!data.carta_file || data.carta_file.length !== 1)) {
