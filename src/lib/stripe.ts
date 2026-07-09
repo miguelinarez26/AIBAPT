@@ -6,6 +6,6 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 // Inicializar la instancia de Stripe
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-02-24.acacia', // Usa la API version más reciente
+  apiVersion: '2026-06-24.dahlia', // Usa la API version más reciente
   typescript: true,
 });
