@@ -278,7 +278,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                       </Link>
                     </div>
 
-                    {isSelected && !esc.subProfiles && !esc.isContactForm && (
+                    {isSelected && !esc.isContactForm && (
                       <div className="mt-auto pt-6 flex items-center justify-center gap-2 text-white text-sm font-bold animate-fade-in-up">
                         <CheckCircle className="w-5 h-5" />
                         {lang === "es" ? "Seleccionado" : "Selecionado"}
