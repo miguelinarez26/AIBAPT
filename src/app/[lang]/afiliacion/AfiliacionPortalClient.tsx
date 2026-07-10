@@ -95,11 +95,11 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
       if (fetchError) {
         console.error("Error fetching applications:", fetchError);
       }
-      const { data: profile } = await supabase
+      const { data: profile } = (await supabase
         .from('profiles')
         .select('is_member')
         .eq('id', session.user.id)
-        .single();
+        .single()) as any;
 
       if (profile?.is_member || existingApp?.status === 'approved') {
         toast.success(
