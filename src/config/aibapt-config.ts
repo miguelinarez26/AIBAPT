@@ -158,15 +158,17 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
       {
         id: 'bienhechor',
         label: { es: 'Miembro Bienhechor', pt: 'Membro Benfeitor' },
-        monto: 45,
-        description: { es: 'Apoya nuestra labor de forma activa y altruista.', pt: 'Apoie nosso trabalho de forma ativa e altruísta.' },
+        monto: 0,
+        description: { es: 'Apoya nuestra labor realizando una donación de monto libre.', pt: 'Apoie nosso trabalho fazendo uma doação de valor livre.' },
         requirements: {
           es: [
             'Datos de contacto y dirección',
+            'Comprobante de donación a la AIBAPT',
             'Carta de Recomendación o realizar la solicitud a la AIBAPT'
           ],
           pt: [
             'Dados de contato e endereço',
+            'Comprovante de doação à AIBAPT',
             'Carta de Recomendação ou realizar a solicitação à AIBAPT'
           ]
         }
@@ -179,10 +181,14 @@ export const AIBAPT_TRAMITES: Record<string, TramiteConfig> = {
         requirements: {
           es: [
             'Datos de contacto y dirección',
+            'Currículum (PDF)',
+            'Comprobante de formación o constancia de estudios afines (PDF)',
             'Carta de Recomendación o realizar la solicitud a la AIBAPT'
           ],
           pt: [
             'Dados de contato e endereço',
+            'Currículo (PDF)',
+            'Comprovante de formação ou constância de estudos afins (PDF)',
             'Carta de Recomendação ou realizar a solicitação à AIBAPT'
           ]
         }

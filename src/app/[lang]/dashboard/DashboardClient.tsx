@@ -59,17 +59,21 @@ export default function DashboardClient({ profile: initialProfile, applications:
       setProfile(profileData);
 
       // Fetch applications
-      const { data: appsData } = await supabase
+      const { data: appsData, error: appsError } = await supabase
         .from('applications')
-        .select('*, accreditation_types(name)')
+        .select('*')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
+      if (appsError) {
+        console.error("Error fetching applications:", appsError);
+      }
+
       if (appsData) {
         const mapped = appsData.map((app: any) => ({
           ...app,
-          accreditation_type_name: app.accreditation_types?.name || 'Desconocido',
+          accreditation_type_name: app.type_id || 'Desconocido',
         }));
         setApplications(mapped);
       }
@@ -123,6 +127,7 @@ export default function DashboardClient({ profile: initialProfile, applications:
   if (!mounted) return null;
 
   const TRAMITE_NAMES: Record<string, string> = {
+    'solicitud_membresia': lang === 'es' ? 'Solicitud de Membresía' : 'Solicitação de Filiação',
     'Certificacion_EMDR': t["tramite.name.certificacion"],
     'Eventos_Conferencia': t["tramite.name.conferencia"],
     'Eventos_Workshop': t["tramite.name.workshop"],
@@ -144,6 +149,8 @@ export default function DashboardClient({ profile: initialProfile, applications:
     router.push(`/${lang}/auth/login`);
     router.refresh();
   };
+
+  const activeMembershipApp = applications.find(app => app.type_id === 'solicitud_membresia' && app.status !== 'rejected');
 
   return (
     <main className="pt-8 md:pt-12 min-h-screen bg-background-light dark:bg-background-dark relative overflow-hidden">
@@ -206,31 +213,61 @@ export default function DashboardClient({ profile: initialProfile, applications:
                 </div>
               </div>
             ) : !isMember && (
-              <div className="bg-gradient-to-br from-primary/15 to-secondary/5 dark:from-primary/20 dark:to-surface-dark p-8 md:p-10 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-primary/20 dark:border-primary/10 text-text-light relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 group-hover:bg-secondary/20 transition-all duration-700"></div>
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl shadow-inner text-primary border border-primary/20">
-                      <span className="material-icons-round">waving_hand</span>
+              activeMembershipApp ? (
+                <div className="bg-gradient-to-br from-highlight/15 to-highlight/5 dark:from-highlight/20 dark:to-surface-dark p-8 md:p-10 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-highlight/20 dark:border-highlight/10 text-text-light relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-highlight/10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 group-hover:bg-highlight/20 transition-all duration-700"></div>
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 rounded-2xl bg-highlight/20 flex items-center justify-center text-3xl shadow-inner text-amber-600 border border-highlight/30">
+                        <span className="material-icons-round">hourglass_empty</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-serif font-bold text-text-light dark:text-white tracking-tight mb-2">
+                          {lang === 'es' ? 'Tu solicitud está en curso' : 'Sua solicitação está em andamento'}
+                        </h2>
+                        <p className="text-text-dark dark:text-gray-400 font-light max-w-md leading-relaxed text-sm">
+                          {lang === 'es' ? 'Revisa el estado a continuación o completa el pago si está pendiente.' : 'Verifique o status abaixo ou conclua o pagamento se estiver pendente.'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-2xl md:text-3xl font-serif font-bold text-text-light dark:text-white tracking-tight mb-2">
-                        {t["dashboard.welcome.aibapt"]}
-                      </h2>
-                      <p className="text-text-dark dark:text-gray-400 font-light max-w-md leading-relaxed text-sm">
-                        {t["dashboard.welcome.new_account"]}
-                      </p>
-                    </div>
+                    <button
+                      onClick={() => {
+                        document.getElementById('applications-table')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="flex-shrink-0 bg-white dark:bg-surface-dark hover:bg-highlight/10 text-text-light dark:text-white px-8 py-3.5 rounded-full font-bold transition-all shadow-sm border border-highlight/30 hover:shadow-highlight/20 hover:-translate-y-1 flex items-center gap-2"
+                    >
+                      {lang === 'es' ? 'Ver mis trámites' : 'Ver meus trâmites'}
+                      <span className="material-icons-round text-sm transition-transform group-hover:translate-y-1">arrow_downward</span>
+                    </button>
                   </div>
-                  <Link
-                    href={`/${lang}/afiliacion`}
-                    className="flex-shrink-0 bg-primary hover:bg-primary/90 text-white px-8 py-3.5 rounded-full font-bold transition-all shadow-lg hover:shadow-primary/30 hover:-translate-y-1 flex items-center gap-2"
-                  >
-                    {t["dashboard.start_affiliation"] || "Comenzar Afiliación"}
-                    <span className="material-icons-round text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
-                  </Link>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-gradient-to-br from-primary/15 to-secondary/5 dark:from-primary/20 dark:to-surface-dark p-8 md:p-10 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-primary/20 dark:border-primary/10 text-text-light relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 group-hover:bg-secondary/20 transition-all duration-700"></div>
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl shadow-inner text-primary border border-primary/20">
+                        <span className="material-icons-round">waving_hand</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-serif font-bold text-text-light dark:text-white tracking-tight mb-2">
+                          {t["dashboard.welcome.aibapt"]}
+                        </h2>
+                        <p className="text-text-dark dark:text-gray-400 font-light max-w-md leading-relaxed text-sm">
+                          {t["dashboard.welcome.new_account"]}
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/${lang}/afiliacion`}
+                      className="flex-shrink-0 bg-primary hover:bg-primary/90 text-white px-8 py-3.5 rounded-full font-bold transition-all shadow-lg hover:shadow-primary/30 hover:-translate-y-1 flex items-center gap-2"
+                    >
+                      {t["dashboard.start_affiliation"] || "Comenzar Afiliación"}
+                      <span className="material-icons-round text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
+                    </Link>
+                  </div>
+                </div>
+              )
             )}
 
             {/* Mi Banco de Créditos */}
@@ -337,7 +374,7 @@ export default function DashboardClient({ profile: initialProfile, applications:
             </div>
 
             {/* Tabla de Trámites Recientes */}
-            <div className="bg-white dark:bg-surface-dark rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-secondary/20 dark:border-gray-800 overflow-hidden flex flex-col transition-all duration-500 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+            <div id="applications-table" className="bg-white dark:bg-surface-dark rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-secondary/20 dark:border-gray-800 overflow-hidden flex flex-col transition-all duration-500 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
               <div className="px-8 py-6 border-b border-secondary/20 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-white/5 backdrop-blur-sm">
                 <h3 className="font-bold font-serif text-xl text-text-light dark:text-white flex items-center gap-2">
                   <span className="material-icons-round text-primary">folder_open</span>
@@ -359,7 +396,20 @@ export default function DashboardClient({ profile: initialProfile, applications:
                     <tbody className="divide-y divide-secondary/10 dark:divide-gray-800">
                       {applications.slice(0, 5).map((app: any) => (
                         <React.Fragment key={app.id}>
-                          <tr className="hover:bg-primary/5 dark:hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => router.push(`/${lang}/dashboard/tramites/${app.id}`)}>
+                          <tr 
+                            className="hover:bg-primary/5 dark:hover:bg-white/5 transition-colors group cursor-pointer" 
+                            onClick={() => {
+                              if (app.status === 'pending') {
+                                router.push(`/${lang}/checkout/${app.id}`);
+                              } else {
+                                toast.info(
+                                  lang === 'es' 
+                                    ? "Este trámite ya está pagado o en proceso. Pronto tendremos una vista detallada disponible."
+                                    : "Este trâmite já está pago ou em andamento. Em breve teremos uma visualização detalhada disponível."
+                                );
+                              }
+                            }}
+                          >
                             <td className="py-5 px-8 font-mono text-sm font-bold text-primary">
                               #{app.id.substring(0, 8)}
                             </td>

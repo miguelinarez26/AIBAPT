@@ -43,7 +43,18 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
         {children}
-        <Toaster position="bottom-center" richColors />
+        <Toaster 
+          position="bottom-center" 
+          toastOptions={{
+            classNames: {
+              toast: 'font-sans shadow-lg rounded-2xl',
+              info: '!bg-secondary/10 !border-secondary/30 !text-primary dark:!text-secondary-light',
+              success: '!bg-primary/10 !border-primary/30 !text-primary dark:!text-primary-light',
+              warning: '!bg-highlight/10 !border-highlight/30 !text-amber-700 dark:!text-amber-500',
+              error: '!bg-accent/10 !border-accent/30 !text-accent dark:!text-accent-light',
+            }
+          }}
+        />
       </body>
     </html>
   );

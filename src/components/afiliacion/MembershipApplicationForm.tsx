@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { CustomPhoneInput } from "@/components/ui/CustomPhoneInput";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { 
   ChevronRight, 
   Loader2, 
@@ -42,8 +44,21 @@ const formSchema = z.object({
   state: z.string().min(1, "El estado es obligatorio"),
   country: z.string().min(1, "El país es obligatorio"),
   zip_code: z.string().min(1, "El CEP / Código Postal es obligatorio"),
-  phone_mobile: z.string().min(1, "El teléfono celular es obligatorio"),
-  phone_commercial: z.string().optional(),
+  phone_mobile: z.string().min(1, "El teléfono celular es obligatorio").refine((val) => {
+    try {
+      return isValidPhoneNumber(val);
+    } catch {
+      return false;
+    }
+  }, "El número ingresado no es válido para ese país"),
+  phone_commercial: z.string().optional().refine((val) => {
+    if (!val || val.trim().length <= 5) return true;
+    try {
+      return isValidPhoneNumber(val);
+    } catch {
+      return false;
+    }
+  }, "El número comercial ingresado no es válido para ese país"),
   professional_register: z.string().min(1, "El registro profesional es obligatorio"),
   training_emdr: z.boolean().default(false),
   training_brainspotting: z.boolean().default(false),
@@ -56,36 +71,40 @@ const formSchema = z.object({
   is_public_directory: z.enum(["yes", "no"]),
   cv_file: optionalFileSchema,
   comprobante_file: optionalFileSchema,
+  comprobante_donacion_file: optionalFileSchema,
   carta_option: z.enum(["request", "upload"]),
   carta_file: z.any().optional(),
   terms_accepted: z.literal(true, {
     message: "Debes aceptar los objetivos y términos de AIBAPT"
   }),
-}).refine(data => {
-  if (data.carta_option === 'upload' && (!data.carta_file || data.carta_file.length !== 1)) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Debes subir el PDF de la carta de recomendación o elegir solicitarla.",
-  path: ["carta_file"]
-}).refine(data => {
-  if (data.person_type !== "bienhechor" && data.person_type !== "simpatizante") {
-    if (!data.cv_file || data.cv_file.length !== 1) return false;
-  }
-  return true;
-}, {
-  message: "Este archivo es obligatorio.",
-  path: ["cv_file"]
-}).refine(data => {
-  if (data.person_type !== "bienhechor" && data.person_type !== "simpatizante") {
-    if (!data.comprobante_file || data.comprobante_file.length !== 1) return false;
-  }
-  return true;
-}, {
-  message: "Este archivo es obligatorio.",
-  path: ["comprobante_file"]
 });
+
+const getDynamicSchema = (personType: string, cartaOption: string, hasAnyTraining: boolean) => {
+  const isVoluntary = ["simpatizante", "institucional", "bienhechor"].includes(personType);
+  return formSchema.extend({
+    professional_register: isVoluntary ? z.string().optional() : z.string().min(1, "El registro profesional es obligatorio"),
+    person_type_otro_texto: z.string().optional().superRefine((val, ctx) => {
+      if (personType === "otro" && (!val || val.trim() === "")) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Por favor, especifica tu profesión",
+        });
+      }
+    }),
+    training_otros_texto: z.string().optional().superRefine((val, ctx) => {
+      if (!isVoluntary && !hasAnyTraining && (!val || val.trim() === "")) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Debes seleccionar al menos una formación o especificar en 'Otros'",
+        });
+      }
+    }),
+    cv_file: !isVoluntary ? fileSchema : optionalFileSchema,
+    comprobante_file: !isVoluntary ? fileSchema : optionalFileSchema,
+    comprobante_donacion_file: personType === "bienhechor" ? fileSchema : optionalFileSchema,
+    carta_file: cartaOption === 'upload' ? fileSchema : optionalFileSchema,
+  });
+};
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -108,9 +127,18 @@ export default function MembershipApplicationForm({
     register,
     handleSubmit,
     watch,
+    control,
+    trigger,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: async (data, context, options) => {
+      // Calculate hasAnyTraining from data directly for validation to be accurate during submit
+      const hasTraining = data.training_emdr || data.training_brainspotting || data.training_se || 
+                          data.training_ifs || data.training_trv || data.training_ti_cbt || data.training_ot;
+      const schema = getDynamicSchema(data.person_type, data.carta_option, hasTraining as boolean);
+      return (zodResolver(schema) as any)(data, context, options);
+    },
+    mode: "onChange",
     defaultValues: {
       person_type: (selectedEscenario === "pleno" ? "pleno_salud_mental" : selectedEscenario) as any,
       is_public_directory: "yes",
@@ -120,14 +148,31 @@ export default function MembershipApplicationForm({
 
   const cartaOption = watch("carta_option");
   const personType = watch("person_type");
-  const isVoluntary = personType === "bienhechor" || personType === "simpatizante";
+  const isVoluntary = personType === "bienhechor" || personType === "simpatizante" || personType === "institucional";
+  
+  const trainingCheckboxes = watch([
+    "training_emdr", "training_brainspotting", "training_se", 
+    "training_ifs", "training_trv", "training_ti_cbt", "training_ot"
+  ]);
+  const hasAnyTraining = trainingCheckboxes.some(v => v === true);
+
+  React.useEffect(() => {
+    // Only trigger if the form has been submitted at least once (isSubmitted) 
+    // or if the user is interacting with it, to avoid infinite loops and premature errors.
+    trigger("training_otros_texto");
+  }, [hasAnyTraining, trigger]);
+
+  React.useEffect(() => {
+    if (personType === "otro") {
+      trigger("person_type_otro_texto");
+    }
+  }, [personType, trigger]);
 
   const onSubmit = async (data: FormValues) => {
     setSubmitError(null);
     setIsSubmitting(true);
 
     try {
-      // 1. Upload files
       const applicationId = uuidv4();
       
       const uploadFile = async (fileList: FileList, docType: string) => {
@@ -142,25 +187,25 @@ export default function MembershipApplicationForm({
 
         if (uploadError) throw uploadError;
 
-        await (supabase.from('documents') as any).insert({
+        const { error: docError } = await (supabase.from('documents') as any).insert({
           application_id: applicationId,
+          user_id: userId,
           file_path: fileName,
           document_type: docType,
           is_private: true
         });
 
+        if (docError) {
+          console.error("Error inserting into documents table:", docError);
+          throw new Error(`Error guardando referencia del documento: ${docError.message || JSON.stringify(docError)}`);
+        }
+
         return fileName;
       };
 
-      await uploadFile(data.cv_file, 'cv');
-      await uploadFile(data.comprobante_file, 'comprobante_formacion');
-      if (data.carta_option === 'upload') {
-        await uploadFile(data.carta_file, 'carta_recomendacion');
-      }
-
-      // 2. Insert Application record
       const metadata = {
         person_type: data.person_type,
+        person_type_otro_texto: data.person_type_otro_texto,
         cpf_document: data.cpf_document,
         address: data.address,
         neighborhood: data.neighborhood,
@@ -184,20 +229,35 @@ export default function MembershipApplicationForm({
         is_public_directory: data.is_public_directory === "yes",
         carta_recomendacion_solicitada: data.carta_option === "request",
         lang: lang,
-        escenario: selectedEscenario
+        escenario: selectedEscenario,
+        payment_status: currentEscenarioObj?.monto === 0 ? "not_required" : "pending"
       };
 
+      // 1. Crear primero la solicitud para evitar violar la Foreign Key en documents
       const { error: appError } = await (supabase.from('applications') as any).insert({
         id: applicationId,
         user_id: userId,
         type_id: "solicitud_membresia",
-        status: "pending",
+        status: "pending", // Reverted to a valid enum value
         metadata: metadata
       });
 
-      if (appError) throw appError;
+      if (appError) {
+        const errorDetails = `Code: ${appError.code}, Message: ${appError.message}, Details: ${appError.details}, Hint: ${appError.hint}`;
+        console.error("Error inserting application:", errorDetails, appError);
+        throw new Error(`Error guardando solicitud: ${errorDetails}`);
+      }
 
-      // 3. Update Profile for Member Directory
+      // 2. Subir y registrar documentos (ahora applicationId ya existe en applications)
+      await uploadFile(data.cv_file, 'cv');
+      await uploadFile(data.comprobante_file, 'comprobante_formacion');
+      await uploadFile(data.comprobante_donacion_file, 'pago'); // Cambiado a 'pago' para respetar el Enum
+      if (data.carta_option === 'upload') {
+        await uploadFile(data.carta_file, 'carta_recomendacion');
+      }
+
+      // 3. Actualizar el perfil del usuario
+
       const { error: profileError } = await (supabase.from('profiles') as any).update({
         person_type: data.person_type,
         cpf_document: data.cpf_document,
@@ -214,16 +274,28 @@ export default function MembershipApplicationForm({
         is_public_directory: data.is_public_directory === "yes"
       }).eq('id', userId);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+        throw new Error(`Error actualizando perfil: ${profileError.message || JSON.stringify(profileError)}`);
+      }
 
-      toast.success(lang === "es" ? "Solicitud enviada correctamente" : "Solicitação enviada com sucesso");
-      
-      // Redirect to a success page or back to dashboard
-      window.location.href = `/${lang}/dashboard`;
+      toast.success(lang === "es" ? "Solicitud procesada. Redirigiendo al pago..." : "Solicitação processada. Redirecionando para pagamento...");
+      window.location.href = `/${lang}/checkout/${applicationId}`;
 
     } catch (err: any) {
-      console.error(err);
-      setSubmitError(err.message || "Ocurrió un error inesperado al procesar la solicitud.");
+      console.error("Caught in onSubmit:", err);
+      // Extraemos información real si err es un objeto vacío o sin mensaje claro
+      let errorMsg = err.message;
+      if (!errorMsg || errorMsg === "[object Object]") {
+        try {
+          errorMsg = JSON.stringify(err);
+        } catch (e) {
+          errorMsg = String(err);
+        }
+      }
+      if (errorMsg === "{}") errorMsg = "Error desconocido de Supabase (posible RLS o columna faltante).";
+      
+      setSubmitError(errorMsg || "Ocurrió un error inesperado al procesar la solicitud.");
       toast.error(lang === "es" ? "Error al procesar la solicitud" : "Erro ao processar solicitação");
     } finally {
       setIsSubmitting(false);
@@ -236,10 +308,8 @@ export default function MembershipApplicationForm({
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24 pt-8">
-      {/* Cabecera / Inversión */}
       {currentEscenarioObj && (
         <div className="bg-primary text-white rounded-2xl shadow-xl border border-primary-dark p-8 flex flex-col md:flex-row items-center justify-between overflow-hidden relative">
-          {/* Brillo sutil de fondo para textura */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
           
           <div className="z-10 mb-6 md:mb-0">
@@ -273,7 +343,6 @@ export default function MembershipApplicationForm({
       )}
 
       <form onSubmit={handleSubmit(onSubmit as any, handleFormError)} className="space-y-8">
-        {/* Datos Personales */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary/30 dark:border-gray-800 p-8 transition-all duration-500 group/card">
           <div className="flex items-center mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-4">
@@ -299,9 +368,17 @@ export default function MembershipApplicationForm({
                   <input type="radio" value="otro" {...register("person_type")} className="accent-primary focus:ring-primary h-4 w-4 cursor-pointer" />
                   <span className="text-sm font-medium text-text-dark">Otro</span>
                 </label>
-                
-                {/* Oculto a la vista pero presente para mantener la lógica si viene del perfil Institucional */}
-                <input type="radio" value="institucional" {...register("person_type")} className="hidden" />
+                {personType === "otro" && (
+                  <div className="pl-8 pr-4 animate-in fade-in slide-in-from-top-2">
+                    <input 
+                      type="text" 
+                      placeholder="Especifique su profesión..." 
+                      {...register("person_type_otro_texto")} 
+                      className="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all shadow-inner" 
+                    />
+                    {errors.person_type_otro_texto && <p className="text-red-500 text-xs mt-1">{errors.person_type_otro_texto.message as string}</p>}
+                  </div>
+                )}
               </div>
             </div>
             )}
@@ -309,7 +386,6 @@ export default function MembershipApplicationForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col h-full">
                 <label className="block text-sm font-medium text-text-light mb-1">CPF / Documento Fiscal *</label>
-                <div className="flex-grow"></div>
                 <input type="text" {...register("cpf_document")} className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white focus:border-primary/50 hover:bg-white transition-all duration-300 shadow-inner" />
                 {errors.cpf_document && <p className="text-red-500 text-xs mt-1">{errors.cpf_document.message}</p>}
               </div>
@@ -317,12 +393,6 @@ export default function MembershipApplicationForm({
                 {!isVoluntary && (
                   <>
                     <label className="block text-sm font-medium text-text-light mb-1">Registro Profesional (CRP/CRM) *</label>
-                    <p className="text-[11px] text-text-dark/70 mb-2 leading-tight">
-                      {lang === "es" 
-                        ? 'Miembro "Agente de Intervención Social" que no tenga colegio profesional, colocar "no aplica".'
-                        : 'Membro "Agente de Intervenção Social" que não tenha conselho profissional, colocar "não se aplica".'}
-                    </p>
-                    <div className="flex-grow"></div>
                     <input type="text" {...register("professional_register")} className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white focus:border-primary/50 hover:bg-white transition-all duration-300 shadow-inner" />
                     {errors.professional_register && <p className="text-red-500 text-xs mt-1">{errors.professional_register.message as string}</p>}
                   </>
@@ -333,18 +403,40 @@ export default function MembershipApplicationForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col h-full">
                 <label className="block text-sm font-medium text-text-light mb-1">Celular / WhatsApp *</label>
-                <input type="text" {...register("phone_mobile")} className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white focus:border-primary/50 hover:bg-white transition-all duration-300 shadow-inner" />
+                <Controller
+                    name="phone_mobile"
+                    control={control}
+                    render={({ field }) => (
+                      <CustomPhoneInput
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder={lang === "es" ? "Solo número local (sin prefijo)" : "Apenas número local (sem prefixo)"}
+                        searchPlaceholder={lang === "es" ? "Buscar país..." : "Buscar país..."}
+                        notFoundText={lang === "es" ? "País no encontrado" : "País não encontrado"}
+                      />
+                    )}
+                />
                 {errors.phone_mobile && <p className="text-red-500 text-xs mt-1">{errors.phone_mobile.message as string}</p>}
               </div>
               <div className="flex flex-col h-full">
                 <label className="block text-sm font-medium text-text-light mb-1">Teléfono Comercial</label>
-                <input type="text" {...register("phone_commercial")} className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white focus:border-primary/50 hover:bg-white transition-all duration-300 shadow-inner" />
+                <Controller
+                    name="phone_commercial"
+                    control={control}
+                    render={({ field }) => (
+                      <CustomPhoneInput
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder={lang === "es" ? "Número comercial" : "Número comercial"}
+                      />
+                    )}
+                />
+                {errors.phone_commercial && <p className="text-red-500 text-xs mt-1">{errors.phone_commercial.message as string}</p>}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Dirección */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary/30 dark:border-gray-800 p-8 transition-all duration-500 group/card">
           <div className="flex items-center mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-4">
@@ -387,14 +479,13 @@ export default function MembershipApplicationForm({
           </div>
         </div>
 
-        {/* Formación - Oculto para voluntarios */}
         {!isVoluntary && (
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary/30 dark:border-gray-800 p-8 transition-all duration-500 group/card">
             <div className="flex items-center mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
               <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-4">
                 <GraduationCap className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="text-xl font-serif text-text-light">Formación (Cursos o certificaciones)</h3>
+              <h3 className="text-xl font-serif text-text-light">Formación (Cursos o certificaciones) *</h3>
             </div>
             
             <label className="block text-sm font-medium text-text-light mb-4">Selecciona las formaciones con las que cuentas:</label>
@@ -432,11 +523,11 @@ export default function MembershipApplicationForm({
             <div>
               <label className="block text-sm font-medium text-text-light mb-1">Otros (Especificar)</label>
               <input type="text" {...register("training_otros_texto")} className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white focus:border-primary/50 hover:bg-white transition-all duration-300 shadow-inner" />
+              {errors.training_otros_texto && <p className="text-red-500 text-xs mt-1">{errors.training_otros_texto.message as string}</p>}
             </div>
           </div>
         )}
 
-        {/* Carga de Documentos */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary/30 dark:border-gray-800 p-8 transition-all duration-500 group/card">
           <div className="flex items-center mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-4">
@@ -460,6 +551,14 @@ export default function MembershipApplicationForm({
                   {errors.comprobante_file && <p className="text-red-500 text-xs mt-1">{errors.comprobante_file.message as string}</p>}
                 </div>
               </>
+            )}
+
+            {personType === "bienhechor" && (
+                <div>
+                  <label className="block text-sm font-medium text-text-light mb-1">Cargar Comprobante de Donación (PDF) *</label>
+                  <input type="file" accept=".pdf" {...register("comprobante_donacion_file")} className="w-full text-sm text-text-dark file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+                  {errors.comprobante_donacion_file && <p className="text-red-500 text-xs mt-1">{errors.comprobante_donacion_file.message as string}</p>}
+                </div>
             )}
 
             <div className={!isVoluntary ? "pt-4 border-t border-gray-100 dark:border-gray-800" : ""}>
@@ -494,7 +593,6 @@ export default function MembershipApplicationForm({
           </div>
         </div>
 
-        {/* Visibilidad de Directorio */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary/30 dark:border-gray-800 p-8 transition-all duration-500 group/card">
           <label className="block text-base font-bold text-text-light mb-3">¿Desea que su información sea pública en el directorio de la página de AIBAPT?</label>
           <div className="flex flex-wrap gap-4">
@@ -509,7 +607,6 @@ export default function MembershipApplicationForm({
           </div>
         </div>
 
-        {/* Aceptación de Términos */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary/30 dark:border-gray-800 p-8 transition-all duration-500 group/card">
           <div className="prose prose-sm dark:prose-invert max-w-none mb-6 text-text-dark">
             <p><strong>He leído y estoy de acuerdo con los objetivos de la Asociación Iberoamericana de Psicotrauma:</strong></p>
@@ -521,28 +618,33 @@ export default function MembershipApplicationForm({
             </ul>
           </div>
           
-          <label className="flex items-start space-x-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
-            <input type="checkbox" {...register("terms_accepted")} className="mt-1 accent-primary focus:ring-primary h-5 w-5 cursor-pointer rounded border-gray-300" />
-            <span className="text-sm font-medium text-text-light">Acepto los términos y condiciones de la Asociación Iberoamericana de Psicotrauma.</span>
+          <label className="flex items-center space-x-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
+            <input type="checkbox" {...register("terms_accepted")} className="accent-primary focus:ring-primary h-5 w-5 cursor-pointer rounded border-gray-300" />
+            <span className="text-sm font-medium text-text-light dark:text-gray-300">Acepto los términos y condiciones de la Asociación Iberoamericana de Psicotrauma.</span>
           </label>
-          {errors.terms_accepted && <p className="text-red-500 text-xs mt-2 ml-8">{errors.terms_accepted.message}</p>}
+          {errors.terms_accepted && <p className="text-red-500 text-xs mt-2 ml-8">{errors.terms_accepted?.message as string}</p>}
         </div>
-
+        
         {/* Submit Button */}
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            className="group flex items-center justify-center space-x-2 px-8 py-4 bg-accent hover:bg-accent-light text-white font-medium rounded-full shadow-md transition-all duration-300"
+            disabled={isSubmitting}
+            className={`group flex items-center justify-center space-x-2 px-8 py-4 bg-accent hover:bg-accent-light text-white font-medium rounded-full shadow-md transition-all duration-300 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            {isSubmitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                <span>Enviar Solicitud</span>
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
-                  <ChevronRight className="w-4 h-4 text-white" />
-                </div>
-              </>
+            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
+            <span>
+              {isSubmitting 
+                ? (lang === "es" ? "Procesando..." : "Processando...")
+                : currentEscenarioObj?.monto === 0 
+                  ? (lang === "es" ? "Enviar Solicitud" : "Enviar Solicitação")
+                  : (lang === "es" ? "Proceder al Pago Seguro" : "Proceder ao Pagamento Seguro")
+              }
+            </span>
+            {!isSubmitting && (
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
+                <ChevronRight className="w-4 h-4 text-white" />
+              </div>
             )}
           </button>
         </div>

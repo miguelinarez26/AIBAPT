@@ -12,8 +12,11 @@ import {
   Users,
   Building2,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   pleno: Users,
@@ -40,6 +43,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
 
   const [selectedEscenario, setSelectedEscenario] = useState<string>("");
   const [showStepper, setShowStepper] = useState(false);
+  const [isCheckingApp, setIsCheckingApp] = useState(false);
 
   // Derivar objeto del escenario seleccionado para detectar sub-perfiles
   const currentEscenarioObj = config?.monto.find(
@@ -52,7 +56,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
 
   const [error, setError] = useState<string | null>(null);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!isSelectionValid) {
       setError(lang === "es" ? "Por favor selecciona el tipo de membresía al que deseas aplicar para continuar." : "Por favor, selecione o tipo de membresia que deseja aplicar para continuar.");
       return;
@@ -73,7 +77,35 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
       router.push(`/${lang}/registro?redirectTo=${encodeURIComponent(redirectPath)}`);
       return;
     }
-    setShowStepper(true);
+    
+    setIsCheckingApp(true);
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const { data: existingApp, error: fetchError } = await supabase
+        .from('applications')
+        .select('status, id')
+        .eq('user_id', session.user.id)
+        .eq('type_id', 'solicitud_membresia')
+        .neq('status', 'rejected')
+        .maybeSingle();
+        
+      if (existingApp) {
+        toast.error(
+          lang === "es" 
+            ? "Ya tienes una solicitud de membresía en curso." 
+            : "Você já tem uma solicitação de filiação em andamento."
+        );
+        router.push(`/${lang}/dashboard`);
+        return;
+      }
+      
+      setShowStepper(true);
+    } catch (err) {
+      console.error(err);
+      setError(lang === "es" ? "Error verificando estado." : "Erro ao verificar o status.");
+    } finally {
+      setIsCheckingApp(false);
+    }
   };
 
   const fadeInUp: any = {
@@ -243,7 +275,7 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
                       }`}>
                       {esc.monto > 0
                         ? `${esc.monto} €`
-                        : lang === "es" ? "Voluntario" : "Voluntário"}
+                        : lang === "es" ? "Donación" : "Doação"}
                       {esc.monto > 0 && (
                         <span className={`text-sm font-medium ml-1 transition-colors duration-500 ${isSelected ? "text-white/80" : "text-text-dark group-hover:text-white/80"}`}>
                           /{lang === "es" ? "año" : "ano"}
@@ -309,9 +341,11 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
         <div className="flex justify-center">
           <button
             onClick={handleContinue}
-            className="group/btn relative inline-flex items-center gap-4 bg-accent hover:bg-accent-light text-white pl-8 pr-2 py-2 rounded-full font-bold text-lg transition-all duration-300 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-1"
+            disabled={isCheckingApp}
+            className="group/btn relative inline-flex items-center gap-4 bg-accent hover:bg-accent-light text-white pl-8 pr-2 py-2 rounded-full font-bold text-lg transition-all duration-300 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-1 disabled:opacity-70 disabled:hover:translate-y-0"
           >
-            <span className="leading-none">
+            <span className="leading-none flex items-center gap-2">
+              {isCheckingApp && <Loader2 className="w-5 h-5 animate-spin" />}
               {!(mounted && session)
                 ? (lang === "es"
                   ? "Crear cuenta y continuar"

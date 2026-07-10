@@ -110,8 +110,8 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
     setError(null);
 
     try {
-      const isCCA = appData?.accreditation_types?.name?.includes('CCA');
-      const isMembresia = appData?.accreditation_types?.name?.includes('membresia');
+      const isCCA = appData?.type_id?.includes('CCA') || appData?.accreditation_types?.name?.includes('CCA');
+      const isMembresia = appData?.type_id === 'solicitud_membresia' || appData?.accreditation_types?.name?.includes('membresia');
       
       let actionType = 'GENERAL';
       if (isCCA) actionType = 'CCA';
@@ -144,13 +144,21 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
 
   const handleViewDocument = async (filePath: string) => {
     try {
-      const { data, error } = await supabase
-        .storage
-        .from('private-certifications')
-        .createSignedUrl(filePath, 60);
+      const bucketName = appData?.type_id === 'solicitud_membresia' ? 'documents' : 'private-certifications';
+      
+      const res = await fetch('/api/admin/get-signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bucket: bucketName, path: filePath })
+      });
 
-      if (error) throw error;
-      window.open(data.signedUrl, '_blank');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Error al obtener archivo');
+      }
+
+      const { url } = await res.json();
+      window.open(url, '_blank');
     } catch (err: any) {
       toast.error(t("admin.modal.error.file") || "Error al abrir el archivo.");
     }
@@ -170,7 +178,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
   if (!appData) return null;
 
   const metadata = appData.metadata as Record<string, any> || {};
-  const isMembresia = appData.accreditation_types?.name?.includes('membresia');
+  const isMembresia = appData?.type_id === 'solicitud_membresia' || appData.accreditation_types?.name?.includes('membresia');
 
   const TRAMITE_NAMES: Record<string, string> = {
     'solicitud_membresia': t("tramite.name.membresia"),
@@ -186,13 +194,13 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
     'Psicotrauma_Individual': t("tramite.name.trauma_ind"),
     'Psicotrauma_Programa': t("tramite.name.trauma_prog"),
   };
-  const humanTramiteName = TRAMITE_NAMES[appData.accreditation_types?.name || ''] || appData.accreditation_types?.name?.replace(/_/g, ' ') || t("status.unknown");
+  const humanTramiteName = TRAMITE_NAMES[appData.type_id || appData.accreditation_types?.name || ''] || appData.type_id?.replace(/_/g, ' ') || appData.accreditation_types?.name?.replace(/_/g, ' ') || t("status.unknown");
 
   const DOC_TYPE_LABELS: Record<string, Record<'es' | 'pt', string>> = {
     'hoja_inscripcion': { es: 'Hoja de Inscripción', pt: 'Ficha de Inscrição' },
     'solicitud_ingreso': { es: 'Solicitud de Ingreso', pt: 'Solicitação de Ingresso' },
     'titulo_profesional': { es: 'Título Profesional', pt: 'Título Profissional' },
-    'cv': { es: 'Currículum Vitae', pt: 'Currículum Vitae' },
+    'cv': { es: 'Currículum', pt: 'Currículo' },
     'comprobante_formacion_sm': { es: 'Diploma Abordaje Trauma', pt: 'Diploma Abordagem Trauma' },
     'comprobante_formacion_as': { es: 'Certificado Taller 10h', pt: 'Certificado Workshop 10h' },
     'carta_recomendacion_1': { es: 'Carta de Recomendación (1)', pt: 'Carta de Recomendação (1)' },
@@ -373,7 +381,23 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
               <div className="bg-zinc-50/50 dark:bg-zinc-800/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800/50">
                 <ul className="space-y-1 text-sm">
                   {Object.entries(metadata)
-                    .filter(([key]) => !(key === 'modalidad_online' && isMembresia))
+                    .filter(([key]) => !(key === 'modalidad_online' && isMembresia) && key !== 'paypal_order_id' && key !== 'lang')
+                    .sort(([keyA], [keyB]) => {
+                      const KEY_ORDER = [
+                        'escenario', 'categoria_membresia', 'person_type', 'person_type_otro_texto',
+                        'cpf_document', 'professional_register',
+                        'phone_mobile', 'phone_commercial',
+                        'country', 'state', 'city', 'neighborhood', 'address', 'zip_code',
+                        'training_background', 'carta_recomendacion_solicitada', 'is_public_directory',
+                        'payment_status', 'monto_pagado', 'monto', 'inversion', 'paid_at', 'fecha_pago', 'referencia'
+                      ];
+                      const indexA = KEY_ORDER.indexOf(keyA);
+                      const indexB = KEY_ORDER.indexOf(keyB);
+                      if (indexA === -1 && indexB === -1) return keyA.localeCompare(keyB);
+                      if (indexA === -1) return 1;
+                      if (indexB === -1) return -1;
+                      return indexA - indexB;
+                    })
                     .map(([key, value]) => {
                     let displayValue = String(value);
                     
@@ -389,7 +413,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                         style: 'currency',
                         currency: 'EUR'
                       }).format(Number(value));
-                    } else if (key === 'escenario' || key === 'categoria_membresia') {
+                    } else if (key === 'escenario' || key === 'categoria_membresia' || key === 'person_type') {
                       const categoryMap: Record<string, string> = {
                         'pleno_salud_mental': lang === 'es' ? 'Miembro Pleno — Profesional de Salud Mental' : 'Membro Pleno — Profissional de Saúde Mental',
                         'pleno_agente_social': lang === 'es' ? 'Miembro Pleno — Agente de Intervención Social' : 'Membro Pleno — Agente de Intervenção Social',
@@ -401,18 +425,47 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                         'supervisor': lang === 'es' ? 'Miembro Supervisor / Profesor' : 'Membro Supervisor / Professor',
                       };
                       displayValue = categoryMap[String(value)] || String(value).replace(/_/g, ' ');
-                    } else if (key === 'idioma_solicitud') {
+                    } else if (key === 'idioma_solicitud' || key === 'lang') {
                       displayValue = value === 'es' ? 'Español' : value === 'pt' ? 'Português' : String(value);
                     } else if (key === 'tramite_tipo') {
                       displayValue = value === 'membresia' ? (lang === 'es' ? 'Solicitud de Membresía' : 'Solicitação de Membresia') : String(value);
+                    } else if (key === 'paid_at' || key === 'fecha_pago') {
+                      displayValue = new Date(String(value)).toLocaleString(lang === 'es' ? 'es-ES' : 'pt-BR');
+                    } else if (key === 'payment_status') {
+                      if (value === 'paid') displayValue = lang === 'es' ? 'Pagado' : 'Pago';
+                      else if (value === 'pending') displayValue = lang === 'es' ? 'Pendiente' : 'Pendente';
+                      else if (value === 'not_required') displayValue = lang === 'es' ? 'No Requerido' : 'Não Exigido';
+                      else displayValue = String(value);
+                    } else if (typeof value === 'object' && value !== null) {
+                      displayValue = Object.entries(value)
+                        .filter(([_, v]) => v)
+                        .map(([k, v]) => typeof v === 'boolean' ? k.replace(/_/g, ' ') : String(v))
+                        .join(', ') || (lang === 'es' ? 'Ninguno' : 'Nenhum');
                     }
 
                     // Lógica de etiquetas humanizadas (Keys)
                     const keyLabelMap: Record<string, string> = {
-                      'escenario': appData.accreditation_types?.name?.includes('membresia') 
+                      'escenario': appData?.type_id?.includes('membresia') 
                         ? (lang === 'es' ? 'Categoría de socio' : 'Categoria de sócio')
                         : (lang === 'es' ? 'Escenario' : 'Cenário'),
                       'categoria_membresia': lang === 'es' ? 'Categoría de membresía' : 'Categoria de membresia',
+                      'person_type': lang === 'es' ? 'Subcategoría / Profesión' : 'Subcategoria / Profissão',
+                      'paid_at': t("field.label.fecha_pago") || (lang === 'es' ? 'Fecha de pago' : 'Data de pagamento'),
+                      'city': lang === 'es' ? 'Ciudad' : 'Cidade',
+                      'state': lang === 'es' ? 'Estado / Provincia' : 'Estado / Província',
+                      'country': lang === 'es' ? 'País' : 'País',
+                      'address': lang === 'es' ? 'Dirección' : 'Endereço',
+                      'neighborhood': lang === 'es' ? 'Barrio / Urbanización' : 'Bairro',
+                      'zip_code': lang === 'es' ? 'Código Postal' : 'Código Postal',
+                      'lang': lang === 'es' ? 'Idioma de la plataforma' : 'Idioma da plataforma',
+                      'payment_status': lang === 'es' ? 'Estado del Pago' : 'Status do Pagamento',
+                      'person_type_otro_texto': lang === 'es' ? 'Otra profesión' : 'Outra profissão',
+                      'phone_mobile': lang === 'es' ? 'Teléfono Móvil' : 'Celular',
+                      'phone_commercial': lang === 'es' ? 'Teléfono Comercial' : 'Telefone Comercial',
+                      'professional_register': lang === 'es' ? 'Registro Profesional' : 'Registro Profissional',
+                      'is_public_directory': lang === 'es' ? 'Aparecer en Directorio Público' : 'Aparecer no Diretório Público',
+                      'carta_recomendacion_solicitada': lang === 'es' ? 'Carta de Recomendación' : 'Carta de Recomendação',
+                      'training_background': lang === 'es' ? 'Formación Previa' : 'Formação Prévia',
                       'monto_pagado': t("field.label.monto_pagado"),
                       'monto': t("field.label.monto_pagado"),
                       'inversion': t("field.label.inversion"),
@@ -421,6 +474,7 @@ export default function AdminDetailModal({ applicationId, lang, onClose, onUpdat
                       'tramite_tipo': lang === 'es' ? 'Tipo de trámite' : 'Tipo de trâmite',
                       'fecha_pago': t("field.label.fecha_pago"),
                       'referencia': t("field.label.referencia"),
+                      'cpf_document': lang === 'es' ? 'Documento de Identidad / CPF' : 'Documento de Identidade / CPF',
                     };
                     const displayKey = keyLabelMap[key] || key.replace(/_/g, ' ');
 

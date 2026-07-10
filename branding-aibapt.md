@@ -143,3 +143,10 @@ Para garantizar la mejor experiencia de usuario (UX) en AIBAPT, se aplicará el 
 - **Prohibido el uso de alertas del navegador:** Queda terminantemente prohibido el uso de `window.alert()`, `window.confirm()` o `window.prompt()`. Estas interfaces nativas del navegador rompen la inmersión y van en contra de la estética premium.
 - **Notificaciones de Éxito o Error:** Para mensajes rápidos, se debe utilizar obligatoriamente la librería de notificaciones (ej. `toast` de `sonner`).
 - **Confirmaciones (Modales):** Si es necesario que el usuario confirme una acción destructiva o irreversible, se debe construir una interfaz de confirmación integrada dentro del mismo componente (ej. expandiendo un área de decisión) o mediante un Modal estilizado con Tailwind CSS que respete el branding, pero jamás lanzando una ventana nativa de JavaScript.
+
+### 6. Campos Telefónicos Internacionales (Estándar Premium)
+Para mantener la estética refinada, queda prohibido el uso de selectores nativos (`<select>`) o librerías genéricas para la entrada de teléfonos internacionales (como `react-phone-input-2` o `react-phone-number-input`), ya que su CSS interfiere con nuestro branding.
+- **Componente Oficial:** Se debe importar y utilizar siempre el componente a medida `<CustomPhoneInput />` ubicado en `src/components/ui/CustomPhoneInput.tsx`.
+- **Diseño del Dropdown:** El menú de selección de país debe abrirse ocupando el 100% del ancho del contenedor del input, con diseño de cristal (`backdrop-blur`), sombra amplia (`shadow-xl`) y una barra de búsqueda fija en la parte superior con ícono de `lucide-react`.
+- **Regla de Banderas:** Debido a que Windows no renderiza los Emojis de países de forma nativa (muestra iniciales), las banderas **deben** cargarse mediante imágenes en alta resolución desde una CDN (ej. `flagcdn.com` con los tamaños optimizados `w20/w40`). No se permiten emojis de texto.
+- **Fuente de Datos:** La lista de países y códigos de marcación se provee de manera centralizada desde `src/lib/countries.ts`, que contiene los 250 países del mundo pre-formateados.

@@ -32,7 +32,7 @@ const STATUS_CONFIG: Record<string, {
   under_review: {
     translationKey: 'status.under_review',
     icon: 'visibility',
-    className: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+    className: 'bg-secondary/20 text-primary border-secondary/40 dark:bg-secondary/10 dark:text-secondary dark:border-secondary/20',
   },
   approved: {
     translationKey: 'status.approved',
