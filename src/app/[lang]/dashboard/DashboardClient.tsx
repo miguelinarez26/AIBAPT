@@ -28,6 +28,7 @@ export default function DashboardClient({ profile: initialProfile, applications:
   const [isLoadingCredits, setIsLoadingCredits] = useState(true);
   const [profile, setProfile] = useState<any>(initialProfile);
   const [applications, setApplications] = useState<any[]>(initialApplications);
+  const [isLoadingMainData, setIsLoadingMainData] = useState(!initialProfile);
 
   useEffect(() => {
     setMounted(true);
@@ -77,6 +78,7 @@ export default function DashboardClient({ profile: initialProfile, applications:
         }));
         setApplications(mapped);
       }
+      setIsLoadingMainData(false);
 
       // Fetch credits
       const { data: creditsData, error: creditsError } = await supabase
@@ -171,7 +173,11 @@ export default function DashboardClient({ profile: initialProfile, applications:
                   {t["dashboard.membership.id"]}: <span className="text-primary">{profile.member_number}</span>
                 </span>
               )}
-              <MembershipBadge isMember={isMember} lang={lang} />
+              {isLoadingMainData ? (
+                <div className="h-6 w-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
+              ) : (
+                <MembershipBadge isMember={isMember} lang={lang} />
+              )}
             </div>
           </div>
         </div>
@@ -183,8 +189,10 @@ export default function DashboardClient({ profile: initialProfile, applications:
           {/* === Columna Izquierda (Contenido Principal) === */}
           <div className="lg:col-span-2 flex flex-col gap-8">
 
-            {/* Banner de Modo Gestión para Admins */}
-            {profile?.role === 'admin' ? (
+            {/* Banner Principal */}
+            {isLoadingMainData ? (
+              <div className="bg-gray-100 dark:bg-surface-dark/50 p-8 md:p-10 rounded-[32px] animate-pulse h-[200px] border border-gray-200 dark:border-gray-800"></div>
+            ) : profile?.role === 'admin' ? (
               <div className="bg-text-light dark:bg-surface-dark p-8 md:p-10 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-white relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3 group-hover:bg-primary/30 transition-all duration-700"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent-light/10 rounded-full blur-[60px] -translate-x-1/3 translate-y-1/3 group-hover:bg-accent-light/20 transition-all duration-700"></div>

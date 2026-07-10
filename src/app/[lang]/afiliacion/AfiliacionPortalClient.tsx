@@ -81,14 +81,36 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
     setIsCheckingApp(true);
     try {
       const supabase = createBrowserSupabaseClient();
-      const { data: existingApp, error: fetchError } = await supabase
+      const { data: existingApps, error: fetchError } = await supabase
         .from('applications')
         .select('status, id')
         .eq('user_id', session.user.id)
         .eq('type_id', 'solicitud_membresia')
         .neq('status', 'rejected')
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
         
+      const existingApp = existingApps && existingApps.length > 0 ? existingApps[0] : null;
+
+      if (fetchError) {
+        console.error("Error fetching applications:", fetchError);
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_member')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile?.is_member || existingApp?.status === 'approved') {
+        toast.success(
+          lang === "es" 
+            ? "Ya eres miembro de AIBAPT." 
+            : "Você já é membro da AIBAPT."
+        );
+        router.push(`/${lang}/dashboard`);
+        return;
+      }
+
       if (existingApp) {
         toast.error(
           lang === "es" 

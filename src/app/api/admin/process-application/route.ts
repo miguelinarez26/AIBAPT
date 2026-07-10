@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
 
 export async function POST(request: Request) {
   try {
@@ -189,6 +192,81 @@ export async function POST(request: Request) {
         if (profileRevertError) {
           console.error('Error al revertir membresía en perfil:', profileRevertError);
         }
+      }
+    }
+
+    // 4. Enviar notificación por correo electrónico al usuario
+    if (newStatus === 'approved' || newStatus === 'rejected') {
+      const profile = Array.isArray((appData as any).profiles) ? (appData as any).profiles[0] : (appData as any).profiles;
+      const userEmail = profile?.email;
+      const userName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
+      const userLang = profile?.language_preference || 'es';
+      const accType = (appData as any).accreditation_types?.name || 'Trámite';
+      
+      // Construir la URL del Dashboard
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.aibapt.org';
+      const dashboardUrl = `${baseUrl}/${userLang}/dashboard`;
+
+      // Textos localizados
+      const subject = userLang === 'pt' 
+          ? `Atualização da sua solicitação na AIBAPT` 
+          : `Actualización de su solicitud en AIBAPT`;
+      
+      const statusText = newStatus === 'approved' 
+          ? (userLang === 'pt' ? 'Aprovada' : 'Aprobada')
+          : (userLang === 'pt' ? 'Rejeitada' : 'Rechazada');
+
+      const message = newStatus === 'approved'
+          ? (userLang === 'pt' 
+              ? 'Temos o prazer de informar que a sua solicitação foi aprovada.' 
+              : 'Nos complace informarle que su solicitud ha sido aprobada.')
+          : (userLang === 'pt' 
+              ? 'Lamentamos informar que a sua solicitação foi rejeitada.' 
+              : 'Lamentamos informarle que su solicitud ha sido rechazada.');
+
+      const greeting = userLang === 'pt' ? 'Olá' : 'Hola';
+      const statusPrefix = userLang === 'pt' ? 'O status do seu trâmite' : 'El estado de su trámite';
+      const changedTo = userLang === 'pt' ? 'mudou para:' : 'ha cambiado a:';
+      const notesTitle = userLang === 'pt' ? 'Notas do Administrador:' : 'Notas del Administrador:';
+      const checkDetails = userLang === 'pt' 
+          ? 'Você pode revisar os detalhes completos e suas notas a partir do seu painel de controle:' 
+          : 'Puede revisar los detalles completos y sus notas desde su panel de control:';
+      const buttonText = userLang === 'pt' ? 'Ir para o Painel (Dashboard)' : 'Ir al Panel (Dashboard)';
+      const sincerely = userLang === 'pt' ? 'Atenciosamente' : 'Atentamente';
+      const team = userLang === 'pt' ? 'A equipe da AIBAPT' : 'El equipo de AIBAPT';
+
+      const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #1a365d;">${subject}</h2>
+          <p>${greeting} <b>${userName || 'Usuario'}</b>,</p>
+          <p>${statusPrefix} (<b>${accType}</b>) ${changedTo} <strong style="color: ${newStatus === 'approved' ? '#16a34a' : '#dc2626'};">${statusText}</strong></p>
+          <p>${message}</p>
+          ${adminNotes ? `<div style="background-color: #f3f4f6; padding: 15px; border-left: 4px solid #4b5563; margin: 20px 0; border-radius: 4px;"><p style="margin: 0; color: #374151;"><b>${notesTitle}</b><br/>${adminNotes}</p></div>` : ''}
+          <br/>
+          <p>${checkDetails}</p>
+          <p><a href="${dashboardUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">${buttonText}</a></p>
+          <br/>
+          <p>${sincerely},<br/>${team}</p>
+        </div>
+      `;
+
+      if (userEmail && process.env.RESEND_API_KEY) {
+          try {
+              await resend.emails.send({
+                  from: 'AIBAPT Portal <onboarding@resend.dev>',
+                  to: userEmail,
+                  subject: subject,
+                  html: html,
+              });
+          } catch (emailError) {
+              console.error('Error enviando correo al usuario:', emailError);
+          }
+      } else if (userEmail) {
+          console.log('====================================');
+          console.log(`[SIMULACIÓN DE CORREO AL USUARIO] Enviando a: ${userEmail}`);
+          console.log(`Asunto: ${subject}`);
+          console.log(`Contenido HTML generado correctamente.`);
+          console.log('====================================');
       }
     }
 
