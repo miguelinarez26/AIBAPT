@@ -37,6 +37,7 @@ const optionalFileSchema = z
 
 const formSchema = z.object({
   person_type: z.enum(["pleno_salud_mental", "pleno_agente_social", "institucional", "bienhechor", "simpatizante", "otro"]),
+  person_type_otro_texto: z.string().optional(),
   cpf_document: z.string().min(1, "El CPF / Doc Fiscal es obligatorio"),
   address: z.string().min(1, "La dirección es obligatoria"),
   neighborhood: z.string().min(1, "El barrio es obligatorio"),
