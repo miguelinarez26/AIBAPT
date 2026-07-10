@@ -81,14 +81,14 @@ export default function AfiliacionPortalClient({ lang }: { lang: "es" | "pt" }) 
     setIsCheckingApp(true);
     try {
       const supabase = createBrowserSupabaseClient();
-      const { data: existingApps, error: fetchError } = await supabase
+      const { data: existingApps, error: fetchError } = (await supabase
         .from('applications')
         .select('status, id')
         .eq('user_id', session.user.id)
         .eq('type_id', 'solicitud_membresia')
         .neq('status', 'rejected')
         .order('created_at', { ascending: false })
-        .limit(1);
+        .limit(1)) as any;
         
       const existingApp = existingApps && existingApps.length > 0 ? existingApps[0] : null;
 
