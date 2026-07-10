@@ -250,6 +250,25 @@ export async function POST(request: Request) {
         </div>
       `;
 
+      // 5. Crear notificación In-App para el solicitante
+      const notificationTitle = newStatus === 'approved' 
+        ? (userLang === 'pt' ? 'Solicitação Aprovada' : 'Solicitud Aprobada')
+        : (userLang === 'pt' ? 'Solicitação Rejeitada' : 'Solicitud Rechazada');
+        
+      const notificationMessage = `${accType} - ${newStatus === 'approved' ? (userLang === 'pt' ? 'Foi aprovada' : 'Ha sido aprobada') : (userLang === 'pt' ? 'Foi rejeitada' : 'Ha sido rechazada')}. ${adminNotes ? (userLang === 'pt' ? 'Veja as notas do administrador.' : 'Ver notas del administrador.') : ''}`;
+
+      const { error: notifError } = await (supabaseAdmin.from('notifications') as any).insert({
+        user_id: (appData as any).user_id,
+        title: notificationTitle,
+        message: notificationMessage,
+        link: `/${userLang}/dashboard`,
+      });
+
+      if (notifError) {
+        console.error('Error insertando notificación In-App para el usuario:', notifError);
+      }
+
+      // 6. Enviar Correo
       if (userEmail && process.env.RESEND_API_KEY) {
           try {
               await resend.emails.send({

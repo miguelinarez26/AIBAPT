@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from "@/components/providers/AuthProvider";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { assetPath } from "@/lib/assets";
 import { LogOut } from "lucide-react";
@@ -169,12 +170,7 @@ export default function Navbar() {
           <div className="flex items-center">
             {mounted && session ? (
               <div className="flex items-center gap-4">
-                {/* Campanita de Notificaciones */}
-                <button className="relative p-2 text-text-dark dark:text-gray-400 hover:text-primary transition-colors rounded-full hover:bg-primary/5">
-                  <span className="material-icons-round text-[22px]">notifications_none</span>
-                  {/* Puntito rojo de notificación (simulado) */}
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--background)]"></span>
-                </button>
+                {user && <NotificationBell lang={lang} />}
 
                 <div className="relative group/auth">
                   <div className="relative">

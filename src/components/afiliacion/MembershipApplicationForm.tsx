@@ -280,6 +280,18 @@ export default function MembershipApplicationForm({
         throw new Error(`Error actualizando perfil: ${profileError.message || JSON.stringify(profileError)}`);
       }
 
+      // 4. Notificar a los administradores In-App
+      fetch('/api/admin/notify-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId,
+          userName: `${data.first_name} ${data.last_name}`,
+          accreditationName: "Solicitud de Membresía",
+          email: data.email
+        })
+      }).catch(e => console.error("Error al notificar admin:", e));
+
       toast.success(lang === "es" ? "Solicitud procesada. Redirigiendo al pago..." : "Solicitação processada. Redirecionando para pagamento...");
       window.location.href = `/${lang}/checkout/${applicationId}`;
 
